@@ -90,7 +90,7 @@ public struct GridN<n: StaticSizeType, Object: Equatable>: Sequence, CustomStrin
     }
 }
 
-public extension GridN where n == _1 {
+extension GridN where n == _1 {
     public init(name: String? = nil, data: [Int: Object?], default defaultObject: Object? = nil) {
         self.init(name: name, data: data.mapKeys{ i in IntList(i) }, default: defaultObject)
     }
@@ -125,7 +125,7 @@ public extension GridN where n == _1 {
     }
 }
 
-public extension GridN where n == _2 {
+extension GridN where n == _2 {
     public subscript(i: Int, j: Int) -> Object? {
         get {
             return self[IntList(i, j)]

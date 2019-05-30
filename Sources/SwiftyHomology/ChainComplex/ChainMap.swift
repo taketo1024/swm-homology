@@ -83,7 +83,7 @@ public struct ChainMapN<n: StaticSizeType, A: FreeModuleBasis, B: FreeModuleBasi
     }
 }
 
-public extension ChainMapN where R: EuclideanRing {
+extension ChainMapN where R: EuclideanRing {
     public func matrix(from: ChainComplexN<n, A, R>, to: ChainComplexN<n, B, R>, at I: IntList) -> DMatrix<R>? {
         guard let s0 = from[I], let s1 = to[I + mDegree] else {
             return nil
@@ -139,7 +139,7 @@ public extension ChainMapN where R: EuclideanRing {
                 
                 // MEMO: the matrix of the dual-map w.r.t the dual-basis is the transpose of the original.
                 
-                guard let i = s1.generators.index(where: { $0.unwrap() == b.base }) else {
+                guard let i = s1.generators.firstIndex(where: { $0.unwrap() == b.base }) else {
                     fatalError()
                 }
                 
@@ -152,7 +152,7 @@ public extension ChainMapN where R: EuclideanRing {
     }
 }
 
-public extension ChainMapN where n == _1 {
+extension ChainMapN where n == _1 {
     public init(degree: Int, _ f: @escaping (Int) -> FreeModuleHom<A, B, R>) {
         self.init(mDegree: IntList(degree)) { I in f(I[0]) }
     }
@@ -178,13 +178,13 @@ public extension ChainMapN where n == _1 {
     }
 }
 
-public extension ChainMapN where R: EuclideanRing, n == _1 {
+extension ChainMapN where R: EuclideanRing, n == _1 {
     public func matrix(from: ChainComplex<A, R>, to: ChainComplex<B, R>, at i: Int) -> DMatrix<R>? {
         return matrix(from: from, to: to, at: IntList(i))
     }
 }
 
-public extension ChainMapN where n == _2 {
+extension ChainMapN where n == _2 {
     public init(bidegree: (Int, Int), _ f: @escaping (Int, Int) -> FreeModuleHom<A, B, R>) {
         let (i, j) = bidegree
         self.init(mDegree: IntList(i, j)) { I in f(I[0], I[1]) }
@@ -211,7 +211,7 @@ public extension ChainMapN where n == _2 {
     }
 }
 
-public extension ChainMapN where R == 𝐙 {
+extension ChainMapN where R == 𝐙 {
     public var tensor2: ChainMapN<n, A, B, 𝐙₂> {
         return ChainMapN<n, A, B, 𝐙₂>(mDegree: mDegree) { I -> FreeModuleHom<A, B, 𝐙₂> in
             FreeModuleHom{ (a: A) -> FreeModule<B, 𝐙₂> in

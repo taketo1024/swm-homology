@@ -8,7 +8,7 @@
 import Foundation
 import SwiftyMath
 
-public extension ChainComplexN where R: EuclideanRing {
+extension ChainComplexN where R: EuclideanRing {
     internal func isFreeToFree(_ I: IntList) -> Bool {
         if let from = base[I], from.isFree,
             let to = base[I + dDegree], to.isFree {
@@ -210,7 +210,7 @@ public extension ChainComplexN where R: EuclideanRing {
     }
 }
 
-public extension ChainComplexN where R: EuclideanRing, n == _1 {
+extension ChainComplexN where R: EuclideanRing, n == _1 {
     public func homology(_ i: Int) -> ModuleObject<A, R>? {
         return homology(IntList(i))
     }
@@ -220,7 +220,7 @@ public extension ChainComplexN where R: EuclideanRing, n == _1 {
     }
 }
 
-public extension ChainComplexN where R: EuclideanRing, n == _2 {
+extension ChainComplexN where R: EuclideanRing, n == _2 {
     public func homology(_ i: Int, _ j: Int) -> ModuleObject<A, R>? {
         return homology(IntList(i, j))
     }

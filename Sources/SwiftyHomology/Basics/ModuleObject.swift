@@ -177,7 +177,7 @@ public struct ModuleObject<A: FreeModuleBasis, R: Ring>: Equatable, CustomString
     }
 }
 
-public extension ModuleObject where R: EuclideanRing {
+extension ModuleObject where R: EuclideanRing {
     
     private static func extract(_ generators: [FreeModule<A, R>]) -> ([A], DMatrix<R>, DMatrix<R>) {
         if generators.allSatisfy({ z in z.isSingle }) {
@@ -290,7 +290,7 @@ public extension ModuleObject where R: EuclideanRing {
     }
 }
 
-public extension ModuleObject where R == 𝐙 {
+extension ModuleObject where R == 𝐙 {
     public var structure: [Int : Int] {
         return summands.group{ $0.divisor }.mapValues{ $0.count }
     }
@@ -321,7 +321,7 @@ public extension ModuleObject where R == 𝐙 {
     }
 }
 
-public extension ModuleObject where R == 𝐙₂ {
+extension ModuleObject where R == 𝐙₂ {
     public var asIntegerQuotients: ModuleObject<A, 𝐙> {
         typealias Summand = ModuleObject<A, 𝐙>.Summand
         let summands = self.summands.map { s -> Summand in
@@ -332,7 +332,7 @@ public extension ModuleObject where R == 𝐙₂ {
     }
 }
 
-public extension ModuleObject where A == AbstractBasisElement, R: EuclideanRing {
+extension ModuleObject where A == AbstractBasisElement, R: EuclideanRing {
     public init(rank r: Int, torsions: [R] = []) {
         let t = torsions.count
         let basis = (0 ..< r + t).map{ i in A(i) }
@@ -343,7 +343,7 @@ public extension ModuleObject where A == AbstractBasisElement, R: EuclideanRing 
     }
 }
 
-public extension ModuleObject where R: EuclideanRing {
+extension ModuleObject where R: EuclideanRing {
     public func asAbstract() -> ModuleObject<AbstractBasisElement, R> {
         typealias Summand = ModuleObject<AbstractBasisElement, R>.Summand
         
@@ -351,7 +351,7 @@ public extension ModuleObject where R: EuclideanRing {
             AbstractBasisElement(i, label: a.description)
         }
         let summands = self.summands.map { s in
-            Summand(s.generator.mapBasis { a in basis[self.rootBasis.index(of: a)!] }, s.divisor)
+            Summand(s.generator.mapBasis { a in basis[self.rootBasis.firstIndex(of: a)!] }, s.divisor)
         }
         
         return ModuleObject<AbstractBasisElement, R>(summands, basis, transition)

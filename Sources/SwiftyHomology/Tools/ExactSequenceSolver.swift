@@ -9,7 +9,7 @@
 import Foundation
 import SwiftyMath
 
-public extension LogFlag {
+extension LogFlag {
     public static var exactSequence: LogFlag {
         return LogFlag(id: "Homology.ExactSequence", label: "exSeq")
     }

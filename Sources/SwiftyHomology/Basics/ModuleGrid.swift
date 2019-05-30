@@ -126,7 +126,7 @@ public struct ModuleGridN<n: StaticSizeType, A: FreeModuleBasis, R: Ring>: Seque
     
 }
 
-public extension ModuleGridN where n == _1 {
+extension ModuleGridN where n == _1 {
     public init(name: String? = nil, data: [Int: Object?]) {
         let grid = GridN<n, Object>(name: name, data: data, default: .zeroModule)
         self.init(grid)
@@ -169,7 +169,7 @@ public extension ModuleGridN where n == _1 {
     }
 }
 
-public extension ModuleGridN where n == _2 {
+extension ModuleGridN where n == _2 {
     public subscript(i: Int, j: Int) -> Object? {
         get {
             return self[IntList(i, j)]
@@ -205,7 +205,7 @@ public extension ModuleGridN where n == _2 {
     }
 }
 
-public extension ModuleGridN where R == 𝐙 {
+extension ModuleGridN where R == 𝐙 {
     public var structureCode: String {
         return indices.map{ I in
             if let s = self[I] {

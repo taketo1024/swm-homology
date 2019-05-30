@@ -117,7 +117,7 @@ public struct ChainComplexN<n: StaticSizeType, A: FreeModuleBasis, R: Ring>: Cus
     }
 }
 
-public extension ChainComplexN where R: EuclideanRing {
+extension ChainComplexN where R: EuclideanRing {
     // MEMO works only when each generator is a single basis-element.
     
     public func dual(name: String? = nil) -> ChainComplexN<n, Dual<A>, R> {
@@ -139,7 +139,7 @@ public extension ChainComplexN where R: EuclideanRing {
     }
 }
 
-public extension ChainComplexN where n == _1 {
+extension ChainComplexN where n == _1 {
     public subscript(i: Int) -> Object? {
         get {
             return base[i]
@@ -165,7 +165,7 @@ public extension ChainComplexN where n == _1 {
     }
 }
 
-public extension ChainComplexN where n == _2 {
+extension ChainComplexN where n == _2 {
     public subscript(i: Int, j: Int) -> Object? {
         get {
             return base[i, j]
@@ -187,7 +187,7 @@ public extension ChainComplexN where n == _2 {
     }
 }
 
-public extension ChainComplexN where R == 𝐙 {
+extension ChainComplexN where R == 𝐙 {
     public var order2torsionPart: ChainComplexN<n, A, 𝐙₂> {
         return ChainComplexN<n, A, 𝐙₂>(base: base.order2torsionPart, differential: d.tensor2)
     }
