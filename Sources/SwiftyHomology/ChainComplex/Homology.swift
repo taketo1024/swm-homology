@@ -18,7 +18,7 @@ public extension ChainComplexN where R: EuclideanRing {
         }
     }
     
-    internal func dMatrix(_ I: IntList) -> Matrix<R>? {
+    internal func dMatrix(_ I: IntList) -> DMatrix<R>? {
         if let c = dMatrices[I], let A = c.value {
             return A // cached.
         }
@@ -28,7 +28,7 @@ public extension ChainComplexN where R: EuclideanRing {
         return A
     }
     
-    internal func dKernel(_ I: IntList) -> Matrix<R>? {
+    internal func dKernel(_ I: IntList) -> DMatrix<R>? {
         guard isFreeToFree(I), let A = dMatrix(I) else {
             return nil // indeterminable.
         }
@@ -37,7 +37,7 @@ public extension ChainComplexN where R: EuclideanRing {
         return E.kernelMatrix
     }
     
-    internal func dKernelTransition(_ I: IntList) -> Matrix<R>? {
+    internal func dKernelTransition(_ I: IntList) -> DMatrix<R>? {
         guard isFreeToFree(I), let A = dMatrix(I) else {
             return nil // indeterminable.
         }
@@ -46,7 +46,7 @@ public extension ChainComplexN where R: EuclideanRing {
         return E.kernelTransitionMatrix
     }
     
-    internal func dImage(_ I: IntList) -> Matrix<R>? {
+    internal func dImage(_ I: IntList) -> DMatrix<R>? {
         guard isFreeToFree(I), let A = dMatrix(I) else {
             return nil // indeterminable.
         }
@@ -55,7 +55,7 @@ public extension ChainComplexN where R: EuclideanRing {
         return E.imageMatrix
     }
     
-    internal func dImageTransition(_ I: IntList) -> Matrix<R>? {
+    internal func dImageTransition(_ I: IntList) -> DMatrix<R>? {
         guard isFreeToFree(I), let A = dMatrix(I) else {
             return nil // indeterminable.
         }
@@ -117,7 +117,7 @@ public extension ChainComplexN where R: EuclideanRing {
                     relationMatrix: T * B
                 )
             } else {
-                let A0 = Matrix(rows: rootBasis.count, cols: generators.count) { (i, j) in generators[j][rootBasis[i]] }
+                let A0 = DMatrix(rows: rootBasis.count, cols: generators.count) { (i, j) in generators[j][rootBasis[i]] }
                 let T0 = A0.elimination(form: .RowHermite).left.submatrix(rowRange: 0 ..< generators.count)
                 
                 res = ModuleObject(

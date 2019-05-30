@@ -8,10 +8,10 @@
 import Foundation
 import SwiftyMath
 
-public typealias  ChainMap<A: BasisElementType, B: BasisElementType, R: Ring> = ChainMapN<_1, A, B, R>
-public typealias ChainMap2<A: BasisElementType, B: BasisElementType, R: Ring> = ChainMapN<_2, A, B, R>
+public typealias  ChainMap<A: FreeModuleBasis, B: FreeModuleBasis, R: Ring> = ChainMapN<_1, A, B, R>
+public typealias ChainMap2<A: FreeModuleBasis, B: FreeModuleBasis, R: Ring> = ChainMapN<_2, A, B, R>
 
-public struct ChainMapN<n: _Int, A: BasisElementType, B: BasisElementType, R: Ring> {
+public struct ChainMapN<n: StaticSizeType, A: FreeModuleBasis, B: FreeModuleBasis, R: Ring> {
     public var mDegree: IntList
     internal let f: (IntList) -> FreeModuleHom<A, B, R>
     
@@ -84,7 +84,7 @@ public struct ChainMapN<n: _Int, A: BasisElementType, B: BasisElementType, R: Ri
 }
 
 public extension ChainMapN where R: EuclideanRing {
-    public func matrix(from: ChainComplexN<n, A, R>, to: ChainComplexN<n, B, R>, at I: IntList) -> Matrix<R>? {
+    public func matrix(from: ChainComplexN<n, A, R>, to: ChainComplexN<n, B, R>, at I: IntList) -> DMatrix<R>? {
         guard let s0 = from[I], let s1 = to[I + mDegree] else {
             return nil
         }
@@ -110,7 +110,7 @@ public extension ChainMapN where R: EuclideanRing {
                 }
             }
             
-            return Matrix(rows: to.count, cols: from.count, components: components)
+            return DMatrix(rows: to.count, cols: from.count, components: components)
         }
         
         let grid = s0.generators.flatMap { x -> [R] in
@@ -118,7 +118,7 @@ public extension ChainMapN where R: EuclideanRing {
             return s1.factorize(y)
         }
         
-        return Matrix(rows: s0.generators.count, cols: s1.generators.count, grid: grid).transposed
+        return DMatrix(rows: s0.generators.count, cols: s1.generators.count, grid: grid).transposed
     }
 
     public func dual(from: ChainComplexN<n, A, R>, to: ChainComplexN<n, B, R>) -> ChainMapN<n, Dual<B>, Dual<A>, R> {
@@ -179,7 +179,7 @@ public extension ChainMapN where n == _1 {
 }
 
 public extension ChainMapN where R: EuclideanRing, n == _1 {
-    public func matrix(from: ChainComplex<A, R>, to: ChainComplex<B, R>, at i: Int) -> Matrix<R>? {
+    public func matrix(from: ChainComplex<A, R>, to: ChainComplex<B, R>, at i: Int) -> DMatrix<R>? {
         return matrix(from: from, to: to, at: IntList(i))
     }
 }

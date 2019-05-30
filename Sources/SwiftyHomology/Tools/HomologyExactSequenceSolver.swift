@@ -9,7 +9,7 @@
 import Foundation
 import SwiftyMath
 
-public final class HomologyExactSequenceSolver<A: BasisElementType, B: BasisElementType, C: BasisElementType, R: EuclideanRing>: CustomStringConvertible {
+public final class HomologyExactSequenceSolver<A: FreeModuleBasis, B: FreeModuleBasis, C: FreeModuleBasis, R: EuclideanRing>: CustomStringConvertible {
     public typealias Object = ExactSequenceSolver<R>.Object
     
     public let C0: ChainComplex<A, R>
@@ -135,7 +135,7 @@ public final class HomologyExactSequenceSolver<A: BasisElementType, B: BasisElem
         }
     }
     
-    private func makeMatrix(_ k: Int) -> Matrix<R>? {
+    private func makeMatrix(_ k: Int) -> DMatrix<R>? {
         let (n0, i0) = gridIndex(k)
         let (n1,  _) = gridIndex(k + 1)
         
@@ -147,13 +147,13 @@ public final class HomologyExactSequenceSolver<A: BasisElementType, B: BasisElem
         }
     }
     
-    private func makeMatrix<X, Y>(_ s0: ChainComplex<X, R>.Object?, _ f: FreeModuleHom<X, Y, R>, _ s1: ChainComplex<Y, R>.Object?) -> Matrix<R>? {
+    private func makeMatrix<X, Y>(_ s0: ChainComplex<X, R>.Object?, _ f: FreeModuleHom<X, Y, R>, _ s1: ChainComplex<Y, R>.Object?) -> DMatrix<R>? {
         guard let s0 = s0, let s1 = s1 else {
             return nil
         }
         
         let grid = s0.generators.flatMap { x in s1.factorize(f.applied(to: x)) }
-        return Matrix(rows: s0.generators.count, cols: s1.generators.count, grid: grid).transposed
+        return DMatrix(rows: s0.generators.count, cols: s1.generators.count, grid: grid).transposed
     }
     
     public func fill(columns: Int ...) {

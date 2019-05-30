@@ -8,10 +8,10 @@
 import Foundation
 import SwiftyMath
 
-public typealias ModuleGrid1<A: BasisElementType, R: Ring> = ModuleGridN<_1, A, R>
-public typealias ModuleGrid2<A: BasisElementType, R: Ring> = ModuleGridN<_2, A, R>
+public typealias ModuleGrid1<A: FreeModuleBasis, R: Ring> = ModuleGridN<_1, A, R>
+public typealias ModuleGrid2<A: FreeModuleBasis, R: Ring> = ModuleGridN<_2, A, R>
 
-public struct ModuleGridN<n: _Int, A: BasisElementType, R: Ring>: Sequence {
+public struct ModuleGridN<n: StaticSizeType, A: FreeModuleBasis, R: Ring>: Sequence {
     public typealias Object = ModuleObject<A, R>
     internal var grid: GridN<n, Object>
     
@@ -216,7 +216,7 @@ public extension ModuleGridN where R == 𝐙 {
         }.joined(separator: ", ")
     }
     
-    public func torsionPart<t: _Int>(order: t.Type) -> ModuleGridN<n, A, IntegerQuotientRing<t>> {
+    public func torsionPart<t: StaticSizeType>(order: t.Type) -> ModuleGridN<n, A, IntegerQuotientRing<t>> {
         return ModuleGridN<n, A, IntegerQuotientRing<t>>(
             grid.map{ $0.torsionPart(order: order) }
         ).named("\(grid.name)_\(t.intValue)")

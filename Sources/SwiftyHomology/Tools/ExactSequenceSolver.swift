@@ -21,7 +21,7 @@ public final class ExactSequenceSolver<R: EuclideanRing>: CustomStringConvertibl
     
     public   var objects : Grid1<Object>
     public   var maps    : Grid1<Map>
-    internal var matrices: Grid1<Matrix<R>>
+    internal var matrices: Grid1<DMatrix<R>>
     
     public init(objects: [Object?], maps: [Map?]) {
         self.objects  = Grid1(data: objects.toDictionary())
@@ -50,7 +50,7 @@ public final class ExactSequenceSolver<R: EuclideanRing>: CustomStringConvertibl
         return objects.isEmpty ? [] : (objects.bottomIndex ... objects.topIndex).toArray()
     }
     
-    public func matrix(_ i: Int) -> Matrix<R>? {
+    public func matrix(_ i: Int) -> DMatrix<R>? {
         if let A = matrices[i] {
             return A
         }
@@ -61,7 +61,7 @@ public final class ExactSequenceSolver<R: EuclideanRing>: CustomStringConvertibl
         return A
     }
     
-    private func _matrix(_ i: Int) -> Matrix<R>? {
+    private func _matrix(_ i: Int) -> DMatrix<R>? {
         guard
             let from = self[i],
             let to   = self[i + 1],
@@ -76,7 +76,7 @@ public final class ExactSequenceSolver<R: EuclideanRing>: CustomStringConvertibl
             return vec.enumerated().map{ (i, a) in MatrixComponent(i, j, a) }
         }
         
-        return Matrix(rows: to.generators.count, cols: from.generators.count, components: comps)
+        return DMatrix(rows: to.generators.count, cols: from.generators.count, components: comps)
     }
     
     public func isZero(_ i: Int) -> Bool {
@@ -239,7 +239,7 @@ public final class ExactSequenceSolver<R: EuclideanRing>: CustomStringConvertibl
         {
             let (r, k) = (M1.rank, A3.elimination().nullity)
             let generators = AbstractBasisElement.generateBasis(r + k)
-            let B = A0 + Matrix<R>.zero(rows: k, cols: k)
+            let B = A0 + DMatrix<R>.zero(rows: k, cols: k)
             let M2 = Object(generators: generators, relationMatrix: B)
             
             log("\(i2): \(M2)")
@@ -330,6 +330,6 @@ public final class ExactSequenceSolver<R: EuclideanRing>: CustomStringConvertibl
     }
     
     private func log(_ msg: @autoclosure () -> String) {
-        Logger.write(.exactSequence, msg)
+        Logger.write(.exactSequence, msg())
     }
 }

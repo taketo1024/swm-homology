@@ -11,7 +11,7 @@ import SwiftyMath
 public typealias Grid1<Object: Equatable> = GridN<_1, Object>
 public typealias Grid2<Object: Equatable> = GridN<_2, Object>
 
-public struct GridN<n: _Int, Object: Equatable>: Sequence, CustomStringConvertible {
+public struct GridN<n: StaticSizeType, Object: Equatable>: Sequence, CustomStringConvertible {
     public var name: String
     internal var data: [IntList : Object?]
     internal let defaultObject: Object?

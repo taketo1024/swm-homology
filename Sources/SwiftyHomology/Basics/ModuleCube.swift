@@ -10,7 +10,7 @@ import SwiftyMath
 
 // An n-dim cube with Modules on all vertices I ∈ {0, 1}^n .
 
-public struct ModuleCube<A: BasisElementType, R: Ring> {
+public struct ModuleCube<A: FreeModuleBasis, R: Ring> {
     public typealias Object = ModuleObject<A, R>
     
     public let dim: Int

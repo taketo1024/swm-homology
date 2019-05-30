@@ -60,7 +60,7 @@ class ModuleObjectTests: XCTestCase {
         let basis = (0 ..< 3).map{ M.wrap(A($0)) }
         let (e0, e1, e2) = (basis[0], basis[1], basis[2])
         
-        let matrix = Matrix<R>(rows: 3, cols: 2, grid:
+        let matrix = DMatrix<R>(rows: 3, cols: 2, grid:
             [1, 0,
              0, 2,
              0, 0]
@@ -85,7 +85,7 @@ class ModuleObjectTests: XCTestCase {
         let basis = (0 ..< 3).map{ M.wrap(A($0)) }
         let (e0, e1, e2) = (basis[0], basis[1], basis[2])
 
-        let matrix = Matrix<R>(rows: 3, cols: 2, grid:
+        let matrix = DMatrix<R>(rows: 3, cols: 2, grid:
             [1, 1,
              1, 0,
              0, -1]
@@ -103,7 +103,7 @@ class ModuleObjectTests: XCTestCase {
     func testSubsummands() {
         let basis = (0 ..< 3).map{ M.wrap(A($0)) }
         let (e0, e1, e2) = (basis[0], basis[1], basis[2])
-        let matrix = Matrix<R>(rows: 3, cols: 2, grid:[2, 0, 0, 4, 0, 0])
+        let matrix = DMatrix<R>(rows: 3, cols: 2, grid:[2, 0, 0, 4, 0, 0])
         
         let str = S(generators: basis, relationMatrix: matrix)
         let sub0 = str.subSummands(0)
@@ -126,7 +126,7 @@ class ModuleObjectTests: XCTestCase {
     func testDirSum1() {
         let basis = (0 ..< 3).map{ M.wrap(A($0)) }
         let (e0, e1, e2) = (basis[0], basis[1], basis[2])
-        let matrix = Matrix<R>(rows: 3, cols: 2, grid:[2, 0, 0, 4, 0, 0])
+        let matrix = DMatrix<R>(rows: 3, cols: 2, grid:[2, 0, 0, 4, 0, 0])
         
         let str = S(generators: basis, relationMatrix: matrix)
         let sub0 = str.subSummands(0)
@@ -149,7 +149,7 @@ class ModuleObjectTests: XCTestCase {
         let basis = (0 ..< 3).map{ M.wrap(A($0)) }
         let (e0, e1, e2) = (basis[0], basis[1], basis[2])
 
-        let sub0 = S(generators: [e0], relationMatrix: Matrix<R>(rows: 1, cols: 1, grid:[2]))
+        let sub0 = S(generators: [e0], relationMatrix: DMatrix<R>(rows: 1, cols: 1, grid:[2]))
         let sub2 = S(basis: [e2])
         let sum = sub0 ⊕ sub2
         

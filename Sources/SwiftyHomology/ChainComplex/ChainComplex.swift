@@ -10,10 +10,10 @@ import SwiftyMath
 
 // TODO substitute for old ChainComplex.
 
-public typealias  ChainComplex<A: BasisElementType, R: Ring> = ChainComplexN<_1, A, R>
-public typealias ChainComplex2<A: BasisElementType, R: Ring> = ChainComplexN<_2, A, R>
+public typealias  ChainComplex<A: FreeModuleBasis, R: Ring> = ChainComplexN<_1, A, R>
+public typealias ChainComplex2<A: FreeModuleBasis, R: Ring> = ChainComplexN<_2, A, R>
 
-public struct ChainComplexN<n: _Int, A: BasisElementType, R: Ring>: CustomStringConvertible {
+public struct ChainComplexN<n: StaticSizeType, A: FreeModuleBasis, R: Ring>: CustomStringConvertible {
     public typealias Base = ModuleGridN<n, A, R>
     public typealias Differential = ChainMapN<n, A, A, R>
     public typealias Object = ModuleObject<A, R>
@@ -21,7 +21,7 @@ public struct ChainComplexN<n: _Int, A: BasisElementType, R: Ring>: CustomString
     public var base: Base
     public let d: Differential
     
-    internal let dMatrices: [IntList : Cache<Matrix<R>>]
+    internal let dMatrices: [IntList : Cache<DMatrix<R>>]
     internal let _freePart = Cache<ChainComplexN<n, A, R>>()
     internal let  _torPart = Cache<ChainComplexN<n, A, R>>()
 
