@@ -17,7 +17,7 @@ extension LogFlag {
 
 public final class ExactSequenceSolver<R: EuclideanRing>: CustomStringConvertible {
     public typealias Object = ModuleObject<AbstractBasisElement, R>
-    public typealias Map    = FreeModuleHom<AbstractBasisElement, AbstractBasisElement, R>
+    public typealias Map    = ModuleEnd<FreeModule<AbstractBasisElement, R>>
     
     public   var objects : Grid1<Object>
     public   var maps    : Grid1<Map>

@@ -8,31 +8,21 @@
 import Foundation
 import SwiftyMath
 
-public typealias  ChainMap<A: FreeModuleBasis, B: FreeModuleBasis, R: Ring> = ChainMapN<_1, A, B, R>
-public typealias ChainMap2<A: FreeModuleBasis, B: FreeModuleBasis, R: Ring> = ChainMapN<_2, A, B, R>
+public typealias  ChainMap<A: FreeModuleGenerator, B: FreeModuleGenerator, R: Ring> = ChainMapN<_1, A, B, R>
+public typealias ChainMap2<A: FreeModuleGenerator, B: FreeModuleGenerator, R: Ring> = ChainMapN<_2, A, B, R>
 
-public struct ChainMapN<n: StaticSizeType, A: FreeModuleBasis, B: FreeModuleBasis, R: Ring> {
-    public var mDegree: IntList
-    internal let f: (IntList) -> FreeModuleHom<A, B, R>
+public struct ChainMapN<n: StaticSizeType, A: FreeModuleGenerator, B: FreeModuleGenerator, R: Ring> {
+    public typealias Hom = ModuleHom<FreeModule<A, R>, FreeModule<B, R>>
     
-    public init(mDegree: IntList, _ f: @escaping (IntList) -> FreeModuleHom<A, B, R>) {
+    public var mDegree: IntList
+    internal let f: (IntList) -> Hom
+    
+    public init(mDegree: IntList, _ f: @escaping (IntList) -> Hom) {
         self.mDegree = mDegree
         self.f = f
     }
     
-    public static func uniform(mDegree: IntList, _ f: FreeModuleHom<A, B, R>) -> ChainMapN<n, A, B, R> {
-        return ChainMapN(mDegree: mDegree) { _ in f }
-    }
-    
-    public static func uniform(mDegree: IntList, _ f: @escaping (A) -> FreeModule<B, R>) -> ChainMapN<n, A, B, R> {
-        return .uniform(mDegree: mDegree, FreeModuleHom(f))
-    }
-    
-    public static func uniform(mDegree: IntList, _ f: @escaping (FreeModule<A, R>) -> FreeModule<B, R>) -> ChainMapN<n, A, B, R> {
-        return .uniform(mDegree: mDegree, FreeModuleHom(f))
-    }
-    
-    public subscript(_ I: IntList) -> FreeModuleHom<A, B, R> {
+    public subscript(_ I: IntList) -> Hom {
         return f(I)
     }
     
@@ -98,11 +88,11 @@ extension ChainMapN where R: EuclideanRing {
         if  s0.isFree, s0.generators.allSatisfy({ $0.isSingle }),
             s1.isFree, s1.generators.allSatisfy({ $0.isSingle }) {
             
-            let (from, to) = (s0.generators.map{ $0.basis[0] }, s1.generators.map{ $0.basis[0] })
+            let (from, to) = (s0.generators.map{ $0.generators[0] }, s1.generators.map{ $0.generators[0] })
             let toIndexer = to.indexer()
             
             let components = from.enumerated().flatMap{ (j, x) -> [MatrixComponent<R>] in
-                map.applied(to: x).elements.map { (y, a) -> MatrixComponent<R> in
+                map.applied(to: .wrap(x)).elements.map { (y, a) -> MatrixComponent<R> in
                     guard let i = toIndexer(y) else {
                         fatalError("not an element of the codomain: \(y)")
                     }
@@ -124,7 +114,7 @@ extension ChainMapN where R: EuclideanRing {
     public func dual(from: ChainComplexN<n, A, R>, to: ChainComplexN<n, B, R>) -> ChainMapN<n, Dual<B>, Dual<A>, R> {
         typealias F = ChainMapN<n, Dual<B>, Dual<A>, R>
         return F(mDegree: -mDegree) { I1 in
-            FreeModuleHom<Dual<B>, Dual<A>, R>{ (b: Dual<B>) in
+            ModuleHom.linearlyExtend{ (b: Dual<B>) in
                 let I0 = I1 - self.mDegree
                 guard let s0 = from[I0],
                     let s1  =  to[I1],
@@ -145,7 +135,7 @@ extension ChainMapN where R: EuclideanRing {
                 
                 return matrix.nonZeroComponents(ofRow: i).sum { (c: MatrixComponent<R>) in
                     let (j, r) = (c.col, c.value)
-                    return r * s0.generator(j).mapBasis{ $0.dual }
+                    return r * s0.generator(j).convertGenerators{ $0.dual }
                 }
             }
         }
@@ -153,23 +143,11 @@ extension ChainMapN where R: EuclideanRing {
 }
 
 extension ChainMapN where n == _1 {
-    public init(degree: Int, _ f: @escaping (Int) -> FreeModuleHom<A, B, R>) {
+    public init(degree: Int, _ f: @escaping (Int) -> Hom) {
         self.init(mDegree: IntList(degree)) { I in f(I[0]) }
     }
     
-    public static func uniform(degree: Int, _ f: FreeModuleHom<A, B, R>) -> ChainMap<A, B, R> {
-        return ChainMap(degree: degree) { _ in f }
-    }
-    
-    public static func uniform(degree: Int, _ f: @escaping (A) -> FreeModule<B, R>) -> ChainMap<A, B, R> {
-        return .uniform(degree: degree, FreeModuleHom(f))
-    }
-    
-    public static func uniform(degree: Int, _ f: @escaping (FreeModule<A, R>) -> FreeModule<B, R>) -> ChainMap<A, B, R> {
-        return .uniform(degree: degree, FreeModuleHom(f))
-    }
-    
-    public subscript(_ i: Int) -> FreeModuleHom<A, B, R> {
+    public subscript(_ i: Int) -> Hom {
         return self[IntList(i)]
     }
     
@@ -185,38 +163,16 @@ extension ChainMapN where R: EuclideanRing, n == _1 {
 }
 
 extension ChainMapN where n == _2 {
-    public init(bidegree: (Int, Int), _ f: @escaping (Int, Int) -> FreeModuleHom<A, B, R>) {
+    public init(bidegree: (Int, Int), _ f: @escaping (Int, Int) -> Hom) {
         let (i, j) = bidegree
         self.init(mDegree: IntList(i, j)) { I in f(I[0], I[1]) }
     }
     
-    public static func uniform(bidegree: (Int, Int), _ f: FreeModuleHom<A, B, R>) -> ChainMap2<A, B, R> {
-        return ChainMap2(bidegree: bidegree) { _, _ in f }
-    }
-    
-    public static func uniform(bidegree: (Int, Int), _ f: @escaping (A) -> FreeModule<B, R>) -> ChainMap2<A, B, R> {
-        return .uniform(bidegree: bidegree, FreeModuleHom(f))
-    }
-    
-    public static func uniform(bidegree: (Int, Int), _ f: @escaping (FreeModule<A, R>) -> FreeModule<B, R>) -> ChainMap2<A, B, R> {
-        return .uniform(bidegree: bidegree, FreeModuleHom(f))
-    }
-    
-    public subscript(_ i: Int, _ j: Int) -> FreeModuleHom<A, B, R> {
+    public subscript(_ i: Int, _ j: Int) -> Hom {
         return self[IntList(i, j)]
     }
     
     public var bidegree: (Int, Int) {
         return (mDegree[0], mDegree[1])
-    }
-}
-
-extension ChainMapN where R == 𝐙 {
-    public var tensor2: ChainMapN<n, A, B, 𝐙₂> {
-        return ChainMapN<n, A, B, 𝐙₂>(mDegree: mDegree) { I -> FreeModuleHom<A, B, 𝐙₂> in
-            FreeModuleHom{ (a: A) -> FreeModule<B, 𝐙₂> in
-                return self[I].applied(to: a).mapValues{ r in 𝐙₂(r) }
-            }
-        }
     }
 }

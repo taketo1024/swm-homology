@@ -16,7 +16,7 @@ import SwiftyMath
 // See: https://en.wikipedia.org/wiki/Free_presentation
 //      https://en.wikipedia.org/wiki/Structure_theorem_for_finitely_generated_modules_over_a_principal_ideal_domain#Invariant_factor_decomposition
 
-public struct ModuleObject<A: FreeModuleBasis, R: Ring>: Equatable, CustomStringConvertible {
+public struct ModuleObject<A: FreeModuleGenerator, R: Ring>: Equatable, CustomStringConvertible {
     public let summands: [Summand]
     
     // MEMO values used for factorization where R: EuclideanRing
@@ -181,11 +181,11 @@ extension ModuleObject where R: EuclideanRing {
     
     private static func extract(_ generators: [FreeModule<A, R>]) -> ([A], DMatrix<R>, DMatrix<R>) {
         if generators.allSatisfy({ z in z.isSingle }) {
-            let rootBasis = generators.map{ z in z.basis[0] }
+            let rootBasis = generators.map{ z in z.generators[0] }
             let I = DMatrix<R>.identity(size: generators.count)
             return (rootBasis, I, I)
         } else {
-            let rootBasis = generators.flatMap{ $0.basis }.unique().sorted()
+            let rootBasis = generators.flatMap{ $0.generators }.unique().sorted()
             let A = DMatrix(rows: rootBasis.count, cols: generators.count) { (i, j) in generators[j][rootBasis[i]] }
             let T = A.elimination(form: .RowHermite).left.submatrix(rowRange: 0 ..< generators.count)
             return (rootBasis, A, T)
@@ -198,7 +198,7 @@ extension ModuleObject where R: EuclideanRing {
     
     public init(basis: [FreeModule<A, R>]) {
         if basis.allSatisfy({ $0.isSingle }) {
-            self.init(basis: basis.map{ $0.basis[0] })
+            self.init(basis: basis.map{ $0.generators[0] })
         } else {
             let summands = basis.map{ z in Summand(z) }
             let (rootBasis, A, T) = ModuleObject<A, R>.extract(basis)
@@ -214,7 +214,7 @@ extension ModuleObject where R: EuclideanRing {
     
     public init(generators: [FreeModule<A, R>], relationMatrix B: DMatrix<R>) {
         if generators.allSatisfy({ $0.isSingle }) {
-            let basis = generators.map{ $0.basis[0] }
+            let basis = generators.map{ $0.generators[0] }
             self.init(generators: basis, relationMatrix: B)
         } else {
             let (rootBasis, A, T) = ModuleObject<A, R>.extract(generators)
@@ -309,7 +309,7 @@ extension ModuleObject where R == 𝐙 {
         let sub = subSummands{ s in s.divisor == n }
         
         let summands = sub.summands.map { s -> Summand in
-            Summand(s.generator.mapValues{ Q($0) }, .zero)
+            Summand(s.generator.convertComponents{ Q($0) }, .zero)
         }
         let transform = sub.transition.mapComponents { Q($0) }
         
@@ -325,7 +325,7 @@ extension ModuleObject where R == 𝐙₂ {
     public var asIntegerQuotients: ModuleObject<A, 𝐙> {
         typealias Summand = ModuleObject<A, 𝐙>.Summand
         let summands = self.summands.map { s -> Summand in
-            Summand(s.generator.mapValues{ $0.representative }, 2)
+            Summand(s.generator.convertComponents{ $0.representative }, 2)
         }
         let T = self.transition.mapComponents{ a in a.representative }
         return ModuleObject<A, 𝐙>(summands, rootBasis, T)
@@ -351,7 +351,7 @@ extension ModuleObject where R: EuclideanRing {
             AbstractBasisElement(i, label: a.description)
         }
         let summands = self.summands.map { s in
-            Summand(s.generator.mapBasis { a in basis[self.rootBasis.firstIndex(of: a)!] }, s.divisor)
+            Summand(s.generator.convertGenerators { a in basis[self.rootBasis.firstIndex(of: a)!] }, s.divisor)
         }
         
         return ModuleObject<AbstractBasisElement, R>(summands, basis, transition)

@@ -9,7 +9,7 @@
 import Foundation
 import SwiftyMath
 
-public final class HomologyExactSequenceSolver<A: FreeModuleBasis, B: FreeModuleBasis, C: FreeModuleBasis, R: EuclideanRing>: CustomStringConvertible {
+public final class HomologyExactSequenceSolver<A: FreeModuleGenerator, B: FreeModuleGenerator, C: FreeModuleGenerator, R: EuclideanRing>: CustomStringConvertible {
     public typealias Object = ExactSequenceSolver<R>.Object
     
     public let C0: ChainComplex<A, R>
@@ -147,7 +147,7 @@ public final class HomologyExactSequenceSolver<A: FreeModuleBasis, B: FreeModule
         }
     }
     
-    private func makeMatrix<X, Y>(_ s0: ChainComplex<X, R>.Object?, _ f: FreeModuleHom<X, Y, R>, _ s1: ChainComplex<Y, R>.Object?) -> DMatrix<R>? {
+    private func makeMatrix<X, Y>(_ s0: ChainComplex<X, R>.Object?, _ f: ModuleHom<FreeModule<X, R>, FreeModule<Y, R>>, _ s1: ChainComplex<Y, R>.Object?) -> DMatrix<R>? {
         guard let s0 = s0, let s1 = s1 else {
             return nil
         }

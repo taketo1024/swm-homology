@@ -8,10 +8,10 @@
 import Foundation
 import SwiftyMath
 
-public typealias  ChainShortExactSequence<A: FreeModuleBasis, B: FreeModuleBasis, C: FreeModuleBasis, R: EuclideanRing> = ChainShortExactSequenceN<_1, A, B, C, R>
-public typealias ChainShortExactSequence2<A: FreeModuleBasis, B: FreeModuleBasis, C: FreeModuleBasis, R: EuclideanRing> = ChainShortExactSequenceN<_2, A, B, C, R>
+public typealias  ChainShortExactSequence<A: FreeModuleGenerator, B: FreeModuleGenerator, C: FreeModuleGenerator, R: EuclideanRing> = ChainShortExactSequenceN<_1, A, B, C, R>
+public typealias ChainShortExactSequence2<A: FreeModuleGenerator, B: FreeModuleGenerator, C: FreeModuleGenerator, R: EuclideanRing> = ChainShortExactSequenceN<_2, A, B, C, R>
 
-public struct ChainShortExactSequenceN<n: StaticSizeType, A: FreeModuleBasis, B: FreeModuleBasis, C: FreeModuleBasis, R: EuclideanRing> {
+public struct ChainShortExactSequenceN<n: StaticSizeType, A: FreeModuleGenerator, B: FreeModuleGenerator, C: FreeModuleGenerator, R: EuclideanRing> {
     public let C0: ChainComplexN<n, A, R>
     public let C1: ChainComplexN<n, B, R>
     public let C2: ChainComplexN<n, C, R>

@@ -10,10 +10,10 @@ import SwiftyMath
 
 // TODO substitute for old ChainComplex.
 
-public typealias  ChainComplex<A: FreeModuleBasis, R: Ring> = ChainComplexN<_1, A, R>
-public typealias ChainComplex2<A: FreeModuleBasis, R: Ring> = ChainComplexN<_2, A, R>
+public typealias  ChainComplex<A: FreeModuleGenerator, R: Ring> = ChainComplexN<_1, A, R>
+public typealias ChainComplex2<A: FreeModuleGenerator, R: Ring> = ChainComplexN<_2, A, R>
 
-public struct ChainComplexN<n: StaticSizeType, A: FreeModuleBasis, R: Ring>: CustomStringConvertible {
+public struct ChainComplexN<n: StaticSizeType, A: FreeModuleGenerator, R: Ring>: CustomStringConvertible {
     public typealias Base = ModuleGridN<n, A, R>
     public typealias Differential = ChainMapN<n, A, A, R>
     public typealias Object = ModuleObject<A, R>
@@ -184,11 +184,5 @@ extension ChainComplexN where n == _2 {
     
     public func printTable() {
         base.printTable()
-    }
-}
-
-extension ChainComplexN where R == 𝐙 {
-    public var order2torsionPart: ChainComplexN<n, A, 𝐙₂> {
-        return ChainComplexN<n, A, 𝐙₂>(base: base.order2torsionPart, differential: d.tensor2)
     }
 }

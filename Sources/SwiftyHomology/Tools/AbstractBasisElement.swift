@@ -8,7 +8,7 @@
 import Foundation
 import SwiftyMath
 
-public struct AbstractBasisElement: FreeModuleBasis {
+public struct AbstractBasisElement: FreeModuleGenerator {
     public let index: Int
     public let label: String
     

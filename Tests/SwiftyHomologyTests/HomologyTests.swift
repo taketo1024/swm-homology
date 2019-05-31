@@ -35,8 +35,8 @@ class HomologyTests: XCTestCase {
         let base = ModuleGrid1<A, R>(generators: Dictionary(pairs: (0 ... n).map{ i in
             (i, A.generateBasis(1))
         }))
-        let d = ChainMap(degree: -1) { (i) -> FreeModuleHom<A, A, R> in
-            FreeModuleHom(from: base[i]!.rootBasis, to: base[i - 1]!.rootBasis, matrix: Matrix1(0).asDMatrix())
+        let d = ChainMap(degree: -1) { i in
+            ModuleEnd<FreeModule<A, R>>.linearlyExtend{ _ in .zero }
         }
         let C = ChainComplex(base: base, differential: d)
         let H = C.homology()
@@ -52,8 +52,8 @@ class HomologyTests: XCTestCase {
         let base = ModuleGrid1<A, R>(generators: Dictionary(pairs: (0 ... n).map{ i in
             (i, A.generateBasis(1))
         }))
-        let d = ChainMap(degree: -1) { (i) -> FreeModuleHom<A, A, R> in
-            FreeModuleHom(from: base[i]!.rootBasis, to: base[i - 1]!.rootBasis, matrix: Matrix1(i % 2 == 0 ? 0 : 1).asDMatrix())
+        let d = ChainMap(degree: -1) { i in
+            ModuleEnd<FreeModule<A, R>>.linearlyExtend{ _ in (i % 2 == 0) ? .zero : base[i - 1]!.generators[0] }
         }
         let C = ChainComplex(base: base, differential: d)
         let H = C.homology()
@@ -63,29 +63,21 @@ class HomologyTests: XCTestCase {
         XCTAssertEqual(H[2]!.structure, [:])
         XCTAssertEqual(H[3]!.structure, [:])
     }
-    
+
     func testHomology3() {
         let n = 3
         let base = ModuleGrid1<A, R>(generators: Dictionary(pairs: (0 ... n).map{ i in
             (i, A.generateBasis(1))
         }))
-        let d = ChainMap(degree: -1) { (i) -> FreeModuleHom<A, A, R> in
-            FreeModuleHom(from: base[i]!.rootBasis, to: base[i - 1]!.rootBasis, matrix: Matrix1(i % 2 == 0 ? 0 : 2).asDMatrix())
+        let d = ChainMap(degree: -1) { i in
+            ModuleEnd<FreeModule<A, R>>.linearlyExtend{ _ in (i % 2 == 0) ? .zero : 2 * base[i - 1]!.generators[0] }
         }
         let C = ChainComplex(base: base, differential: d)
         let H = C.homology()
-        
+
         XCTAssertEqual(H[0]!.structure, [2: 1])
         XCTAssertEqual(H[1]!.structure, [:])
         XCTAssertEqual(H[2]!.structure, [2: 1])
         XCTAssertEqual(H[3]!.structure, [:])
     }
-    
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
-    }
-
 }
