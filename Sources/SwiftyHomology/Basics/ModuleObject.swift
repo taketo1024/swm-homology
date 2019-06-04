@@ -127,3 +127,25 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
         }
     }
 }
+
+extension ModuleObject {
+    public var dual: ModuleObject<Dual<BaseModule>> {
+        assert(isFree)
+        
+        typealias DualObject = ModuleObject<Dual<BaseModule>>
+        let summands = self.generators.enumerated().map { (i, _) in
+            Dual<BaseModule> { z in
+                .wrap(self.factorize(z)[i])
+            }
+        }.map{ DualObject.Summand($0) }
+        
+        let factr = { (f: Dual<BaseModule>) -> DVector<R> in
+            let comps = self.generators.enumerated().compactMap{ (i, z) -> MatrixComponent<R>? in
+                let a: R = f.applied(to: z).value
+                return (a != .zero) ? (i, 0, a) : nil
+            }
+            return DVector(size: self.rank, components: comps)
+        }
+        return ModuleObject<Dual<BaseModule>>(summands, factr)
+    }
+}

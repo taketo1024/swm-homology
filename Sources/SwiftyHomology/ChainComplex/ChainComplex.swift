@@ -78,28 +78,6 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module>: CustomS
     }
 }
 
-//extension ChainComplex where R: EuclideanRing {
-//    // MEMO works only when each generator is a single basis-element.
-//
-//    public func dual(name: String? = nil) -> ChainComplex<n, Dual<A>, R> {
-//        typealias D = ChainComplex<n, Dual<A>, R>
-//
-//        let dName = name ?? "\(base.name)^*"
-//        let dGens = Dictionary(pairs:
-//            indices.map { I -> (IntList, [Dual<A>]) in
-//                guard let o = self[I], o.isFree, o.generators.allSatisfy({ $0.isSingle }) else {
-//                    fatalError("unavailable")
-//                }
-//                return (I, o.generators.map{ $0.unwrap().dual })
-//            }
-//        )
-//        let dBase = D.Base(name: dName, generators: dGens)
-//        let dDiff = d.dual(from: self, to: self)
-//
-//        return D(base: dBase, differential: dDiff)
-//    }
-//}
-
 extension ChainComplex where GridDim == _1 {
     // chain complex (degree: -1)
     public init(descendingSequence sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) {
@@ -131,5 +109,11 @@ extension ChainComplex where GridDim == _2 {
     
     public func describe(_ i: Int, _ j: Int) {
         describe(IntList(i, j))
+    }
+}
+
+extension ChainComplex {
+    public var dual: ChainComplex<GridDim, Dual<BaseModule>> {
+        return ChainComplex<GridDim, Dual<BaseModule>>(grid: grid.dual, differential: differential.dual)
     }
 }

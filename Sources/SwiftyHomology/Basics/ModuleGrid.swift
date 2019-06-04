@@ -70,3 +70,9 @@ extension ModuleGrid where GridDim == _2 {
         describe(IntList(i, j))
     }
 }
+
+extension ModuleGrid {
+    public var dual: ModuleGrid<GridDim, Dual<BaseModule>> {
+        return ModuleGrid<GridDim, Dual<BaseModule>>{ I in self[I].dual }
+    }
+}

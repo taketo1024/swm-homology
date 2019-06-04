@@ -102,4 +102,26 @@ class HomologyTests: XCTestCase {
         XCTAssertEqual(H[2].dictionaryDescription, [2:1])
         XCTAssertEqual(H[3].dictionaryDescription, [:])
     }
+    
+    func testCohomology() {
+        let seq = (0 ... 3).map { (i: Int) -> ModuleObject<M> in
+            let a = A(i)
+            return ModuleObject(basis: [M.wrap(a)], factorizer: { z in DVector([z[a]]) })
+        }
+        let C = ChainComplex1(
+            descendingSequence: { i in
+                seq.indices.contains(i) ? seq[i] : .zeroModule
+            },
+            differential: { i in
+                ModuleEnd<M>.linearlyExtend{ _ in (i % 2 == 1 && seq.indices.contains(i - 1)) ? 2 * seq[i - 1].generators[0] : .zero }
+            }
+        )
+        let H = Homology(C.dual)
+        
+        XCTAssertEqual(H[0].dictionaryDescription, [:])
+        XCTAssertEqual(H[1].dictionaryDescription, [2:1])
+        XCTAssertEqual(H[2].dictionaryDescription, [:])
+        XCTAssertEqual(H[3].dictionaryDescription, [2:1])
+    }
+
 }

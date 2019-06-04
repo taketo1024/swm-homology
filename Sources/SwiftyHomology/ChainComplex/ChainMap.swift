@@ -76,38 +76,6 @@ public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2
     }
 }
 
-extension ChainMap where R: EuclideanRing {
-//    public func dual(from: ChainComplex<n, A, R>, to: ChainComplex<n, B, R>) -> ChainMap<n, Dual<B>, Dual<A>, R> {
-//        typealias F = ChainMap<n, Dual<B>, Dual<A>, R>
-//        return F(mDegree: -mDegree) { I1 in
-//            ModuleHom.linearlyExtend{ (b: Dual<B>) in
-//                let I0 = I1 - self.mDegree
-//                guard let s0 = from[I0],
-//                    let s1  =  to[I1],
-//                    let matrix = self.matrix(from: from, to: to, at: I0) else {
-//                        return .zero
-//                }
-//
-//                guard s0.isFree, s0.generators.allSatisfy({ $0.isSingle }),
-//                    s1.isFree, s1.generators.allSatisfy({ $0.isSingle }) else {
-//                        fatalError("inavailable")
-//                }
-//
-//                // MEMO: the matrix of the dual-map w.r.t the dual-basis is the transpose of the original.
-//
-//                guard let i = s1.generators.firstIndex(where: { $0.unwrap() == b.base }) else {
-//                    fatalError()
-//                }
-//
-//                return matrix.nonZeroComponents(ofRow: i).sum { (c: MatrixComponent<R>) in
-//                    let (j, r) = (c.col, c.value)
-//                    return r * s0.generator(j).convertGenerators{ $0.dual }
-//                }
-//            }
-//        }
-//    }
-}
-
 extension ChainMap where GridDim == _1 {
     public init(degree: Int, maps: @escaping (Int) -> Hom) {
         self.init(multiDegree: IntList(degree)) { I in maps(I[0]) }
@@ -125,5 +93,16 @@ extension ChainMap where GridDim == _1 {
 extension ChainMap where GridDim == _2 {
     public subscript(_ i: Int, _ j: Int) -> Hom {
         return self[IntList(i, j)]
+    }
+}
+
+extension ChainMap {
+    public var dual: ChainMap<GridDim, Dual<BaseModule2>, Dual<BaseModule1>> {
+        return ChainMap<GridDim, Dual<BaseModule2>, Dual<BaseModule1>>(multiDegree: -self.multiDegree) { I in
+            ModuleHom<Dual<BaseModule2>, Dual<BaseModule1>> { g in
+                let f = self[I - self.multiDegree]
+                return g ∘ f
+            }
+        }
     }
 }
