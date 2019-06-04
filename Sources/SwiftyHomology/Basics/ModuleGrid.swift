@@ -15,12 +15,10 @@ public struct ModuleGrid<GridDim: StaticSizeType, BaseModule: Module> {
     public typealias R = BaseModule.CoeffRing
     public typealias Vertex = ModuleObject<BaseModule>
     
-    public let name: String
     private let grid: (IntList) -> Vertex
     private let gridCache: Cache<[IntList : Vertex]> = Cache([:])
     
-    public init(name: String? = nil, grid: @escaping (IntList) -> Vertex) {
-        self.name = name ?? ""
+    public init(grid: @escaping (IntList) -> Vertex) {
         self.grid = grid
     }
     

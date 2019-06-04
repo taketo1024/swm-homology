@@ -16,9 +16,8 @@ public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseMo
     public let chainComplex: ChainComplex<GridDim, BaseModule>
     public let grid: ModuleGrid<GridDim, BaseModule>
     
-    public init(name aName: String? = nil, _ chainComplex: ChainComplex<GridDim, BaseModule>) {
-        let name = aName ?? "H(\(chainComplex.name))"
-        let grid = ModuleGrid<GridDim, BaseModule>(name: name) { I in
+    public init(_ chainComplex: ChainComplex<GridDim, BaseModule>) {
+        let grid = ModuleGrid<GridDim, BaseModule> { I in
             let C = chainComplex
             let generators = C[I].generators
             
@@ -52,10 +51,6 @@ public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseMo
     
     public var gridDim: Int {
         return GridDim.intValue
-    }
-    
-    public var name: String {
-        return grid.name
     }
     
     public func describe(_ I: IntList) {

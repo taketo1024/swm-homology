@@ -34,10 +34,6 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module>: CustomS
         return GridDim.intValue
     }
     
-    public var name: String {
-        return grid.name
-    }
-    
     internal func isFreeToFree(_ I: IntList) -> Bool {
         return grid[I].isFree && grid[I + differential.multiDegree].isFree
     }
