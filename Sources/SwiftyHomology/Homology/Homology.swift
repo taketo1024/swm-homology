@@ -8,215 +8,150 @@
 import Foundation
 import SwiftyMath
 
-extension ChainComplexN where R: EuclideanRing {
-    internal func isFreeToFree(_ I: IntList) -> Bool {
-        if let from = base[I], from.isFree,
-            let to = base[I + dDegree], to.isFree {
-            return true
-        } else {
-            return false
-        }
-    }
+public typealias Homology1<M: Module> = Homology<_1, M> where M.CoeffRing: EuclideanRing
+public typealias Homology2<M: Module> = Homology<_2, M> where M.CoeffRing: EuclideanRing
+
+public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseModule.CoeffRing: EuclideanRing {
+    public typealias R = BaseModule.CoeffRing
+    public let chainComplex: ChainComplex<GridDim, BaseModule>
+    public let grid: ModuleGrid<GridDim, BaseModule>
     
-    internal func dMatrix(_ I: IntList) -> DMatrix<R>? {
-        if let c = dMatrices[I], let A = c.value {
-            return A // cached.
+    public init(name aName: String? = nil, _ chainComplex: ChainComplex<GridDim, BaseModule>) {
+        let name = aName ?? "H(\(chainComplex.name))"
+        let grid = ModuleGrid<GridDim, BaseModule>(name: name) { I in
+            let C = chainComplex
+            let generators = C[I].generators
+            
+            let Z = C.dKernel(I)
+            let T = C.dKernelTransition(I)
+            let B = C.dImage(I - C.differential.multiDegree)
+            
+            let (Q, d, S) = Homology.calculateQuotient(Z, B, T)
+            
+            let hGenerators = (0 ..< Q.cols).map { j in
+                Q.nonZeroComponents(ofCol: j).sum{ c in
+                    c.value * generators[c.row]
+                }
+            }
+            
+            let summands = hGenerators.enumerated().map { (i, z) in
+                ModuleObject.Summand(z, d[i])
+            }
+            let factr = { z in S * C[I].factorize(z) }
+            
+            return ModuleObject(summands, factr)
         }
         
-        let A = d.matrix(from: self, to: self, at: I)
-        dMatrices[I]?.value = A
-        return A
+        self.chainComplex = chainComplex
+        self.grid = grid
     }
     
-    internal func dKernel(_ I: IntList) -> DMatrix<R>? {
-        guard isFreeToFree(I), let A = dMatrix(I) else {
-            return nil // indeterminable.
-        }
+    public subscript(I: IntList) -> ModuleObject<BaseModule> {
+        return grid[I]
+    }
+    
+    public var gridDim: Int {
+        return GridDim.intValue
+    }
+    
+    public var name: String {
+        return grid.name
+    }
+    
+    public func describe(_ I: IntList) {
+        grid.describe(I)
+    }
+    
+    public var description: String {
+        return grid.description
+    }
+    
+    /*
+     *       R^n ==== R^n
+     *        ^        ^|
+     *       B|       A||T
+     *        |   TB   |v
+     *  0 -> R^l >---> R^k --->> Q -> 0
+     *        ^        ^|
+     *        |       P||
+     *        |    D   |v
+     *  0 -> R^l >---> R^k --->> Q -> 0
+     *
+     */
+    internal static func calculateQuotient(_ A: DMatrix<R>, _ B: DMatrix<R>, _ T: DMatrix<R>) -> (DMatrix<R>, [R], DMatrix<R>) {
+        assert(A.rows == B.rows) // n
+        assert(A.cols == T.rows) // k
+        assert(A.rows >= A.cols) // n >= k
+        assert(A.cols >= B.cols) // k >= l
         
-        let E = A.elimination(form: .Diagonal)
+        let (k, l) = (A.cols, B.cols)
+        
+        // if k = 3, l = 2, D = [1, 2], then Q = 0 + Z/2 + Z.
+        
+        let elim = (T * B).elimination(form: .Smith)
+        let D = elim.diagonal + [.zero].repeated(k - l)
+        let s = D.count{ !$0.isInvertible }
+        
+        let A2 = A * elim.leftInverse.submatrix(colRange: (k - s) ..< k)
+        let diag = Array(D[k - s ..< k])
+        let T2 = (elim.left * T).submatrix(rowRange: (k - s) ..< k)
+        
+        assert(T2 * A2 == DMatrix<R>.identity(size: s))
+        return (A2, diag, T2)
+    }
+}
+
+extension Homology where GridDim == _1 {
+    public subscript(i: Int) -> ModuleObject<BaseModule> {
+        return grid[i]
+    }
+    
+    public func describe(_ i: Int) {
+        describe(IntList(i))
+    }
+}
+
+extension Homology where GridDim == _2 {
+    public subscript(i: Int, j: Int) -> ModuleObject<BaseModule> {
+        return grid[i, j]
+    }
+    
+    public func describe(_ i: Int, _ j: Int) {
+        describe(IntList(i, j))
+    }
+}
+
+
+extension ChainComplex where R: EuclideanRing {
+    internal func dKernel(_ I: IntList) -> DMatrix<R> {
+        assert(isFreeToFree(I))
+        
+        let E = differntialMatrix(I).elimination(form: .Diagonal)
         return E.kernelMatrix
     }
     
-    internal func dKernelTransition(_ I: IntList) -> DMatrix<R>? {
-        guard isFreeToFree(I), let A = dMatrix(I) else {
-            return nil // indeterminable.
-        }
+    internal func dKernelTransition(_ I: IntList) -> DMatrix<R> {
+        assert(isFreeToFree(I))
         
-        let E = A.elimination(form: .Diagonal)
+        let E = differntialMatrix(I).elimination(form: .Diagonal)
         return E.kernelTransitionMatrix
     }
     
-    internal func dImage(_ I: IntList) -> DMatrix<R>? {
-        guard isFreeToFree(I), let A = dMatrix(I) else {
-            return nil // indeterminable.
-        }
+    internal func dImage(_ I: IntList) -> DMatrix<R> {
+        assert(isFreeToFree(I))
         
-        let E = A.elimination(form: .Diagonal)
+        let E = differntialMatrix(I).elimination(form: .Diagonal)
         return E.imageMatrix
     }
     
     internal func dImageTransition(_ I: IntList) -> DMatrix<R>? {
-        guard isFreeToFree(I), let A = dMatrix(I) else {
-            return nil // indeterminable.
-        }
+        assert(isFreeToFree(I))
         
-        let E = A.elimination(form: .Diagonal)
+        let E = differntialMatrix(I).elimination(form: .Diagonal)
         return E.imageTransitionMatrix
     }
     
-    public func cycle(_ I: IntList) -> ModuleObject<A, R>? {
-        if let basis = self[I]?.generators, let Z = dKernel(I) {
-            return ModuleObject(basis: basis * Z)
-        } else {
-            return nil
-        }
-    }
-    
-    public func boundary(_ I: IntList) -> ModuleObject<A, R>? {
-        if let basis = self[I]?.generators, let B = dImage(I - dDegree) {
-            return ModuleObject(basis: basis * B)
-        } else {
-            return nil
-        }
-    }
-    
-    public func homology(_ I: IntList) -> ModuleObject<A, R>? {
-        // case: indeterminable
-        if self[I] == nil {
-            return nil
-        }
-        
-        // case: obviously isom
-        if  let Ain = dMatrix(I - dDegree), Ain.isZero,
-            let Aout = dMatrix(I), Aout.isZero {
-            return self[I]
-        }
-        
-        // case: obviously zero
-        if let Z = dKernel(I), Z.isZero {
-            return .zeroModule
-        }
-        
-        // case: free
-        if isFreeToFree(I) && isFreeToFree(I - dDegree) {
-            let s = self[I]!
-            let rootBasis = s.rootBasis
-            let generators = s.generators
-            
-            let Z = dKernel(I)!
-            let T = dKernelTransition(I)!
-            let B = dImage(I - dDegree)!
-            
-            let res: ModuleObject<A, R>
-            
-            if s.transition.isIdentity {
-                res = ModuleObject(
-                    rootBasis: rootBasis,
-                    generatingMatrix: Z,
-                    transitionMatrix: T,
-                    relationMatrix: T * B
-                )
-            } else {
-                let A0 = DMatrix(rows: rootBasis.count, cols: generators.count) { (i, j) in generators[j][rootBasis[i]] }
-                let T0 = A0.elimination(form: .RowHermite).left.submatrix(rowRange: 0 ..< generators.count)
-                
-                res = ModuleObject(
-                    rootBasis: rootBasis,
-                    generatingMatrix: A0 * Z,
-                    transitionMatrix: T * T0,
-                    relationMatrix: T * B
-                )
-            }
-            return !res.isZero ? res : .zeroModule
-        }
-        
-        if dSplits(I) && dSplits(I - dDegree) {
-            // TODO
-            print(I, ": split")
-            describeMap(I)
-            return nil
-        }
-        
-        return nil
-    }
-    
-    internal func dSplits(_ I: IntList) -> Bool {
-        guard let from = self[I],
-            let to = self[I + dDegree],
-            let A = dMatrix(I) else {
-                return false
-        }
-        
-        // MEMO summands are assumed to be ordered as:
-        // (R/d_0 ⊕ ... ⊕ R/d_k) ⊕ R^r
-        
-        func t(_ s: ModuleObject<A, R>) -> [(R, Int)] {
-            return s.summands.reduce([]) { (res, s) in
-                if let l = res.last, l.0 == s.divisor {
-                    return res[0 ..< res.count - 1] + [(l.0, l.1 + 1)]
-                } else {
-                    return res + [(s.divisor, 1)]
-                }
-            }
-        }
-        
-        let t0 = t(from)
-        let t1 = t(to)
-        
-        let blocks = A.blocks(rowSizes: t1.map{ $0.1 }, colSizes: t0.map{ $0.1 })
-        return blocks.enumerated().allSatisfy { (i, Bs) in
-            Bs.enumerated().allSatisfy { (j, B) in
-                return (t0[j].0 == t1[i].0) || B.isZero
-            }
-        }
-    }
-    
-    public func cycle() -> ModuleGridN<n, A, R> {
-        let name = "Z(\(base.name))"
-        let data = Dictionary(pairs: base.indices.map{ I in (I, cycle(I)) })
-        return ModuleGridN(name: name, data: data)
-    }
-    
-    public func boundary() -> ModuleGridN<n, A, R> {
-        let name = "B(\(base.name))"
-        let data = Dictionary(pairs: base.indices.map{ I in (I, boundary(I)) })
-        return ModuleGridN(name: name, data: data)
-    }
-    
-    public func homology() -> ModuleGridN<n, A, R> {
-        let name = "H(\(base.name))"
-        let data = Dictionary(pairs: base.indices.map{ I in (I, homology(I)) })
-        return ModuleGridN(name: name, data: data)
-    }
-    
-    public var isExact: Bool {
-        return homology().isZero
-    }
-    
-    public func describeMap(_ I: IntList) {
-        print("\(I) \(self[I]?.description ?? "?") -> \(self[I + dDegree]?.description ?? "?")")
-        if let A = dMatrix(I) {
-            print(A.detailDescription)
-        }
-    }
-}
-
-extension ChainComplexN where R: EuclideanRing, n == _1 {
-    public func homology(_ i: Int) -> ModuleObject<A, R>? {
-        return homology(IntList(i))
-    }
-    
-    public func describeMap(_ i: Int) {
-        describeMap(IntList(i))
-    }
-}
-
-extension ChainComplexN where R: EuclideanRing, n == _2 {
-    public func homology(_ i: Int, _ j: Int) -> ModuleObject<A, R>? {
-        return homology(IntList(i, j))
-    }
-    
-    public func describeMap(_ i: Int, _ j: Int) {
-        describeMap(IntList(i, j))
+    public var homology: Homology<GridDim, BaseModule> {
+        return Homology(self)
     }
 }

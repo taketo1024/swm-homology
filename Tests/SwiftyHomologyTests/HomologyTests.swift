@@ -9,16 +9,26 @@ import XCTest
 import SwiftyMath
 @testable import SwiftyHomology
 
-extension Matrix {
-    func asDMatrix() -> DMatrix<R> {
-        return DMatrix(rows: rows, cols: cols, grid: grid)
+struct IntGenerator: FreeModuleGenerator {
+    let index: Int
+    init(_ index: Int) {
+        self.index = index
+    }
+    
+    static func < (lhs: IntGenerator, rhs: IntGenerator) -> Bool {
+        return lhs.index < rhs.index
+    }
+    
+    var description: String {
+        return "e\(Format.sub(index))"
     }
 }
 
 class HomologyTests: XCTestCase {
     
     typealias R = 𝐙
-    typealias A = AbstractBasisElement
+    typealias A = IntGenerator
+    typealias M = FreeModule<A, R>
 
     override func setUp() {
         super.setUp()
@@ -29,55 +39,67 @@ class HomologyTests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         super.tearDown()
     }
-
+    
     func testHomology() {
-        let n = 3
-        let base = ModuleGrid1<A, R>(generators: Dictionary(pairs: (0 ... n).map{ i in
-            (i, A.generateBasis(1))
-        }))
-        let d = ChainMap(degree: -1) { i in
-            ModuleEnd<FreeModule<A, R>>.linearlyExtend{ _ in .zero }
+        let seq = (0 ... 3).map { (i: Int) -> ModuleObject<M> in
+            let a = A(i)
+            return ModuleObject(basis: [M.wrap(a)], factorizer: { z in DVector([z[a]]) })
         }
-        let C = ChainComplex(base: base, differential: d)
-        let H = C.homology()
-        
-        XCTAssertEqual(H[0]!.structure, [0: 1])
-        XCTAssertEqual(H[1]!.structure, [0: 1])
-        XCTAssertEqual(H[2]!.structure, [0: 1])
-        XCTAssertEqual(H[3]!.structure, [0: 1])
+        let C = ChainComplex1(
+            descendingSequence: { i in
+                seq.indices.contains(i) ? seq[i] : .zeroModule
+            },
+            differential: { i in
+                ModuleEnd<M>.linearlyExtend{ _ in .zero }
+            }
+        )
+        let H = Homology(C)
+
+        XCTAssertEqual(H[0].dictionaryDescription, [0: 1])
+        XCTAssertEqual(H[1].dictionaryDescription, [0: 1])
+        XCTAssertEqual(H[2].dictionaryDescription, [0: 1])
+        XCTAssertEqual(H[3].dictionaryDescription, [0: 1])
     }
 
     func testHomology2() {
-        let n = 3
-        let base = ModuleGrid1<A, R>(generators: Dictionary(pairs: (0 ... n).map{ i in
-            (i, A.generateBasis(1))
-        }))
-        let d = ChainMap(degree: -1) { i in
-            ModuleEnd<FreeModule<A, R>>.linearlyExtend{ _ in (i % 2 == 0) ? .zero : base[i - 1]!.generators[0] }
+        let seq = (0 ... 3).map { (i: Int) -> ModuleObject<M> in
+            let a = A(i)
+            return ModuleObject(basis: [M.wrap(a)], factorizer: { z in DVector([z[a]]) })
         }
-        let C = ChainComplex(base: base, differential: d)
-        let H = C.homology()
-        
-        XCTAssertEqual(H[0]!.structure, [:])
-        XCTAssertEqual(H[1]!.structure, [:])
-        XCTAssertEqual(H[2]!.structure, [:])
-        XCTAssertEqual(H[3]!.structure, [:])
+        let C = ChainComplex1(
+            descendingSequence: { i in
+                seq.indices.contains(i) ? seq[i] : .zeroModule
+            },
+            differential: { i in
+                ModuleEnd<M>.linearlyExtend{ _ in (i % 2 == 1 && seq.indices.contains(i - 1)) ? seq[i - 1].generators[0] : .zero }
+            }
+        )
+        let H = Homology(C)
+
+        XCTAssertEqual(H[0].dictionaryDescription, [:])
+        XCTAssertEqual(H[1].dictionaryDescription, [:])
+        XCTAssertEqual(H[2].dictionaryDescription, [:])
+        XCTAssertEqual(H[3].dictionaryDescription, [:])
     }
 
     func testHomology3() {
-        let n = 3
-        let base = ModuleGrid1<A, R>(generators: Dictionary(pairs: (0 ... n).map{ i in
-            (i, A.generateBasis(1))
-        }))
-        let d = ChainMap(degree: -1) { i in
-            ModuleEnd<FreeModule<A, R>>.linearlyExtend{ _ in (i % 2 == 0) ? .zero : 2 * base[i - 1]!.generators[0] }
+        let seq = (0 ... 3).map { (i: Int) -> ModuleObject<M> in
+            let a = A(i)
+            return ModuleObject(basis: [M.wrap(a)], factorizer: { z in DVector([z[a]]) })
         }
-        let C = ChainComplex(base: base, differential: d)
-        let H = C.homology()
+        let C = ChainComplex1(
+            descendingSequence: { i in
+                seq.indices.contains(i) ? seq[i] : .zeroModule
+            },
+            differential: { i in
+                ModuleEnd<M>.linearlyExtend{ _ in (i % 2 == 1 && seq.indices.contains(i - 1)) ? 2 * seq[i - 1].generators[0] : .zero }
+            }
+        )
+        let H = Homology(C)
 
-        XCTAssertEqual(H[0]!.structure, [2: 1])
-        XCTAssertEqual(H[1]!.structure, [:])
-        XCTAssertEqual(H[2]!.structure, [2: 1])
-        XCTAssertEqual(H[3]!.structure, [:])
+        XCTAssertEqual(H[0].dictionaryDescription, [2:1])
+        XCTAssertEqual(H[1].dictionaryDescription, [:])
+        XCTAssertEqual(H[2].dictionaryDescription, [2:1])
+        XCTAssertEqual(H[3].dictionaryDescription, [:])
     }
 }

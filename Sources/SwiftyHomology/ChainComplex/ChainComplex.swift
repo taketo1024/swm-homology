@@ -10,154 +10,117 @@ import SwiftyMath
 
 // TODO substitute for old ChainComplex.
 
-public typealias  ChainComplex<A: FreeModuleGenerator, R: Ring> = ChainComplexN<_1, A, R>
-public typealias ChainComplex2<A: FreeModuleGenerator, R: Ring> = ChainComplexN<_2, A, R>
+public typealias ChainComplex1<M: Module> = ChainComplex<_1, M>
+public typealias ChainComplex2<M: Module> = ChainComplex<_2, M>
 
-public struct ChainComplexN<n: StaticSizeType, A: FreeModuleGenerator, R: Ring>: CustomStringConvertible {
-    public typealias Base = ModuleGridN<n, A, R>
-    public typealias Differential = ChainMapN<n, A, A, R>
-    public typealias Object = ModuleObject<A, R>
+public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module>: CustomStringConvertible {
+    public typealias R = BaseModule.CoeffRing
+    public typealias Differential = ChainMap<GridDim, BaseModule, BaseModule>
     
-    public var base: Base
-    public let d: Differential
-    
-    internal let dMatrices: [IntList : Cache<DMatrix<R>>]
-    internal let _freePart = Cache<ChainComplexN<n, A, R>>()
-    internal let  _torPart = Cache<ChainComplexN<n, A, R>>()
+    public var grid: ModuleGrid<GridDim, BaseModule>
+    public let differential: Differential
+    private let matrixCache: Cache<[IntList : DMatrix<R>]> = Cache([:])
 
-    public init(base: ModuleGridN<n, A, R>, differential d: Differential) {
-        self.base = base
-        self.d = d
-        
-        let degs = base.indices.flatMap{ I in [I, I - d.mDegree] }.unique()
-        self.dMatrices = Dictionary(pairs: degs.map{ I in (I, .empty) })
+    public init(grid: ModuleGrid<GridDim, BaseModule>, differential: Differential) {
+        self.grid = grid
+        self.differential = differential
     }
     
-    public subscript(I: IntList) -> Object? {
-        get {
-            return base[I]
-        } set {
-            base[I] = newValue
-        }
+    public subscript(I: IntList) -> ModuleObject<BaseModule> {
+        return grid[I]
     }
     
-    internal var dDegree: IntList {
-        return d.mDegree
-    }
-    
-    public var indices: [IntList] {
-        return base.indices
+    public var gridDim: Int {
+        return GridDim.intValue
     }
     
     public var name: String {
-        return base.name
+        return grid.name
     }
     
-    public func named(_ name: String) -> ChainComplexN<n, A, R> {
-        return ChainComplexN(base: base.named(name), differential: d)
+    internal func isFreeToFree(_ I: IntList) -> Bool {
+        return grid[I].isFree && grid[I + differential.multiDegree].isFree
     }
     
-    public func shifted(_ I: IntList) -> ChainComplexN<n, A, R> {
-        return ChainComplexN(base: base.shifted(I), differential: d.shifted(I))
-    }
-    
-    public var freePart: ChainComplexN<n, A, R> {
-        return _freePart.useCacheOrSet {
-            ChainComplexN<n, A, R>(base: base.freePart, differential: d)
+    internal func differntialMatrix(_ I: IntList) -> DMatrix<R> {
+        if let A = matrixCache.value![I] {
+            return A // cached.
         }
+        
+        let A = differential.asMatrix(at: I, from: self, to: self)
+        matrixCache.value![I] = A
+        return A
     }
     
-    public var torsionPart: ChainComplexN<n, A, R> {
-        return _torPart.useCacheOrSet {
-            ChainComplexN(base: base.torsionPart, differential: d)
-        }
-    }
-    
-    public func assertChainComplex(debug: Bool = false) {
+    public func assertChainComplex(at I0: IntList, debug: Bool = false) {
         func print(_ msg: @autoclosure () -> String) {
             if debug { Swift.print(msg()) }
         }
         
-        for I0 in indices {
-            let I1 = I0 + dDegree
-            let I2 = I1 + dDegree
+        let deg = differential.multiDegree
+        let (I1, I2) = (I0 + deg, I0 + deg + deg)
+        let (s0, s1, s2) = (self[I0], self[I1], self[I2])
+        
+        print("\(I0): \(s0) -> \(s1) -> \(s2)")
+        
+        for x in s0.generators {
+            let y = differential[I0].applied(to: x)
             
-            guard let s0 = self[I0],
-                  let s1 = self[I1],
-                  let s2 = self[I2] else {
-                    print("\(I0): undeterminable.")
-                    continue
-            }
+            let z = differential[I1].applied(to: y)
+            print("\t\(x) ->\t\(y) ->\t\(z)")
             
-            print("\(I0): \(s0) -> \(s1) -> \(s2)")
-            
-            for x in s0.generators {
-                let y = d[I0].applied(to: x)
-                
-                let z = d[I1].applied(to: y)
-                print("\t\(x) ->\t\(y) ->\t\(z)")
-                
-//                assert(s1.contains(y))
-//                assert(s2.contains(z))
-//                assert(s2.elementIsZero(z))
-            }
+            assert(self[I2].factorize(z).isZero)
         }
-    }
-    
-    public func describeAll() {
-        base.describeAll()
     }
     
     public func describe(_ I: IntList) {
-        base.describe(I)
+        grid.describe(I)
     }
     
     public var description: String {
-        return base.description
+        return grid.description
     }
 }
 
-extension ChainComplexN where R: EuclideanRing {
-    // MEMO works only when each generator is a single basis-element.
-    
-    public func dual(name: String? = nil) -> ChainComplexN<n, Dual<A>, R> {
-        typealias D = ChainComplexN<n, Dual<A>, R>
-        
-        let dName = name ?? "\(base.name)^*"
-        let dGens = Dictionary(pairs:
-            indices.map { I -> (IntList, [Dual<A>]) in
-                guard let o = self[I], o.isFree, o.generators.allSatisfy({ $0.isSingle }) else {
-                    fatalError("unavailable")
-                }
-                return (I, o.generators.map{ $0.unwrap().dual })
-            }
-        )
-        let dBase = D.Base(name: dName, generators: dGens)
-        let dDiff = d.dual(from: self, to: self)
-        
-        return D(base: dBase, differential: dDiff)
-    }
-}
+//extension ChainComplex where R: EuclideanRing {
+//    // MEMO works only when each generator is a single basis-element.
+//
+//    public func dual(name: String? = nil) -> ChainComplex<n, Dual<A>, R> {
+//        typealias D = ChainComplex<n, Dual<A>, R>
+//
+//        let dName = name ?? "\(base.name)^*"
+//        let dGens = Dictionary(pairs:
+//            indices.map { I -> (IntList, [Dual<A>]) in
+//                guard let o = self[I], o.isFree, o.generators.allSatisfy({ $0.isSingle }) else {
+//                    fatalError("unavailable")
+//                }
+//                return (I, o.generators.map{ $0.unwrap().dual })
+//            }
+//        )
+//        let dBase = D.Base(name: dName, generators: dGens)
+//        let dDiff = d.dual(from: self, to: self)
+//
+//        return D(base: dBase, differential: dDiff)
+//    }
+//}
 
-extension ChainComplexN where n == _1 {
-    public subscript(i: Int) -> Object? {
-        get {
-            return base[i]
-        } set {
-            base[i] = newValue
-        }
+extension ChainComplex where GridDim == _1 {
+    // chain complex (degree: -1)
+    public init(descendingSequence sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) {
+        self.init(sequence: sequence, ascending: false, differential: d)
     }
     
-    public var bottomDegree: Int {
-        return base.bottomDegree
+    // cochain complex (degree: +1)
+    public init(ascendingSequence sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) {
+        self.init(sequence: sequence, ascending: true, differential: d)
     }
     
-    public var topDegree: Int {
-        return base.topDegree
+    private init(sequence: @escaping (Int) -> ModuleObject<BaseModule>, ascending: Bool, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) {
+        self.init(grid: ModuleGrid1(sequence: sequence), differential: Differential(degree: ascending ? 1 : -1, maps: d))
     }
     
-    public func shifted(_ i: Int) -> ChainComplex<A, R> {
-        return shifted(IntList(i))
+    public subscript(i: Int) -> ModuleObject<BaseModule> {
+        return grid[i]
     }
     
     public func describe(_ i: Int) {
@@ -165,24 +128,12 @@ extension ChainComplexN where n == _1 {
     }
 }
 
-extension ChainComplexN where n == _2 {
-    public subscript(i: Int, j: Int) -> Object? {
-        get {
-            return base[i, j]
-        } set {
-            base[i, j] = newValue
-        }
-    }
-    
-    public func shifted(_ i: Int, _ j: Int) -> ChainComplex2<A, R> {
-        return shifted(IntList(i, j))
+extension ChainComplex where GridDim == _2 {
+    public subscript(i: Int, j: Int) -> ModuleObject<BaseModule> {
+        return grid[i, j]
     }
     
     public func describe(_ i: Int, _ j: Int) {
         describe(IntList(i, j))
-    }
-    
-    public func printTable() {
-        base.printTable()
     }
 }
