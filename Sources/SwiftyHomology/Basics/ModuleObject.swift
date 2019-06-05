@@ -76,16 +76,12 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
         return a.summands == b.summands
     }
     
-    public func describe(detail: Bool = false) {
-        if !detail || isZero {
-            print(self.description)
-        } else {
-            print("\(self) {")
-            for (i, x) in generators.enumerated() {
-                print("\t(\(i))\t\(x)")
-            }
-            print("}")
+    public func printDetail() {
+        print("\(self) {")
+        for (i, x) in generators.enumerated() {
+            print("\t(\(i))\t\(x)")
         }
+        print("}")
     }
     
     public var description: String {

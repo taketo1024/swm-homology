@@ -49,12 +49,12 @@ public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseMo
         return grid[I]
     }
     
-    public var gridDim: Int {
-        return GridDim.intValue
+    public subscript(I: Int...) -> ModuleObject<BaseModule> {
+        return self[IntList(I)]
     }
     
-    public func describe(_ I: IntList) {
-        grid.describe(I)
+    public var gridDim: Int {
+        return GridDim.intValue
     }
     
     public var description: String {
@@ -97,22 +97,22 @@ public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseMo
 }
 
 extension Homology where GridDim == _1 {
-    public subscript(i: Int) -> ModuleObject<BaseModule> {
-        return grid[i]
+    public func printSequence(indices: [Int]) {
+        grid.printSequence(indices: indices)
     }
     
-    public func describe(_ i: Int) {
-        describe(IntList(i))
+    public func printSequence(range: ClosedRange<Int>) {
+        grid.printSequence(range: range)
     }
 }
 
 extension Homology where GridDim == _2 {
-    public subscript(i: Int, j: Int) -> ModuleObject<BaseModule> {
-        return grid[i, j]
+    public func printTable(indices1: [Int], indices2: [Int]) {
+        grid.printTable(indices1: indices1, indices2: indices2)
     }
     
-    public func describe(_ i: Int, _ j: Int) {
-        describe(IntList(i, j))
+    public func printTable(range1: ClosedRange<Int>, range2: ClosedRange<Int>) {
+        grid.printTable(range1: range1, range2: range2)
     }
 }
 

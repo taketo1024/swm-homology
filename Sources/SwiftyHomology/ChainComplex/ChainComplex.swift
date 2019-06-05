@@ -30,6 +30,10 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module>: CustomS
         return grid[I]
     }
     
+    public subscript(I: Int...) -> ModuleObject<BaseModule> {
+        return self[IntList(I)]
+    }
+    
     public var gridDim: Int {
         return GridDim.intValue
     }
@@ -69,10 +73,6 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module>: CustomS
         }
     }
     
-    public func describe(_ I: IntList) {
-        grid.describe(I)
-    }
-    
     public var description: String {
         return grid.description
     }
@@ -93,22 +93,22 @@ extension ChainComplex where GridDim == _1 {
         self.init(grid: ModuleGrid1(sequence: sequence), differential: Differential(degree: ascending ? 1 : -1, maps: d))
     }
     
-    public subscript(i: Int) -> ModuleObject<BaseModule> {
-        return grid[i]
+    public func printSequence(indices: [Int]) {
+        grid.printSequence(indices: indices)
     }
     
-    public func describe(_ i: Int) {
-        describe(IntList(i))
+    public func printSequence(range: ClosedRange<Int>) {
+        grid.printSequence(range: range)
     }
 }
 
 extension ChainComplex where GridDim == _2 {
-    public subscript(i: Int, j: Int) -> ModuleObject<BaseModule> {
-        return grid[i, j]
+    public func printTable(indices1: [Int], indices2: [Int]) {
+        grid.printTable(indices1: indices1, indices2: indices2)
     }
     
-    public func describe(_ i: Int, _ j: Int) {
-        describe(IntList(i, j))
+    public func printTable(range1: ClosedRange<Int>, range2: ClosedRange<Int>) {
+        printTable(range1: range1, range2: range2)
     }
 }
 

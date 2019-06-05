@@ -33,13 +33,12 @@ public struct ModuleGrid<GridDim: StaticSizeType, BaseModule: Module> {
         return vertex
     }
     
-    public var gridDim: Int {
-        return GridDim.intValue
+    public subscript(I: Int...) -> Vertex {
+        return self[IntList(I)]
     }
     
-    public func describe(_ I: IntList, detail: Bool = false) {
-        print("\(I) ", terminator: "")
-        self[I].describe(detail: detail)
+    public var gridDim: Int {
+        return GridDim.intValue
     }
     
     public var description: String {
@@ -52,22 +51,25 @@ extension ModuleGrid where GridDim == _1 {
         self.init{ I in sequence(I[0]) }
     }
     
-    public subscript(i: Int) -> Vertex {
-        return self[IntList(i)]
+    public func printSequence(indices: [Int]) {
+        print( Format.table(rows: [""], cols: indices, symbol: "i") { (_, i) in self[i].description } )
     }
     
-    public func describe(_ i: Int) {
-        describe(IntList(i))
+    public func printSequence(range: ClosedRange<Int>) {
+        printSequence(indices: range.toArray())
     }
 }
 
 extension ModuleGrid where GridDim == _2 {
-    public subscript(i: Int, j: Int) -> Vertex {
-        return self[IntList(i, j)]
+    public func printTable(indices1: [Int], indices2: [Int]) {
+        print( Format.table(rows: indices2.reversed(), cols: indices1, symbol: "j\\i") { (j, i) -> String in
+            let s = self[i, j].description
+            return (s != "0") ? s : ""
+        } )
     }
     
-    public func describe(_ i: Int, _ j: Int) {
-        describe(IntList(i, j))
+    public func printTable(range1: ClosedRange<Int>, range2: ClosedRange<Int>) {
+        printTable(indices1: range1.toArray(), indices2: range2.toArray())
     }
 }
 
