@@ -41,6 +41,17 @@ public struct ModuleGrid<GridDim: StaticSizeType, BaseModule: Module> {
         return GridDim.intValue
     }
     
+    public func shifted(_ shift: IntList) -> ModuleGrid<GridDim, BaseModule> {
+        assert(shift.length == gridDim)
+        return ModuleGrid { I in
+            self[I - shift]
+        }
+    }
+    
+    public func shifted(_ shift: Int...) -> ModuleGrid<GridDim, BaseModule> {
+        return shifted(IntList(shift))
+    }
+    
     public var description: String {
         return gridCache.value!.description
     }

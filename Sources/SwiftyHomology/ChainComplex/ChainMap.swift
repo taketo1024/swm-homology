@@ -27,6 +27,17 @@ public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2
         return maps(I)
     }
     
+    public func shifted(_ shift: IntList) -> ChainMap<GridDim, BaseModule1, BaseModule2> {
+        assert(shift.length == GridDim.intValue)
+        return ChainMap(multiDegree: multiDegree) { I in
+            self[I - shift]
+        }
+    }
+    
+    public func shifted(_ shift: Int...) -> ChainMap<GridDim, BaseModule1, BaseModule2> {
+        return shifted(IntList(shift))
+    }
+    
     public func asMatrix(at I: IntList, from: ChainComplex<GridDim, BaseModule1>, to: ChainComplex<GridDim, BaseModule2>) -> DMatrix<R> {
         let (s0, s1) = (from[I], to[I + multiDegree])
         let f = self[I]

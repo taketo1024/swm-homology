@@ -38,6 +38,15 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module>: CustomS
         return GridDim.intValue
     }
     
+    public func shifted(_ shift: IntList) -> ChainComplex<GridDim, BaseModule> {
+        assert(shift.length == gridDim)
+        return ChainComplex(grid: grid.shifted(shift), differential: differential.shifted(shift))
+    }
+    
+    public func shifted(_ shift: Int...) -> ChainComplex<GridDim, BaseModule> {
+        return shifted(IntList(shift))
+    }
+    
     internal func isFreeToFree(_ I: IntList) -> Bool {
         return grid[I].isFree && grid[I + differential.multiDegree].isFree
     }
