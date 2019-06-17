@@ -8,18 +8,15 @@
 import Foundation
 import SwiftyMath
 
-// TODO substitute for old ChainComplex.
-
 public typealias ChainComplex1<M: Module> = ChainComplex<_1, M>
 public typealias ChainComplex2<M: Module> = ChainComplex<_2, M>
 
-public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module>: CustomStringConvertible {
+public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
     public typealias R = BaseModule.CoeffRing
     public typealias Differential = ChainMap<GridDim, BaseModule, BaseModule>
     
     public var grid: ModuleGrid<GridDim, BaseModule>
     public let differential: Differential
-    private let matrixCache: Cache<[IntList : DMatrix<R>]> = Cache([:])
 
     public init(grid: ModuleGrid<GridDim, BaseModule>, differential: Differential) {
         self.grid = grid
@@ -47,18 +44,12 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module>: CustomS
         return shifted(IntList(shift))
     }
     
-    internal func isFreeToFree(_ I: IntList) -> Bool {
+    public func isFreeToFree(_ I: IntList) -> Bool {
         return grid[I].isFree && grid[I + differential.multiDegree].isFree
     }
     
-    internal func differntialMatrix(_ I: IntList) -> DMatrix<R> {
-        if let A = matrixCache.value![I] {
-            return A // cached.
-        }
-        
-        let A = differential.asMatrix(at: I, from: self, to: self)
-        matrixCache.value![I] = A
-        return A
+    public func differntialMatrix(_ I: IntList) -> DMatrix<R> {
+        return differential.asMatrix(at: I, from: self, to: self)
     }
     
     public func assertChainComplex(at I0: IntList, debug: Bool = false) {
@@ -80,10 +71,6 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module>: CustomS
             
             assert(self[I2].factorize(z).isZero)
         }
-    }
-    
-    public var description: String {
-        return grid.description
     }
 }
 
@@ -117,7 +104,7 @@ extension ChainComplex where GridDim == _2 {
     }
     
     public func printTable(range1: ClosedRange<Int>, range2: ClosedRange<Int>) {
-        printTable(range1: range1, range2: range2)
+        grid.printTable(range1: range1, range2: range2)
     }
 }
 

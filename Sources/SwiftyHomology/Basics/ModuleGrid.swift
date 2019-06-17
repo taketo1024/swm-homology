@@ -16,21 +16,14 @@ public struct ModuleGrid<GridDim: StaticSizeType, BaseModule: Module> {
     public typealias Vertex = ModuleObject<BaseModule>
     
     private let grid: (IntList) -> Vertex
-    private let gridCache: Cache<[IntList : Vertex]> = Cache([:])
+    private let gridCache: CacheDictionary<IntList, Vertex> = CacheDictionary.empty
     
     public init(grid: @escaping (IntList) -> Vertex) {
         self.grid = grid
     }
     
     public subscript(I: IntList) -> Vertex {
-        let vertex: Vertex
-        if let cached = gridCache.value![I] {
-            vertex = cached
-        } else {
-            vertex = grid(I)
-            gridCache.value![I] = vertex
-        }
-        return vertex
+        return gridCache.useCacheOrSet(key: I) { self.grid(I) }
     }
     
     public subscript(I: Int...) -> Vertex {
@@ -50,10 +43,6 @@ public struct ModuleGrid<GridDim: StaticSizeType, BaseModule: Module> {
     
     public func shifted(_ shift: Int...) -> ModuleGrid<GridDim, BaseModule> {
         return shifted(IntList(shift))
-    }
-    
-    public var description: String {
-        return gridCache.value!.description
     }
 }
 

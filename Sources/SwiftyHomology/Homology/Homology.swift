@@ -17,22 +17,26 @@ public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseMo
     public let grid: ModuleGrid<GridDim, BaseModule>
     
     public init(_ chainComplex: ChainComplex<GridDim, BaseModule>) {
+        typealias E = MatrixEliminationResult<DynamicSize, DynamicSize, R>
+        
+        let elimCache: CacheDictionary<IntList, E> = CacheDictionary.empty
+        func elim(_ I: IntList) -> E {
+            assert(chainComplex.isFreeToFree(I))
+            return elimCache.useCacheOrSet(key: I) {
+                MatrixEliminator.eliminate(chainComplex.differntialMatrix(I), form: .Diagonal)
+            }
+        }
+        
         let grid = ModuleGrid<GridDim, BaseModule> { I in
             let C = chainComplex
             let generators = C[I].generators
             
-            let Z = C.dKernel(I)
-            let T = C.dKernelTransition(I)
-            let B = C.dImage(I - C.differential.multiDegree)
-            
+            let Z = elim(I).kernelMatrix
+            let T = elim(I).kernelTransitionMatrix
+            let B = elim(I - C.differential.multiDegree).imageMatrix
             let (Q, d, S) = Homology.calculateQuotient(Z, B, T)
             
-            let hGenerators = (0 ..< Q.cols).map { j in
-                Q.nonZeroComponents(ofCol: j).sum{ c in
-                    c.value * generators[c.row]
-                }
-            }
-            
+            let hGenerators = generators * Q
             let summands = hGenerators.enumerated().map { (i, z) in
                 ModuleObject.Summand(z, d[i])
             }
@@ -57,10 +61,6 @@ public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseMo
         return GridDim.intValue
     }
     
-    public var description: String {
-        return grid.description
-    }
-    
     /*
      *       R^n ==== R^n
      *        ^        ^|
@@ -83,7 +83,7 @@ public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseMo
         
         // if k = 3, l = 2, D = [1, 2], then Q = 0 + Z/2 + Z.
         
-        let elim = (T * B).elimination(form: .Smith)
+        let elim = MatrixEliminator.eliminate(T * B, form: .Smith)
         let D = elim.diagonal + [.zero].repeated(k - l)
         let s = D.count{ !$0.isInvertible }
         
@@ -116,36 +116,7 @@ extension Homology where GridDim == _2 {
     }
 }
 
-
 extension ChainComplex where R: EuclideanRing {
-    internal func dKernel(_ I: IntList) -> DMatrix<R> {
-        assert(isFreeToFree(I))
-        
-        let E = differntialMatrix(I).elimination(form: .Diagonal)
-        return E.kernelMatrix
-    }
-    
-    internal func dKernelTransition(_ I: IntList) -> DMatrix<R> {
-        assert(isFreeToFree(I))
-        
-        let E = differntialMatrix(I).elimination(form: .Diagonal)
-        return E.kernelTransitionMatrix
-    }
-    
-    internal func dImage(_ I: IntList) -> DMatrix<R> {
-        assert(isFreeToFree(I))
-        
-        let E = differntialMatrix(I).elimination(form: .Diagonal)
-        return E.imageMatrix
-    }
-    
-    internal func dImageTransition(_ I: IntList) -> DMatrix<R>? {
-        assert(isFreeToFree(I))
-        
-        let E = differntialMatrix(I).elimination(form: .Diagonal)
-        return E.imageTransitionMatrix
-    }
-    
     public var homology: Homology<GridDim, BaseModule> {
         return Homology(self)
     }
