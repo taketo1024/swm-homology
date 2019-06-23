@@ -23,7 +23,7 @@ public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseMo
         func elim(_ I: IntList) -> E {
             assert(chainComplex.isFreeToFree(I))
             return elimCache.useCacheOrSet(key: I) {
-                MatrixEliminator.eliminate(chainComplex.differntialMatrix(I), form: .Diagonal)
+                chainComplex.differntialMatrix(I).eliminate(form: .Diagonal)
             }
         }
         
@@ -83,8 +83,8 @@ public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseMo
         
         // if k = 3, l = 2, D = [1, 2], then Q = 0 + Z/2 + Z.
         
-        let elim = MatrixEliminator.eliminate(T * B, form: .Smith)
-        let D = elim.diagonal + [.zero].repeated(k - l)
+        let elim = (T * B).eliminate(form: .Smith)
+        let D = elim.result.diagonal + [.zero].repeated(k - l)
         let s = D.count{ !$0.isInvertible }
         
         let A2 = A * elim.leftInverse.submatrix(colRange: (k - s) ..< k)
