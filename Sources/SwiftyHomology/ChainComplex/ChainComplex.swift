@@ -77,15 +77,15 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
 extension ChainComplex where GridDim == _1 {
     // chain complex (degree: -1)
     public init(descendingSequence sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) {
-        self.init(sequence: sequence, ascending: false, differential: d)
+        self.init(ascending: false, sequence: sequence, differential: d)
     }
     
     // cochain complex (degree: +1)
     public init(ascendingSequence sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) {
-        self.init(sequence: sequence, ascending: true, differential: d)
+        self.init(ascending: true, sequence: sequence, differential: d)
     }
     
-    private init(sequence: @escaping (Int) -> ModuleObject<BaseModule>, ascending: Bool, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) {
+    private init(ascending: Bool, sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) {
         self.init(grid: ModuleGrid1(sequence: sequence), differential: Differential(degree: ascending ? 1 : -1, maps: d))
     }
     
