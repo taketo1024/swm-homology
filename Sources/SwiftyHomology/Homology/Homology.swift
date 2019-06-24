@@ -21,9 +21,9 @@ public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseMo
         
         let elimCache: CacheDictionary<IntList, E> = CacheDictionary.empty
         func elim(_ I: IntList) -> E {
-            assert(chainComplex.isFreeToFree(I))
+            assert(chainComplex.isFreeToFree(at: I))
             return elimCache.useCacheOrSet(key: I) {
-                chainComplex.differntialMatrix(I).eliminate(form: .Diagonal)
+                chainComplex.differntialMatrix(at: I).eliminate(form: .Diagonal)
             }
         }
         

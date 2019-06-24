@@ -40,15 +40,11 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
         return ChainComplex(grid: grid.shifted(shift), differential: differential.shifted(shift))
     }
     
-    public func shifted(_ shift: Int...) -> ChainComplex<GridDim, BaseModule> {
-        return shifted(IntList(shift))
-    }
-    
-    public func isFreeToFree(_ I: IntList) -> Bool {
+    public func isFreeToFree(at I: IntList) -> Bool {
         return grid[I].isFree && grid[I + differential.multiDegree].isFree
     }
     
-    public func differntialMatrix(_ I: IntList) -> DMatrix<R> {
+    public func differntialMatrix(at I: IntList) -> DMatrix<R> {
         return differential.asMatrix(at: I, from: self, to: self)
     }
     
@@ -87,6 +83,28 @@ extension ChainComplex where GridDim == _1 {
     
     private init(ascending: Bool, sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) {
         self.init(grid: ModuleGrid1(sequence: sequence), differential: Differential(degree: ascending ? 1 : -1, maps: d))
+    }
+    
+    public func shifted(_ shift: Int) -> ChainComplex<GridDim, BaseModule> {
+        return shifted(IntList(shift))
+    }
+    
+    public func isFreeToFree(at i: Int) -> Bool {
+        return isFreeToFree(at: IntList(i))
+    }
+    
+    public func differntialMatrix(at i: Int) -> DMatrix<R> {
+        return differntialMatrix(at: IntList(i))
+    }
+    
+    public func assertChainComplex(at i: Int, debug: Bool = false) {
+        self.assertChainComplex(at: IntList(i), debug: debug)
+    }
+
+    public func assertChainComplex(range: CountableClosedRange<Int>, debug: Bool = false) {
+        for i in range {
+            self.assertChainComplex(at: i, debug: debug)
+        }
     }
     
     public func printSequence(indices: [Int]) {
