@@ -12,6 +12,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/taketo1024/SwiftyMath.git", .exact("1.0.13")),
+//        .package(url: "../core/", .branch("HEAD")),
     ],
     targets: [
         .target(
