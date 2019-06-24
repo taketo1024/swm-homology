@@ -119,6 +119,16 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
     }
 }
 
+extension ModuleObject where BaseModule: FreeModuleType {
+    public init(basis: [BaseModule.Generator]) {
+        self.init(basis: basis.map{ .wrap($0) }, factorizer: { z in DVector(z.factorize(by: basis)) })
+    }
+    
+    public init(generators: [BaseModule.Generator], divisors: [R]) {
+        self.init(generators: generators.map{ .wrap($0) }, divisors: divisors, factorizer: { z in DVector(z.factorize(by: generators)) })
+    }
+}
+
 extension ModuleObject {
     public var dual: ModuleObject<Dual<BaseModule>> {
         assert(isFree)
