@@ -76,32 +76,27 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
         return a.summands == b.summands
     }
     
-    public func printDetail() {
-        print("\(self) {")
-        for (i, x) in generators.enumerated() {
-            print("\t(\(i))\t\(x)")
-        }
-        print("}")
-    }
-    
     public var description: String {
         if summands.isEmpty {
             return "0"
         }
         
-        return summands
-            .group{ $0.divisor }
-            .map{ (r, list) in
-                list.first!.description + (list.count > 1 ? Format.sup(list.count) : "")
-            }
-            .joined(separator: "⊕")
+        let group = summands.group{ "\($0.divisor)" }
+        return group.keys.sorted().map { key in
+            let list = group[key]!
+            return list.first!.description + (list.count > 1 ? Format.sup(list.count) : "")
+            }.joined(separator: "⊕")
     }
     
-    public var dictionaryDescription: [R : Int] {
-        return summands.group{ $0.divisor }.mapValues{ $0.count }
+    public func printDetail() {
+        print("\(self) {")
+        for s in summands {
+            print("\t\(s): \(s.generator)")
+        }
+        print("}")
     }
     
-    public struct Summand: AlgebraicStructure {
+    public struct Summand: Equatable, CustomStringConvertible {
         public let generator: BaseModule
         public let divisor: R
         
@@ -124,6 +119,16 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
     }
 }
 
+extension ModuleObject where BaseModule: FreeModuleType {
+    public init(basis: [BaseModule.Generator]) {
+        self.init(basis: basis.map{ .wrap($0) }, factorizer: { z in DVector(z.factorize(by: basis)) })
+    }
+    
+    public init(generators: [BaseModule.Generator], divisors: [R]) {
+        self.init(generators: generators.map{ .wrap($0) }, divisors: divisors, factorizer: { z in DVector(z.factorize(by: generators)) })
+    }
+}
+
 extension ModuleObject {
     public var dual: ModuleObject<Dual<BaseModule>> {
         assert(isFree)
@@ -143,5 +148,11 @@ extension ModuleObject {
             return DVector(size: self.rank, components: comps)
         }
         return ModuleObject<Dual<BaseModule>>(summands, factr)
+    }
+}
+
+extension ModuleObject where R: Hashable {
+    public var dictionaryDescription: [R : Int] {
+        return summands.group{ $0.divisor }.mapValues{ $0.count }
     }
 }

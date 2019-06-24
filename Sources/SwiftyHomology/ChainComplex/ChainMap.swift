@@ -27,15 +27,15 @@ public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2
         return maps(I)
     }
     
+    public subscript(_ I: Int...) -> Hom {
+        return self[IntList(I)]
+    }
+    
     public func shifted(_ shift: IntList) -> ChainMap<GridDim, BaseModule1, BaseModule2> {
         assert(shift.length == GridDim.intValue)
         return ChainMap(multiDegree: multiDegree) { I in
             self[I - shift]
         }
-    }
-    
-    public func shifted(_ shift: Int...) -> ChainMap<GridDim, BaseModule1, BaseModule2> {
-        return shifted(IntList(shift))
     }
     
     public func asMatrix(at I: IntList, from: ChainComplex<GridDim, BaseModule1>, to: ChainComplex<GridDim, BaseModule2>) -> DMatrix<R> {
@@ -50,7 +50,7 @@ public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2
         return DMatrix(rows: s1.generators.count, cols: s0.generators.count, components: components)
     }
     
-    public func assertChainMap(from C0: ChainComplex<GridDim, BaseModule1>, to C1: ChainComplex<GridDim, BaseModule2>, at I0: IntList, debug: Bool = false) {
+    public func assertChainMap(at I0: IntList, from C0: ChainComplex<GridDim, BaseModule1>, to C1: ChainComplex<GridDim, BaseModule2>, debug: Bool = false) {
         assert(C0.differential.multiDegree == C1.differential.multiDegree)
 
         //          d0
@@ -95,6 +95,19 @@ extension ChainMap where GridDim == _1 {
     public subscript(_ i: Int) -> Hom {
         return self[IntList(i)]
     }
+    
+    public func shifted(_ shift: Int...) -> ChainMap<GridDim, BaseModule1, BaseModule2> {
+        return shifted(IntList(shift))
+    }
+    
+    public func asMatrix(at i: Int, from: ChainComplex<GridDim, BaseModule1>, to: ChainComplex<GridDim, BaseModule2>) -> DMatrix<R> {
+        return asMatrix(at: IntList(i), from: from, to: to)
+    }
+    
+    public func assertChainMap(at i: Int, from: ChainComplex<GridDim, BaseModule1>, to: ChainComplex<GridDim, BaseModule2>, debug: Bool = false) {
+        assertChainMap(at: IntList(i), from: from, to: to, debug: debug)
+    }
+
     
     public var degree: Int {
         return multiDegree[0]

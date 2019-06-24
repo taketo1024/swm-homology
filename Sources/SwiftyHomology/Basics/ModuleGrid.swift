@@ -40,10 +40,6 @@ public struct ModuleGrid<GridDim: StaticSizeType, BaseModule: Module> {
             self[I - shift]
         }
     }
-    
-    public func shifted(_ shift: Int...) -> ModuleGrid<GridDim, BaseModule> {
-        return shifted(IntList(shift))
-    }
 }
 
 extension ModuleGrid where GridDim == _1 {
@@ -51,6 +47,10 @@ extension ModuleGrid where GridDim == _1 {
         self.init{ I in sequence(I[0]) }
     }
     
+    public func shifted(_ shift: Int) -> ModuleGrid<GridDim, BaseModule> {
+        return shifted(IntList(shift))
+    }
+
     public func printSequence(indices: [Int]) {
         print( Format.table(rows: [""], cols: indices, symbol: "i") { (_, i) in self[i].description } )
     }
