@@ -74,12 +74,12 @@ public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseMo
      *
      */
     internal static func calculateQuotient(_ A: DMatrix<R>, _ B: DMatrix<R>, _ T: DMatrix<R>) -> (DMatrix<R>, [R], DMatrix<R>) {
-        assert(A.rows == B.rows) // n
-        assert(A.cols == T.rows) // k
-        assert(A.rows >= A.cols) // n >= k
-        assert(A.cols >= B.cols) // k >= l
+        assert(A.size.rows == B.size.rows) // n
+        assert(A.size.cols == T.size.rows) // k
+        assert(A.size.rows >= A.size.cols) // n >= k
+        assert(A.size.cols >= B.size.cols) // k >= l
         
-        let (k, l) = (A.cols, B.cols)
+        let (k, l) = (A.size.cols, B.size.cols)
         
         // if k = 3, l = 2, D = [1, 2], then Q = 0 + Z/2 + Z.
         
