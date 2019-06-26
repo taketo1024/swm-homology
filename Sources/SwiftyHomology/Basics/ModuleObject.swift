@@ -121,11 +121,17 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
 
 extension ModuleObject where BaseModule: FreeModuleType {
     public init(basis: [BaseModule.Generator]) {
-        self.init(basis: basis.map{ .wrap($0) }, factorizer: { z in z.factorize(by: basis) } )
-    }
-    
-    public init(generators: [BaseModule.Generator], divisors: [R]) {
-        self.init(generators: generators.map{ .wrap($0) }, divisors: divisors, factorizer: { z in z.factorize(by: generators) } )
+        let indexer = basis.indexer()
+        
+        // MEMO: This is almost identical to the impl of `FreeModule.factorize()`,
+        // except that `indexer` is captured outside which makes the performance way better.
+        
+        self.init(basis: basis.map{ .wrap($0) }, factorizer: { z in
+            let comps = z.elements.compactMap { (a, r) -> MatrixComponent<R>? in
+                indexer(a).map{ i in (i, 0, r) }
+            }
+            return DVector<R>(size: (basis.count, 1), components: comps, zerosExcluded: true)
+        })
     }
 }
 
