@@ -145,7 +145,7 @@ extension ModuleObject {
                 let a: R = f.applied(to: z).value
                 return (a != .zero) ? (i, 0, a) : nil
             }
-            return DVector(size: (self.rank, 1), components: comps)
+            return DVector(size: (self.rank, 1), components: comps, zerosExcluded: true)
         }
         return ModuleObject<Dual<BaseModule>>(summands, factr)
     }

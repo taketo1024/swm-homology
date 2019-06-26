@@ -47,7 +47,7 @@ public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2
             return to[I + multiDegree].factorize(y).map{ c in (c.row, j, c.value) }
         }
         
-        return DMatrix(size: (s1.generators.count, s0.generators.count), components: components)
+        return DMatrix(size: (s1.generators.count, s0.generators.count), components: components, zerosExcluded: true)
     }
     
     public func assertChainMap(at I0: IntList, from C0: ChainComplex<GridDim, BaseModule1>, to C1: ChainComplex<GridDim, BaseModule2>, debug: Bool = false) {
