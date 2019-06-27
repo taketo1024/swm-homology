@@ -34,7 +34,7 @@ public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseMo
             let Z = elim(I).kernelMatrix
             let T = elim(I).kernelTransitionMatrix
             let B = elim(I - C.differential.multiDegree).imageMatrix
-            let (Q, d, S) = Homology.calculateQuotient(Z, B, T)
+            let (d, Q, S) = Homology.calculateQuotient(Z, B, T)
             
             let hGenerators = generators * Q
             let summands = hGenerators.enumerated().map { (i, z) in
@@ -61,38 +61,50 @@ public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseMo
         return GridDim.intValue
     }
     
-    /*
-     *       R^n ==== R^n
-     *        ^        ^|
-     *       B|       A||T
-     *        |   TB   |v
-     *  0 -> R^l >---> R^k --->> Q -> 0
-     *        ^        ^|
-     *        |       P||
-     *        |    D   |v
-     *  0 -> R^l >---> R^k --->> Q -> 0
-     *
-     */
-    internal static func calculateQuotient(_ A: DMatrix<R>, _ B: DMatrix<R>, _ T: DMatrix<R>) -> (DMatrix<R>, [R], DMatrix<R>) {
+    // Calculates the quotient module Im(A) / Im(B).
+    //
+    //        Im(B)  ⊂  Im(A) ⊂ R^n
+    //          ↑         ↑   /
+    //         B|        A|  / T
+    //          |   TB    | ↓
+    //    0 -> R^l >---> R^k --->> Q -> 0
+    //          ↑         |
+    //          |        P|
+    //          |    S    ↓
+    //    0 -> R^l >---> R^k --->> Q -> 0
+    //
+    // If
+    //
+    //     TB  ~>  S = [ I |   |   ]
+    //                 [   | D |   ]
+    //                 [   |   | O ]
+    //                 [   |   | O ]
+    //
+    // then
+    //
+    //      Q = R^k / Im(I ⊕ D ⊕ O)
+    //        = (0 ⊕ .. ⊕ 0) ⊕ (R/d_1 ⊕ .. ⊕ R/d_r) ⊕ (R ⊕ .. ⊕ R)
+    //                          ~~~~~~~~~~~~~~~~~~~    ~~~~~~~~~~~~
+    //                               tor-part            free-part
+    
+    internal static func calculateQuotient(_ A: DMatrix<R>, _ B: DMatrix<R>, _ T: DMatrix<R>) -> (factors: [R], generatingMatrix: DMatrix<R>, transitionMatrix: DMatrix<R>) {
         assert(A.size.rows == B.size.rows) // n
         assert(A.size.cols == T.size.rows) // k
         assert(A.size.rows >= A.size.cols) // n >= k
         assert(A.size.cols >= B.size.cols) // k >= l
         
         let (k, l) = (A.size.cols, B.size.cols)
-        
-        // if k = 3, l = 2, D = [1, 2], then Q = 0 + Z/2 + Z.
-        
         let elim = (T * B).eliminate(form: .Smith)
-        let D = elim.result.diagonal + [.zero].repeated(k - l)
-        let s = D.count{ !$0.isInvertible }
+        let d = elim.result.diagonal.exclude{ $0.isInvertible } + [.zero].repeated(k - l)
+        let s = d.count
         
-        let A2 = A * elim.leftInverse.submatrix(colRange: (k - s) ..< k)
-        let diag = Array(D[k - s ..< k])
-        let T2 = (elim.left * T).submatrix(rowRange: (k - s) ..< k)
+        let P    = elim.left       .submatrix(rowRange: (k - s) ..< k)
+        let Pinv = elim.leftInverse.submatrix(colRange: (k - s) ..< k)
+        let (A2, T2) = (A * Pinv, P * T)
         
         assert(T2 * A2 == DMatrix<R>.identity(size: s))
-        return (A2, diag, T2)
+        
+        return (d, A2, T2)
     }
 }
 
