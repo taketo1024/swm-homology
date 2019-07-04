@@ -73,17 +73,17 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
 
 extension ChainComplex where GridDim == _1 {
     // chain complex (degree: -1)
-    public init(descendingSequence sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) {
-        self.init(ascending: false, sequence: sequence, differential: d)
+    public static func descending<S: Sequence>(supported: S, sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) -> ChainComplex1<BaseModule> where S.Element == Int {
+        return _sequence(supported: supported, ascending: false, sequence: sequence, differential: d)
     }
     
     // cochain complex (degree: +1)
-    public init(ascendingSequence sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) {
-        self.init(ascending: true, sequence: sequence, differential: d)
+    public static func ascending<S: Sequence>(supported: S, sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) -> ChainComplex1<BaseModule> where S.Element == Int {
+        return _sequence(supported: supported, ascending: true, sequence: sequence, differential: d)
     }
     
-    private init(ascending: Bool, sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) {
-        self.init(grid: ModuleGrid1(sequence: sequence), differential: Differential(degree: ascending ? 1 : -1, maps: d))
+    private static func _sequence<S: Sequence>(supported: S, ascending: Bool, sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) -> ChainComplex1<BaseModule> where S.Element == Int {
+        return .init(grid: ModuleGrid1(supported: supported, sequence: sequence), differential: Differential(degree: ascending ? 1 : -1, maps: d))
     }
     
     public func shifted(_ shift: Int) -> ChainComplex<GridDim, BaseModule> {
@@ -108,22 +108,22 @@ extension ChainComplex where GridDim == _1 {
         }
     }
     
-    public func printSequence(indices: [Int]) {
-        grid.printSequence(indices: indices)
+    public func printSequence() {
+        grid.printSequence()
     }
     
-    public func printSequence(range: ClosedRange<Int>) {
-        grid.printSequence(range: range)
+    public func printSequence(_ range: ClosedRange<Int>) {
+        grid.printSequence(range)
     }
 }
 
 extension ChainComplex where GridDim == _2 {
-    public func printTable(indices1: [Int], indices2: [Int]) {
-        grid.printTable(indices1: indices1, indices2: indices2)
+    public func printTable() {
+        grid.printTable()
     }
     
-    public func printTable(range1: ClosedRange<Int>, range2: ClosedRange<Int>) {
-        grid.printTable(range1: range1, range2: range2)
+    public func printTable(_ range1: ClosedRange<Int>, _ range2: ClosedRange<Int>) {
+        grid.printTable(range1, range2)
     }
 }
 

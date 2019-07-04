@@ -28,7 +28,8 @@ public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseMo
             }
         }
         
-        let grid = ModuleGrid<GridDim, BaseModule> { I in
+        let supported = chainComplex.grid.supportedCoords
+        let grid = ModuleGrid<GridDim, BaseModule>(supportedCoords: supported) { I in
             let C = chainComplex
             
             let generators = C[I].generators
@@ -110,22 +111,22 @@ public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseMo
 }
 
 extension Homology where GridDim == _1 {
-    public func printSequence(indices: [Int]) {
-        grid.printSequence(indices: indices)
+    public func printSequence() {
+        grid.printSequence()
     }
     
-    public func printSequence(range: ClosedRange<Int>) {
-        grid.printSequence(range: range)
+    public func printSequence(_ range: ClosedRange<Int>) {
+        grid.printSequence(range)
     }
 }
 
 extension Homology where GridDim == _2 {
-    public func printTable(indices1: [Int], indices2: [Int]) {
-        grid.printTable(indices1: indices1, indices2: indices2)
+    public func printTable() {
+        grid.printTable()
     }
     
-    public func printTable(range1: ClosedRange<Int>, range2: ClosedRange<Int>) {
-        grid.printTable(range1: range1, range2: range2)
+    public func printTable(_ range1: ClosedRange<Int>, _ range2: ClosedRange<Int>) {
+        grid.printTable(range1, range2)
     }
 }
 

@@ -15,10 +15,12 @@ public struct ModuleGrid<GridDim: StaticSizeType, BaseModule: Module> {
     public typealias R = BaseModule.CoeffRing
     public typealias Vertex = ModuleObject<BaseModule>
     
+    internal let supportedCoords: [GridCoords]
     private let grid: (GridCoords) -> Vertex
     private let gridCache: CacheDictionary<GridCoords, Vertex> = CacheDictionary.empty
     
-    public init(grid: @escaping (GridCoords) -> Vertex) {
+    public init(supportedCoords: [GridCoords] = [], grid: @escaping (GridCoords) -> Vertex) {
+        self.supportedCoords = supportedCoords
         self.grid = grid
     }
     
@@ -37,40 +39,52 @@ public struct ModuleGrid<GridDim: StaticSizeType, BaseModule: Module> {
     
     public func shifted(_ shift: GridCoords) -> ModuleGrid<GridDim, BaseModule> {
         assert(shift.count == gridDim)
-        return ModuleGrid { I in
+        return ModuleGrid(supportedCoords: supportedCoords.map{ $0.shifted(shift) }) { I in
             self[I.shifted(-shift)]
         }
     }
 }
 
 extension ModuleGrid where GridDim == _1 {
-    public init(sequence: @escaping (Int) -> ModuleObject<BaseModule>) {
-        self.init{ I in sequence(I[0]) }
+    public init<S: Sequence>(supported: S, sequence: @escaping (Int) -> ModuleObject<BaseModule>) where S.Element == Int {
+        self.init(supportedCoords: supported.map{ [$0] }) { I in sequence(I[0]) }
     }
     
     public func shifted(_ shift: Int) -> ModuleGrid<GridDim, BaseModule> {
         return shifted([shift])
     }
-
-    public func printSequence(indices: [Int]) {
-        print( Format.table(rows: [""], cols: indices, symbol: "i") { (_, i) in self[i].description } )
+    
+    public func printSequence() {
+        let indices = supportedCoords.map{ $0[0] }.sorted()
+        printSequence(indices)
     }
     
-    public func printSequence(range: ClosedRange<Int>) {
-        printSequence(indices: range.toArray())
+    public func printSequence(_ range: ClosedRange<Int>) {
+        printSequence(range.toArray())
+    }
+    
+    private func printSequence(_ indices: [Int]) {
+        print( Format.table(rows: [""], cols: indices, symbol: "i") { (_, i) in self[i].description } )
     }
 }
 
 extension ModuleGrid where GridDim == _2 {
-    public func printTable(indices1: [Int], indices2: [Int]) {
+    public func printTable() {
+        let indices = [0, 1].map { i in
+            Set(supportedCoords.map{ $0[i] }).sorted()
+        }
+        printTable(indices[0], indices[1])
+    }
+    
+    public func printTable(_ range1: ClosedRange<Int>, _ range2: ClosedRange<Int>) {
+        printTable(range1.toArray(), range2.toArray())
+    }
+    
+    private func printTable(_ indices1: [Int], _ indices2: [Int]) {
         print( Format.table(rows: indices2.reversed(), cols: indices1, symbol: "j\\i") { (j, i) -> String in
             let s = self[i, j].description
             return (s != "0") ? s : ""
         } )
-    }
-    
-    public func printTable(range1: ClosedRange<Int>, range2: ClosedRange<Int>) {
-        printTable(indices1: range1.toArray(), indices2: range2.toArray())
     }
 }
 
