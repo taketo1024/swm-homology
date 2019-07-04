@@ -15,29 +15,30 @@ public struct ModuleGrid<GridDim: StaticSizeType, BaseModule: Module> {
     public typealias R = BaseModule.CoeffRing
     public typealias Vertex = ModuleObject<BaseModule>
     
-    private let grid: (IntList) -> Vertex
-    private let gridCache: CacheDictionary<IntList, Vertex> = CacheDictionary.empty
+    private let grid: (GridCoords) -> Vertex
+    private let gridCache: CacheDictionary<GridCoords, Vertex> = CacheDictionary.empty
     
-    public init(grid: @escaping (IntList) -> Vertex) {
+    public init(grid: @escaping (GridCoords) -> Vertex) {
         self.grid = grid
     }
     
-    public subscript(I: IntList) -> Vertex {
+    public subscript(I: GridCoords) -> Vertex {
+        assert(I.count == gridDim)
         return gridCache.useCacheOrSet(key: I) { self.grid(I) }
     }
     
     public subscript(I: Int...) -> Vertex {
-        return self[IntList(I)]
+        return self[I]
     }
     
     public var gridDim: Int {
         return GridDim.intValue
     }
     
-    public func shifted(_ shift: IntList) -> ModuleGrid<GridDim, BaseModule> {
-        assert(shift.length == gridDim)
+    public func shifted(_ shift: GridCoords) -> ModuleGrid<GridDim, BaseModule> {
+        assert(shift.count == gridDim)
         return ModuleGrid { I in
-            self[I - shift]
+            self[I.shifted(-shift)]
         }
     }
 }
@@ -48,7 +49,7 @@ extension ModuleGrid where GridDim == _1 {
     }
     
     public func shifted(_ shift: Int) -> ModuleGrid<GridDim, BaseModule> {
-        return shifted(IntList(shift))
+        return shifted([shift])
     }
 
     public func printSequence(indices: [Int]) {

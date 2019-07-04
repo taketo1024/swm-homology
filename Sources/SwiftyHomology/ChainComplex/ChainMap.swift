@@ -15,42 +15,43 @@ public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2
     public typealias R = BaseModule1.CoeffRing
     public typealias Hom = ModuleHom<BaseModule1, BaseModule2>
     
-    public var multiDegree: IntList
-    internal let maps: (IntList) -> Hom
+    public var multiDegree: [Int]
+    internal let maps: (GridCoords) -> Hom
     
-    public init(multiDegree: IntList, maps: @escaping (IntList) -> Hom) {
+    public init(multiDegree: GridCoords, maps: @escaping (GridCoords) -> Hom) {
         self.multiDegree = multiDegree
         self.maps = maps
     }
     
-    public subscript(_ I: IntList) -> Hom {
+    public subscript(_ I: GridCoords) -> Hom {
         return maps(I)
     }
     
     public subscript(_ I: Int...) -> Hom {
-        return self[IntList(I)]
+        return self[I]
     }
     
-    public func shifted(_ shift: IntList) -> ChainMap<GridDim, BaseModule1, BaseModule2> {
-        assert(shift.length == GridDim.intValue)
+    public func shifted(_ shift: GridCoords) -> ChainMap<GridDim, BaseModule1, BaseModule2> {
+        assert(shift.count == GridDim.intValue)
         return ChainMap(multiDegree: multiDegree) { I in
-            self[I - shift]
+            self[I.shifted(-shift)]
         }
     }
     
-    public func asMatrix(at I: IntList, from: ChainComplex<GridDim, BaseModule1>, to: ChainComplex<GridDim, BaseModule2>) -> DMatrix<R> {
-        let (s0, s1) = (from[I], to[I + multiDegree])
+    public func asMatrix(at I: GridCoords, from: ChainComplex<GridDim, BaseModule1>, to: ChainComplex<GridDim, BaseModule2>) -> DMatrix<R> {
+        let J = I.shifted(multiDegree)
+        let (s0, s1) = (from[I], to[J])
         let f = self[I]
         
         let components = s0.generators.enumerated().flatMap { (j, x) -> [MatrixComponent<R>] in
             let y = f.applied(to: x)
-            return to[I + multiDegree].factorize(y).map{ c in (c.row, j, c.value) }
+            return to[J].factorize(y).map{ c in (c.row, j, c.value) }
         }
         
         return DMatrix(size: (s1.generators.count, s0.generators.count), components: components, zerosExcluded: true)
     }
     
-    public func assertChainMap(at I0: IntList, from C0: ChainComplex<GridDim, BaseModule1>, to C1: ChainComplex<GridDim, BaseModule2>, debug: Bool = false) {
+    public func assertChainMap(at I0: GridCoords, from C0: ChainComplex<GridDim, BaseModule1>, to C1: ChainComplex<GridDim, BaseModule2>, debug: Bool = false) {
         assert(C0.differential.multiDegree == C1.differential.multiDegree)
 
         //          d0
@@ -67,7 +68,9 @@ public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2
             Swift.print(msg())
         }
 
-        let (I1, I2, I3) = (I0 + d0.multiDegree, I0 + f.multiDegree, I0 + d0.multiDegree + f.multiDegree)
+        let I1 = I0.shifted(d0.multiDegree)
+        let I2 = I0.shifted( f.multiDegree)
+        let I3 = I1.shifted( f.multiDegree)
         let (s0, s3) = (C0[I0], C1[I3])
 
         print("\(I0): \(s0) -> \(s3)")
@@ -89,23 +92,19 @@ public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2
 
 extension ChainMap where GridDim == _1 {
     public init(degree: Int, maps: @escaping (Int) -> Hom) {
-        self.init(multiDegree: IntList(degree)) { I in maps(I[0]) }
+        self.init(multiDegree: [degree]) { I in maps(I[0]) }
     }
     
-    public subscript(_ i: Int) -> Hom {
-        return self[IntList(i)]
-    }
-    
-    public func shifted(_ shift: Int...) -> ChainMap<GridDim, BaseModule1, BaseModule2> {
-        return shifted(IntList(shift))
+    public func shifted(_ shift: Int) -> ChainMap<GridDim, BaseModule1, BaseModule2> {
+        return shifted([shift])
     }
     
     public func asMatrix(at i: Int, from: ChainComplex<GridDim, BaseModule1>, to: ChainComplex<GridDim, BaseModule2>) -> DMatrix<R> {
-        return asMatrix(at: IntList(i), from: from, to: to)
+        return asMatrix(at: [i], from: from, to: to)
     }
     
     public func assertChainMap(at i: Int, from: ChainComplex<GridDim, BaseModule1>, to: ChainComplex<GridDim, BaseModule2>, debug: Bool = false) {
-        assertChainMap(at: IntList(i), from: from, to: to, debug: debug)
+        assertChainMap(at: [i], from: from, to: to, debug: debug)
     }
 
     
@@ -114,17 +113,12 @@ extension ChainMap where GridDim == _1 {
     }
 }
 
-extension ChainMap where GridDim == _2 {
-    public subscript(_ i: Int, _ j: Int) -> Hom {
-        return self[IntList(i, j)]
-    }
-}
-
 extension ChainMap {
     public var dual: ChainMap<GridDim, Dual<BaseModule2>, Dual<BaseModule1>> {
-        return ChainMap<GridDim, Dual<BaseModule2>, Dual<BaseModule1>>(multiDegree: -self.multiDegree) { I in
+        return ChainMap<GridDim, Dual<BaseModule2>, Dual<BaseModule1>>(multiDegree: -multiDegree) { I in
             ModuleHom<Dual<BaseModule2>, Dual<BaseModule1>> { g in
-                let f = self[I - self.multiDegree]
+                let J = I.shifted(-self.multiDegree)
+                let f = self[J]
                 return g ∘ f
             }
         }

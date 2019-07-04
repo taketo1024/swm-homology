@@ -110,7 +110,7 @@ class HomologyTests: XCTestCase {
         let H = Homology(C)
 
         for i in 0 ... d.count {
-            C.assertChainComplex(at: IntList(i))
+            C.assertChainComplex(at: i)
         }
         
         XCTAssertEqual(H[-1].dictionaryDescription, [:])
@@ -128,7 +128,7 @@ class HomologyTests: XCTestCase {
         let H = Homology(C)
         
         for i in 0 ... d.count {
-            C.assertChainComplex(at: IntList(i + shift))
+            C.assertChainComplex(at: i + shift)
         }
         
         XCTAssertEqual(H[-1 + shift].dictionaryDescription, [:])

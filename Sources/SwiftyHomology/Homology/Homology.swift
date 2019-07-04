@@ -13,14 +13,15 @@ public typealias Homology2<M: Module> = Homology<_2, M> where M.CoeffRing: Eucli
 
 public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseModule.CoeffRing: EuclideanRing {
     public typealias R = BaseModule.CoeffRing
+    
     public let chainComplex: ChainComplex<GridDim, BaseModule>
     public let grid: ModuleGrid<GridDim, BaseModule>
     
     public init(_ chainComplex: ChainComplex<GridDim, BaseModule>) {
         typealias E = MatrixEliminationResult<DynamicSize, DynamicSize, R>
         
-        let elimCache: CacheDictionary<IntList, E> = CacheDictionary.empty
-        func elim(_ I: IntList) -> E {
+        let elimCache: CacheDictionary<GridCoords, E> = CacheDictionary.empty
+        func elim(_ I: GridCoords) -> E {
             assert(chainComplex.isFreeToFree(at: I))
             return elimCache.useCacheOrSet(key: I) {
                 chainComplex.differntialMatrix(at: I).eliminate(form: .Diagonal)
@@ -29,11 +30,11 @@ public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseMo
         
         let grid = ModuleGrid<GridDim, BaseModule> { I in
             let C = chainComplex
-            let generators = C[I].generators
             
+            let generators = C[I].generators
             let Z = elim(I).kernelMatrix
             let T = elim(I).kernelTransitionMatrix
-            let B = elim(I - C.differential.multiDegree).imageMatrix
+            let B = elim(I.shifted(-C.differential.multiDegree)).imageMatrix
             let (d, Q, S) = Homology.calculateQuotient(Z, B, T)
             
             let hGenerators = generators * Q
@@ -49,12 +50,12 @@ public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseMo
         self.grid = grid
     }
     
-    public subscript(I: IntList) -> ModuleObject<BaseModule> {
+    public subscript(I: GridCoords) -> ModuleObject<BaseModule> {
         return grid[I]
     }
     
     public subscript(I: Int...) -> ModuleObject<BaseModule> {
-        return self[IntList(I)]
+        return self[I]
     }
     
     public var gridDim: Int {

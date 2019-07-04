@@ -11,7 +11,7 @@ let package = Package(
             targets: ["SwiftyHomology"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/taketo1024/SwiftyMath.git", from: "1.0.23"),
+        .package(url: "https://github.com/taketo1024/SwiftyMath.git", from: "1.0.24"),
 //        .package(url: "../core/", .branch("HEAD")),
     ],
     targets: [

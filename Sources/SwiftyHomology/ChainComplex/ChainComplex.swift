@@ -23,38 +23,39 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
         self.differential = differential
     }
     
-    public subscript(I: IntList) -> ModuleObject<BaseModule> {
+    public subscript(I: GridCoords) -> ModuleObject<BaseModule> {
         return grid[I]
     }
     
     public subscript(I: Int...) -> ModuleObject<BaseModule> {
-        return self[IntList(I)]
+        return self[I]
     }
     
     public var gridDim: Int {
         return GridDim.intValue
     }
     
-    public func shifted(_ shift: IntList) -> ChainComplex<GridDim, BaseModule> {
-        assert(shift.length == gridDim)
+    public func shifted(_ shift: GridCoords) -> ChainComplex<GridDim, BaseModule> {
+        assert(shift.count == gridDim)
         return ChainComplex(grid: grid.shifted(shift), differential: differential.shifted(shift))
     }
     
-    public func isFreeToFree(at I: IntList) -> Bool {
-        return grid[I].isFree && grid[I + differential.multiDegree].isFree
+    public func isFreeToFree(at I: GridCoords) -> Bool {
+        return grid[I].isFree && grid[I.shifted(differential.multiDegree)].isFree
     }
     
-    public func differntialMatrix(at I: IntList) -> DMatrix<R> {
+    public func differntialMatrix(at I: GridCoords) -> DMatrix<R> {
         return differential.asMatrix(at: I, from: self, to: self)
     }
     
-    public func assertChainComplex(at I0: IntList, debug: Bool = false) {
+    public func assertChainComplex(at I0: GridCoords, debug: Bool = false) {
         func print(_ msg: @autoclosure () -> String) {
             if debug { Swift.print(msg()) }
         }
         
         let deg = differential.multiDegree
-        let (I1, I2) = (I0 + deg, I0 + deg + deg)
+        let I1 = I0.shifted(deg)
+        let I2 = I1.shifted(deg)
         let (s0, s1, s2) = (self[I0], self[I1], self[I2])
         
         print("\(I0): \(s0) -> \(s1) -> \(s2)")
@@ -86,19 +87,19 @@ extension ChainComplex where GridDim == _1 {
     }
     
     public func shifted(_ shift: Int) -> ChainComplex<GridDim, BaseModule> {
-        return shifted(IntList(shift))
+        return shifted([shift])
     }
     
     public func isFreeToFree(at i: Int) -> Bool {
-        return isFreeToFree(at: IntList(i))
+        return isFreeToFree(at: [i])
     }
     
     public func differntialMatrix(at i: Int) -> DMatrix<R> {
-        return differntialMatrix(at: IntList(i))
+        return differntialMatrix(at: [i])
     }
     
     public func assertChainComplex(at i: Int, debug: Bool = false) {
-        self.assertChainComplex(at: IntList(i), debug: debug)
+        self.assertChainComplex(at: [i], debug: debug)
     }
 
     public func assertChainComplex(range: CountableClosedRange<Int>, debug: Bool = false) {
