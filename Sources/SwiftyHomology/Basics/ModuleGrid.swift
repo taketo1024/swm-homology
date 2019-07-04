@@ -15,7 +15,7 @@ public struct ModuleGrid<GridDim: StaticSizeType, BaseModule: Module> {
     public typealias R = BaseModule.CoeffRing
     public typealias Vertex = ModuleObject<BaseModule>
     
-    internal let supportedCoords: [GridCoords]
+    public let supportedCoords: [GridCoords]
     private let grid: (GridCoords) -> Vertex
     private let gridCache: CacheDictionary<GridCoords, Vertex> = CacheDictionary.empty
     
