@@ -17,6 +17,8 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
     
     public var grid: ModuleGrid<GridDim, BaseModule>
     public let differential: Differential
+    
+    internal let elimCache: CacheDictionary<GridCoords, Any> = .empty
 
     public init(grid: ModuleGrid<GridDim, BaseModule>, differential: Differential) {
         self.grid = grid

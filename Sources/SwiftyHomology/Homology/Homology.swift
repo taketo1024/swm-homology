@@ -20,22 +20,14 @@ public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseMo
     public init(_ chainComplex: ChainComplex<GridDim, BaseModule>) {
         typealias E = MatrixEliminationResult<DynamicSize, DynamicSize, R>
         
-        let elimCache: CacheDictionary<GridCoords, E> = CacheDictionary.empty
-        func elim(_ I: GridCoords) -> E {
-            assert(chainComplex.isFreeToFree(at: I))
-            return elimCache.useCacheOrSet(key: I) {
-                chainComplex.differntialMatrix(at: I).eliminate(form: .Diagonal)
-            }
-        }
-        
         let supported = chainComplex.grid.supportedCoords
         let grid = ModuleGrid<GridDim, BaseModule>(supportedCoords: supported) { I in
             let C = chainComplex
             
             let generators = C[I].generators
-            let Z = elim(I).kernelMatrix
-            let T = elim(I).kernelTransitionMatrix
-            let B = elim(I.shifted(-C.differential.multiDegree)).imageMatrix
+            let Z = C.dKernelMatrix(I)
+            let T = C.dKernelTransitionMatrix(I)
+            let B = C.dImageMatrix(I.shifted(-C.differential.multiDegree))
             let (d, Q, S) = Homology.calculateQuotient(Z, B, T)
             
             let hGenerators = generators * Q
@@ -133,5 +125,65 @@ extension Homology where GridDim == _2 {
 extension ChainComplex where R: EuclideanRing {
     public var homology: Homology<GridDim, BaseModule> {
         return Homology(self)
+    }
+
+    public func cycleSubmodule(_ I: GridCoords) -> ModuleObject<BaseModule> {
+        assert(isFreeToFree(at: I))
+        let (Z, T) = (dKernelMatrix(I), dKernelTransitionMatrix(I))
+        
+        let C_I = self[I]
+        let gens = C_I.generators * Z
+        let factr = { z in T * C_I.factorize(z) }
+        
+        return ModuleObject(basis: gens, factorizer: factr)
+    }
+    
+    public func boundarySubmodule(_ I: GridCoords) -> ModuleObject<BaseModule> {
+        assert(isFreeToFree(at: I))
+        let J = I.shifted(-differential.multiDegree)
+        let (B, T) = (dImageMatrix(J), dImageTransitionMatrix(J))
+        
+        let C_I = self[I]
+        let gens = C_I.generators * B
+        let diag = dElim(J).result.diagonal
+        let factr = { (b: BaseModule) -> DVector<R> in
+            let v = T * C_I.factorize(b)
+            let divided = v.map { (i, _, a) -> MatrixComponent<R> in (i, 0, a / diag[i]) }
+            return DVector(size: v.size, components: divided, zerosExcluded: true)
+        }
+        return ModuleObject(basis: gens, factorizer: factr)
+    }
+    
+    internal func dKernelMatrix(_ I: GridCoords) -> DMatrix<R> {
+        return dElim(I).kernelMatrix
+    }
+    
+    internal func dKernelTransitionMatrix(_ I: GridCoords) -> DMatrix<R> {
+        return dElim(I).kernelTransitionMatrix
+    }
+    
+    internal func dImageMatrix(_ I: GridCoords) -> DMatrix<R> {
+        return dElim(I).imageMatrix
+    }
+    
+    internal func dImageTransitionMatrix(_ I: GridCoords) -> DMatrix<R> {
+        return dElim(I).imageTransitionMatrix
+    }
+    
+    private func dElim(_ I: GridCoords) -> MatrixEliminationResult<DynamicSize, DynamicSize, R> {
+        return elimCache.useCacheOrSet(key: I) {
+            assert(isFreeToFree(at: I))
+            return differntialMatrix(at: I).eliminate(form: .Diagonal)
+        } as! MatrixEliminationResult<DynamicSize, DynamicSize, R>
+    }
+}
+
+extension ChainComplex where R: EuclideanRing, GridDim == _1 {
+    public func cycleSubmodule(_ i: Int) -> ModuleObject<BaseModule> {
+        return cycleSubmodule([i])
+    }
+    
+    public func boundarySubmodule(_ i: Int) -> ModuleObject<BaseModule> {
+        return boundarySubmodule([i])
     }
 }
