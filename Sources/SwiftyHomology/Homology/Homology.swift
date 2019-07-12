@@ -25,9 +25,9 @@ public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseMo
             let C = chainComplex
             
             let generators = C[I].generators
-            let Z = C.dKernelMatrix(I)
-            let T = C.dKernelTransitionMatrix(I)
-            let B = C.dImageMatrix(I.shifted(-C.differential.multiDegree))
+            let Z = C.cycleMatrix(I)
+            let T = C.cycleTransitionMatrix(I)
+            let B = C.boundaryMatrix(I.shifted(-C.d.multiDegree))
             let (d, Q, S) = Homology.calculateQuotient(Z, B, T)
             
             let hGenerators = generators * Q
@@ -129,7 +129,7 @@ extension ChainComplex where R: EuclideanRing {
 
     public func cycleSubmodule(_ I: GridCoords) -> ModuleObject<BaseModule> {
         assert(isFreeToFree(at: I))
-        let (Z, T) = (dKernelMatrix(I), dKernelTransitionMatrix(I))
+        let (Z, T) = (cycleMatrix(I), cycleTransitionMatrix(I))
         
         let C_I = self[I]
         let gens = C_I.generators * Z
@@ -140,8 +140,8 @@ extension ChainComplex where R: EuclideanRing {
     
     public func boundarySubmodule(_ I: GridCoords) -> ModuleObject<BaseModule> {
         assert(isFreeToFree(at: I))
-        let J = I.shifted(-differential.multiDegree)
-        let (B, T) = (dImageMatrix(J), dImageTransitionMatrix(J))
+        let J = I.shifted(-d.multiDegree)
+        let (B, T) = (boundaryMatrix(J), boundaryTransitionMatrix(J))
         
         let C_I = self[I]
         let gens = C_I.generators * B
@@ -154,19 +154,19 @@ extension ChainComplex where R: EuclideanRing {
         return ModuleObject(basis: gens, factorizer: factr)
     }
     
-    internal func dKernelMatrix(_ I: GridCoords) -> DMatrix<R> {
+    internal func cycleMatrix(_ I: GridCoords) -> DMatrix<R> {
         return dElim(I).kernelMatrix
     }
     
-    internal func dKernelTransitionMatrix(_ I: GridCoords) -> DMatrix<R> {
+    internal func cycleTransitionMatrix(_ I: GridCoords) -> DMatrix<R> {
         return dElim(I).kernelTransitionMatrix
     }
     
-    internal func dImageMatrix(_ I: GridCoords) -> DMatrix<R> {
+    internal func boundaryMatrix(_ I: GridCoords) -> DMatrix<R> {
         return dElim(I).imageMatrix
     }
     
-    internal func dImageTransitionMatrix(_ I: GridCoords) -> DMatrix<R> {
+    internal func boundaryTransitionMatrix(_ I: GridCoords) -> DMatrix<R> {
         return dElim(I).imageTransitionMatrix
     }
     

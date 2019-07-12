@@ -52,7 +52,7 @@ public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2
     }
     
     public func assertChainMap(at I0: GridCoords, from C0: ChainComplex<GridDim, BaseModule1>, to C1: ChainComplex<GridDim, BaseModule2>, debug: Bool = false) {
-        assert(C0.differential.multiDegree == C1.differential.multiDegree)
+        assert(C0.d.multiDegree == C1.d.multiDegree)
 
         //          d0
         //  C0[I0] -----> C0[I1]
@@ -62,7 +62,7 @@ public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2
         //  C1[I2] -----> C1[I3]
         //          d1
 
-        let (f, d0, d1) = (self, C0.differential, C1.differential)
+        let (f, d0, d1) = (self, C0.d, C1.d)
 
         func print(_ msg: @autoclosure () -> String) {
             Swift.print(msg())

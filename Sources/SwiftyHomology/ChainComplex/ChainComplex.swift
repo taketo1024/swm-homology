@@ -16,13 +16,13 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
     public typealias Differential = ChainMap<GridDim, BaseModule, BaseModule>
     
     public var grid: ModuleGrid<GridDim, BaseModule>
-    public let differential: Differential
     
+    internal let d: Differential
     internal let elimCache: CacheDictionary<GridCoords, Any> = .empty
 
     public init(grid: ModuleGrid<GridDim, BaseModule>, differential: Differential) {
         self.grid = grid
-        self.differential = differential
+        self.d = differential
     }
     
     public subscript(I: GridCoords) -> ModuleObject<BaseModule> {
@@ -39,15 +39,19 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
     
     public func shifted(_ shift: GridCoords) -> ChainComplex<GridDim, BaseModule> {
         assert(shift.count == gridDim)
-        return ChainComplex(grid: grid.shifted(shift), differential: differential.shifted(shift))
+        return ChainComplex(grid: grid.shifted(shift), differential: d.shifted(shift))
     }
     
     public func isFreeToFree(at I: GridCoords) -> Bool {
-        return grid[I].isFree && grid[I.shifted(differential.multiDegree)].isFree
+        return grid[I].isFree && grid[I.shifted(d.multiDegree)].isFree
+    }
+    
+    public func differntial(at I: GridCoords) -> Differential.Hom {
+        return d[I]
     }
     
     public func differntialMatrix(at I: GridCoords) -> DMatrix<R> {
-        return differential.asMatrix(at: I, from: self, to: self)
+        return d.asMatrix(at: I, from: self, to: self)
     }
     
     public func assertChainComplex(at I0: GridCoords, debug: Bool = false) {
@@ -55,7 +59,7 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
             if debug { Swift.print(msg()) }
         }
         
-        let deg = differential.multiDegree
+        let deg = d.multiDegree
         let I1 = I0.shifted(deg)
         let I2 = I1.shifted(deg)
         let (s0, s1, s2) = (self[I0], self[I1], self[I2])
@@ -63,9 +67,8 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
         print("\(I0): \(s0) -> \(s1) -> \(s2)")
         
         for x in s0.generators {
-            let y = differential[I0].applied(to: x)
-            
-            let z = differential[I1].applied(to: y)
+            let y = d[I0].applied(to: x)
+            let z = d[I1].applied(to: y)
             print("\t\(x) ->\t\(y) ->\t\(z)")
             
             assert(self[I2].factorize(z).isZero)
@@ -94,6 +97,10 @@ extension ChainComplex where GridDim == _1 {
     
     public func isFreeToFree(at i: Int) -> Bool {
         return isFreeToFree(at: [i])
+    }
+    
+    public func differntial(at i: Int) -> Differential.Hom {
+        return differntial(at: [i])
     }
     
     public func differntialMatrix(at i: Int) -> DMatrix<R> {
@@ -131,6 +138,6 @@ extension ChainComplex where GridDim == _2 {
 
 extension ChainComplex {
     public var dual: ChainComplex<GridDim, Dual<BaseModule>> {
-        return ChainComplex<GridDim, Dual<BaseModule>>(grid: grid.dual, differential: differential.dual)
+        return ChainComplex<GridDim, Dual<BaseModule>>(grid: grid.dual, differential: d.dual)
     }
 }
