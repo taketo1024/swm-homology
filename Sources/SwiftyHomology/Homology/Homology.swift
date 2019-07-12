@@ -183,7 +183,7 @@ extension ChainComplex where R: EuclideanRing {
     private func dElim(_ I: GridCoords) -> MatrixEliminationResult<DynamicSize, DynamicSize, R> {
         return elimCache.useCacheOrSet(key: I) {
             assert(isFreeToFree(at: I))
-            return differntialMatrix(at: I).eliminate(form: .Diagonal)
+            return differentialMatrix(at: I).eliminate(form: .Diagonal)
         } as! MatrixEliminationResult<DynamicSize, DynamicSize, R>
     }
 }

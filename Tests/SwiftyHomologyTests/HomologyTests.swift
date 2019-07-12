@@ -220,8 +220,8 @@ class HomologyTests: XCTestCase {
         C.assertChainComplex(range: 0 ... d.count)
         
         XCTAssertEqual(C.differential.degree, 1)
-        XCTAssertEqual(C.differntialMatrix(at: 0), d[0].transposed)
-        XCTAssertEqual(C.differntialMatrix(at: 1), d[1].transposed)
+        XCTAssertEqual(C.differentialMatrix(at: 0), d[0].transposed)
+        XCTAssertEqual(C.differentialMatrix(at: 1), d[1].transposed)
 
         XCTAssertEqual(H[0].dictionaryDescription, [0 : 1])
         XCTAssertEqual(H[1].dictionaryDescription, [:])

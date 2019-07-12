@@ -50,11 +50,11 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
         return d
     }
     
-    public func differntial(at I: GridCoords) -> Differential.Hom {
+    public func differential(at I: GridCoords) -> Differential.Hom {
         return d[I]
     }
     
-    public func differntialMatrix(at I: GridCoords) -> DMatrix<R> {
+    public func differentialMatrix(at I: GridCoords) -> DMatrix<R> {
         return d.asMatrix(at: I, from: self, to: self)
     }
     
@@ -103,12 +103,12 @@ extension ChainComplex where GridDim == _1 {
         return isFreeToFree(at: [i])
     }
     
-    public func differntial(at i: Int) -> Differential.Hom {
-        return differntial(at: [i])
+    public func differential(at i: Int) -> Differential.Hom {
+        return differential(at: [i])
     }
     
-    public func differntialMatrix(at i: Int) -> DMatrix<R> {
-        return differntialMatrix(at: [i])
+    public func differentialMatrix(at i: Int) -> DMatrix<R> {
+        return differentialMatrix(at: [i])
     }
     
     public func assertChainComplex(at i: Int, debug: Bool = false) {
