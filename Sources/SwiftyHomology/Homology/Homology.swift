@@ -154,6 +154,16 @@ extension ChainComplex where R: EuclideanRing {
         return ModuleObject(basis: gens, factorizer: factr)
     }
     
+    public func boundaryInverse(of b: BaseModule, at I: GridCoords) -> BaseModule? {
+        assert(isFreeToFree(at: I))
+        let J = I.shifted(-d.multiDegree)
+        if let v = dElim(J).invert(self[I].factorize(b)) {
+            return (self[J].generators * v)[0]
+        } else {
+            return nil
+        }
+    }
+    
     internal func cycleMatrix(_ I: GridCoords) -> DMatrix<R> {
         return dElim(I).kernelMatrix
     }
