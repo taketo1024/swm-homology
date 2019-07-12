@@ -46,6 +46,10 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
         return grid[I].isFree && grid[I.shifted(d.multiDegree)].isFree
     }
     
+    public var differential: Differential {
+        return d
+    }
+    
     public func differntial(at I: GridCoords) -> Differential.Hom {
         return d[I]
     }
