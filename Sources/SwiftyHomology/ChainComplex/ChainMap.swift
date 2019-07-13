@@ -45,7 +45,7 @@ public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2
         
         let components = s0.generators.enumerated().flatMap { (j, x) -> [MatrixComponent<R>] in
             let y = f.applied(to: x)
-            return to[J].factorize(y).map{ c in (c.row, j, c.value) }
+            return to[J].factorize(y).components.map{ c in (c.row, j, c.value) }
         }
         
         return DMatrix(size: (s1.generators.count, s0.generators.count), components: components, zerosExcluded: true)

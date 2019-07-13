@@ -148,7 +148,7 @@ extension ChainComplex where R: EuclideanRing {
         let diag = dElim(J).result.diagonal
         let factr = { (b: BaseModule) -> DVector<R> in
             let v = T * C_I.factorize(b)
-            let divided = v.map { (i, _, a) -> MatrixComponent<R> in (i, 0, a / diag[i]) }
+            let divided = v.components.map { (i, _, a) -> MatrixComponent<R> in (i, 0, a / diag[i]) }
             return DVector(size: v.size, components: divided, zerosExcluded: true)
         }
         return ModuleObject(basis: gens, factorizer: factr)
