@@ -122,7 +122,12 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
 extension ModuleObject where BaseModule: FreeModuleType {
     public init(basis: [BaseModule.Generator]) {
         let indexer = basis.indexer()
-        self.init(basis: basis.map{ x in .wrap(x) }, factorizer: { z in z.factorize(by: basis, indexer: indexer) })
+        self.init(basis: basis.map{ x in .wrap(x) }, factorizer: { z in
+            let comps = z.decomposed().compactMap { (a, r) -> MatrixComponent<R>? in
+                indexer(a).map{ i in (i, 0, r) }
+            }
+            return DVector<R>(size: (basis.count, 1), components: comps, zerosExcluded: true)
+        })
     }
 }
 

@@ -152,7 +152,7 @@ extension ChainComplex where BaseModule: FreeModuleType {
             grid: ModuleGrid(supportedCoords: grid.supportedCoords) { I in
                 let Ci = self[I]
                 let gens = Ci.generators.compactMap{ z -> BaseModule.Generator? in
-                    let x = z.unwrap()
+                    let x = z.unwrap()!
                     return (predicate(x)) ? x : nil
                 }
                 return ModuleObject(basis: gens)
@@ -169,7 +169,7 @@ extension ChainComplex1 where GridDim == _1, BaseModule: FreeModuleType {
                 let (i, j) = (I[0], I[1])
                 let Ci = self[i]
                 let gens = Ci.generators.compactMap{ z -> BaseModule.Generator? in
-                    let x = z.unwrap()
+                    let x = z.unwrap()!
                     return (secondaryDegree(x) == j) ? x : nil
                 }
                 return ModuleObject(basis: gens)
