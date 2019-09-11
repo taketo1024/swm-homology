@@ -80,21 +80,33 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
     }
 }
 
+public enum ChainComplex1Type {
+    case ascending, descending
+    public var degree: Int {
+        switch self {
+        case  .ascending: return 1
+        case .descending: return -1
+        }
+    }
+}
+
 extension ChainComplex where GridDim == _1 {
+    public init<S: Sequence>(type: ChainComplex1Type = .descending, supported: S, sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) where S.Element == Int {
+        self.init(grid: ModuleGrid1(supported: supported, sequence: sequence), differential: Differential(degree: type.degree, maps: d))
+    }
+    
     // chain complex (degree: -1)
+    @available(*, deprecated, message: "use ChainComplex1(type: .descending, ...) ")
     public static func descending<S: Sequence>(supported: S, sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) -> ChainComplex1<BaseModule> where S.Element == Int {
-        return _sequence(supported: supported, ascending: false, sequence: sequence, differential: d)
+        return .init(type: .descending, supported: supported, sequence: sequence, differential: d)
     }
     
     // cochain complex (degree: +1)
+    @available(*, deprecated, message: "use ChainComplex1(type: .ascending, ...) ")
     public static func ascending<S: Sequence>(supported: S, sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) -> ChainComplex1<BaseModule> where S.Element == Int {
-        return _sequence(supported: supported, ascending: true, sequence: sequence, differential: d)
+        return .init(type: .ascending, supported: supported, sequence: sequence, differential: d)
     }
-    
-    private static func _sequence<S: Sequence>(supported: S, ascending: Bool, sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) -> ChainComplex1<BaseModule> where S.Element == Int {
-        return .init(grid: ModuleGrid1(supported: supported, sequence: sequence), differential: Differential(degree: ascending ? 1 : -1, maps: d))
-    }
-    
+
     public func shifted(_ shift: Int) -> ChainComplex<GridDim, BaseModule> {
         return shifted([shift])
     }

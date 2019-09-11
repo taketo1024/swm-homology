@@ -45,7 +45,7 @@ class HomologyTests: XCTestCase {
         
         let objs = bases.map { ModuleObject<M>(basis: $0) }
         
-        return ChainComplex1<M>.descending(
+        return ChainComplex1<M>(
             supported: bases.indices,
             sequence: { i in
                 bases.indices.contains(i) ? objs[i] : .zeroModule
