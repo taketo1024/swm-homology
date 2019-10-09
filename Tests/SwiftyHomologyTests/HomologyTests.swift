@@ -78,7 +78,7 @@ class HomologyTests: XCTestCase {
     func test1() {
         let d = (1 ... 3).map{ _ in DMatrix<R>.zero(size: (1, 1)) }
         let C = generateChainComplex(matrices: d)
-        let H = Homology(C)
+        let H = C.homology
         
         C.assertChainComplex(range: 0 ... d.count)
 
@@ -93,7 +93,7 @@ class HomologyTests: XCTestCase {
     func test2() {
         let d = (1 ... 3).map{ i in i.isOdd ? DMatrix<R>.identity(size: 1) : DMatrix<R>.zero(size: (1, 1)) }
         let C = generateChainComplex(matrices: d)
-        let H = Homology(C)
+        let H = C.homology
 
         C.assertChainComplex(range: 0 ... d.count)
         
@@ -108,7 +108,7 @@ class HomologyTests: XCTestCase {
     func test3() {
         let d = (1 ... 3).map{ i in i.isOdd ? 2 * DMatrix<R>.identity(size: 1) : DMatrix<R>.zero(size: (1, 1)) }
         let C = generateChainComplex(matrices: d)
-        let H = Homology(C)
+        let H = C.homology
 
         for i in 0 ... d.count {
             C.assertChainComplex(at: i)
@@ -126,7 +126,7 @@ class HomologyTests: XCTestCase {
         let shift = -3
         let d = (1 ... 3).map{ i in i.isOdd ? 2 * DMatrix<R>.identity(size: 1) : DMatrix<R>.zero(size: (1, 1)) }
         let C = generateChainComplex(matrices: d).shifted(shift)
-        let H = Homology(C)
+        let H = C.homology
         
         for i in 0 ... d.count {
             C.assertChainComplex(at: i + shift)
@@ -147,7 +147,7 @@ class HomologyTests: XCTestCase {
         ]
         
         let C = generateChainComplex(matrices: d)
-        let H = Homology(C)
+        let H = C.homology
         
         C.assertChainComplex(range: 0 ... d.count)
         
@@ -165,7 +165,7 @@ class HomologyTests: XCTestCase {
         ]
         
         let C = generateChainComplex(matrices: d)
-        let H = Homology(C)
+        let H = C.homology
         
         C.assertChainComplex(range: 0 ... d.count)
         
@@ -182,7 +182,7 @@ class HomologyTests: XCTestCase {
         ]
         
         let C = generateChainComplex(matrices: d)
-        let H = Homology(C)
+        let H = C.homology
         
         C.assertChainComplex(range: 0 ... d.count)
         
@@ -199,7 +199,7 @@ class HomologyTests: XCTestCase {
         ]
         
         let C = generateChainComplex(matrices: d)
-        let H = Homology(C)
+        let H = C.homology
         
         C.assertChainComplex(range: 0 ... d.count)
         
@@ -215,7 +215,7 @@ class HomologyTests: XCTestCase {
         ]
         
         let C = generateChainComplex(matrices: d).dual
-        let H = Homology(C)
+        let H = C.homology
         
         C.assertChainComplex(range: 0 ... d.count)
         
