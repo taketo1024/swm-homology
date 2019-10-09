@@ -17,7 +17,7 @@ import SwiftyMath
 //      https://en.wikipedia.org/wiki/Structure_theorem_for_finitely_generated_modules_over_a_principal_ideal_domain#Invariant_factor_decomposition
 
 public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertible {
-    public typealias R = BaseModule.CoeffRing
+    public typealias R = BaseModule.BaseRing
     public typealias Factorizer = (BaseModule) -> DVector<R>
 
     public let summands: [Summand]
@@ -123,10 +123,13 @@ extension ModuleObject where BaseModule: FreeModuleType {
     public init(basis: [BaseModule.Generator]) {
         let indexer = basis.indexer()
         self.init(basis: basis.map{ x in .wrap(x) }, factorizer: { z in
-            let comps = z.decomposed().compactMap { (a, r) -> MatrixComponent<R>? in
-                indexer(a).map{ i in (i, 0, r) }
+            DVector<R>(size: (basis.count, 1)) { setEntry in
+                z.decomposed().forEach { (a, r) in
+                    if let i = indexer(a) {
+                        setEntry(i, 0, r)
+                    }
+                }
             }
-            return DVector<R>(size: (basis.count, 1), components: comps, zerosExcluded: true)
         })
     }
 }
@@ -143,11 +146,14 @@ extension ModuleObject {
         }.map{ DualObject.Summand($0) }
         
         let factr = { (f: Dual<BaseModule>) -> DVector<R> in
-            let comps = self.generators.enumerated().compactMap{ (i, z) -> MatrixComponent<R>? in
-                let a: R = f.applied(to: z).value
-                return (a != .zero) ? (i, 0, a) : nil
+            DVector(size: (self.generators.count, 1)) { setEntry in
+                self.generators.enumerated().forEach { (i, z) in
+                    let a = f.applied(to: z).value
+                    if !a.isZero {
+                        setEntry(i, 0, a)
+                    }
+                }
             }
-            return DVector(size: (self.rank, 1), components: comps, zerosExcluded: true)
         }
         return ModuleObject<Dual<BaseModule>>(summands, factr)
     }

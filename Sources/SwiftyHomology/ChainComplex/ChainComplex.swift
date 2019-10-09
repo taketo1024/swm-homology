@@ -12,7 +12,7 @@ public typealias ChainComplex1<M: Module> = ChainComplex<_1, M>
 public typealias ChainComplex2<M: Module> = ChainComplex<_2, M>
 
 public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
-    public typealias R = BaseModule.CoeffRing
+    public typealias R = BaseModule.BaseRing
     public typealias Differential = ChainMap<GridDim, BaseModule, BaseModule>
     
     public var grid: ModuleGrid<GridDim, BaseModule>

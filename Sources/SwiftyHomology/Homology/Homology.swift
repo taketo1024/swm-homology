@@ -8,11 +8,11 @@
 import Foundation
 import SwiftyMath
 
-public typealias Homology1<M: Module> = Homology<_1, M> where M.CoeffRing: EuclideanRing
-public typealias Homology2<M: Module> = Homology<_2, M> where M.CoeffRing: EuclideanRing
+public typealias Homology1<M: Module> = Homology<_1, M> where M.BaseRing: EuclideanRing
+public typealias Homology2<M: Module> = Homology<_2, M> where M.BaseRing: EuclideanRing
 
-public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseModule.CoeffRing: EuclideanRing {
-    public typealias R = BaseModule.CoeffRing
+public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseModule.BaseRing: EuclideanRing {
+    public typealias R = BaseModule.BaseRing
     
     public let chainComplex: ChainComplex<GridDim, BaseModule>
     public let grid: ModuleGrid<GridDim, BaseModule>
@@ -88,8 +88,8 @@ public struct Homology<GridDim: StaticSizeType, BaseModule: Module> where BaseMo
         assert(A.size.cols >= B.size.cols) // k >= l
         
         let (k, l) = (A.size.cols, B.size.cols)
-        let elim = (T * B).eliminate(form: .Smith)
-        let d = elim.result.diagonal.exclude{ $0.isInvertible } + [.zero].repeated(k - l)
+        let elim = MatrixEliminator.eliminate(target: T * B, form: .Smith)
+        let d = elim.result.diagonalComponents.exclude{ $0.isInvertible } + [R.zero] * (k - l)
         let s = d.count
         
         let P    = elim.left       .submatrix(rowRange: (k - s) ..< k)
@@ -145,11 +145,12 @@ extension ChainComplex where R: EuclideanRing {
         
         let C_I = self[I]
         let gens = C_I.generators * B
-        let diag = dElim(J).result.diagonal
+        let diag = dElim(J).result.diagonalComponents
         let factr = { (b: BaseModule) -> DVector<R> in
             let v = T * C_I.factorize(b)
-            let divided = v.components.map { (i, _, a) -> MatrixComponent<R> in (i, 0, a / diag[i]) }
-            return DVector(size: v.size, components: divided, zerosExcluded: true)
+            return DVector(size: v.size) { setEntry in
+                v.nonZeroComponents.forEach { (i, _, a) in setEntry(i, 0, a / diag[i]) }
+            }
         }
         return ModuleObject(basis: gens, factorizer: factr)
     }
@@ -183,7 +184,7 @@ extension ChainComplex where R: EuclideanRing {
     private func dElim(_ I: GridCoords) -> MatrixEliminationResult<DynamicSize, DynamicSize, R> {
         return elimCache.useCacheOrSet(key: I) {
             assert(isFreeToFree(at: I))
-            return differentialMatrix(at: I).eliminate(form: .Diagonal)
+            return MatrixEliminator.eliminate(target: differentialMatrix(at: I), form: .Diagonal)
         } as! MatrixEliminationResult<DynamicSize, DynamicSize, R>
     }
 }

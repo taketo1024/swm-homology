@@ -8,11 +8,11 @@
 import Foundation
 import SwiftyMath
 
-public typealias ChainMap1<M: Module, N: Module> = ChainMap<_1, M, N> where M.CoeffRing == N.CoeffRing
-public typealias ChainMap2<M: Module, N: Module> = ChainMap<_2, M, N> where M.CoeffRing == N.CoeffRing
+public typealias ChainMap1<M: Module, N: Module> = ChainMap<_1, M, N> where M.BaseRing == N.BaseRing
+public typealias ChainMap2<M: Module, N: Module> = ChainMap<_2, M, N> where M.BaseRing == N.BaseRing
 
-public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2: Module> where BaseModule1.CoeffRing == BaseModule2.CoeffRing {
-    public typealias R = BaseModule1.CoeffRing
+public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2: Module> where BaseModule1.BaseRing == BaseModule2.BaseRing {
+    public typealias R = BaseModule1.BaseRing
     public typealias Hom = ModuleHom<BaseModule1, BaseModule2>
     
     public var multiDegree: [Int]
@@ -43,12 +43,12 @@ public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2
         let (s0, s1) = (from[I], to[J])
         let f = self[I]
         
-        let components = s0.generators.enumerated().flatMap { (j, x) -> [MatrixComponent<R>] in
-            let y = f.applied(to: x)
-            return to[J].factorize(y).components.map{ c in (c.row, j, c.value) }
+        return DMatrix(size: (s1.generators.count, s0.generators.count)) { setEntry in
+            s0.generators.enumerated().forEach { (j, x) in
+                let y = f.applied(to: x)
+                s1.factorize(y).nonZeroComponents.forEach{ (i, _, a) in setEntry(i, j, a) }
+            }
         }
-        
-        return DMatrix(size: (s1.generators.count, s0.generators.count), components: components, zerosExcluded: true)
     }
     
     public func assertChainMap(at I0: GridCoords, from C0: ChainComplex<GridDim, BaseModule1>, to C1: ChainComplex<GridDim, BaseModule2>, debug: Bool = false) {
@@ -119,7 +119,7 @@ extension ChainMap {
             ModuleHom<Dual<BaseModule2>, Dual<BaseModule1>> { g in
                 let J = I.shifted(-self.multiDegree)
                 let f = self[J]
-                return g ∘ f
+                return .init(g ∘ f)
             }
         }
     }

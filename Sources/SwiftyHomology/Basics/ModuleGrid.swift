@@ -12,7 +12,7 @@ public typealias ModuleGrid1<M: Module> = ModuleGrid<_1, M>
 public typealias ModuleGrid2<M: Module> = ModuleGrid<_2, M>
 
 public struct ModuleGrid<GridDim: StaticSizeType, BaseModule: Module> {
-    public typealias R = BaseModule.CoeffRing
+    public typealias R = BaseModule.BaseRing
     public typealias Vertex = ModuleObject<BaseModule>
     
     public let supportedCoords: [GridCoords]
