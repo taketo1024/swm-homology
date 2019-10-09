@@ -5,8 +5,9 @@
 //  Created by Taketo Sano on 2018/05/18.
 //
 
-import Foundation
 import SwiftyMath
+
+public typealias GridCoords = [Int]
 
 public typealias ModuleGrid1<M: Module> = ModuleGrid<_1, M>
 public typealias ModuleGrid2<M: Module> = ModuleGrid<_2, M>
@@ -30,16 +31,16 @@ public struct ModuleGrid<GridDim: StaticSizeType, BaseModule: Module> {
     }
     
     public subscript(I: Int...) -> Vertex {
-        return self[I]
+        self[I]
     }
     
     public var gridDim: Int {
-        return GridDim.intValue
+        GridDim.intValue
     }
     
-    public func shifted(_ shift: GridCoords) -> ModuleGrid<GridDim, BaseModule> {
+    public func shifted(_ shift: GridCoords) -> Self {
         assert(shift.count == gridDim)
-        return ModuleGrid(supportedCoords: supportedCoords.map{ $0.shifted(shift) }) { I in
+        return .init(supportedCoords: supportedCoords.map{ $0.shifted(shift) }) { I in
             self[I.shifted(-shift)]
         }
     }
@@ -50,8 +51,8 @@ extension ModuleGrid where GridDim == _1 {
         self.init(supportedCoords: supported.map{ [$0] }) { I in sequence(I[0]) }
     }
     
-    public func shifted(_ shift: Int) -> ModuleGrid<GridDim, BaseModule> {
-        return shifted([shift])
+    public func shifted(_ shift: Int) -> Self {
+        shifted([shift])
     }
     
     public func printSequence() {
@@ -90,6 +91,17 @@ extension ModuleGrid where GridDim == _2 {
 
 extension ModuleGrid {
     public var dual: ModuleGrid<GridDim, Dual<BaseModule>> {
-        return ModuleGrid<GridDim, Dual<BaseModule>>{ I in self[I].dual }
+        ModuleGrid<GridDim, Dual<BaseModule>>{ I in self[I].dual }
+    }
+}
+
+internal extension Array where Element == Int {
+    func shifted(_ I: GridCoords) -> GridCoords {
+        assert(self.count == I.count)
+        return zip(self, I).map{ (x, y) in x + y }
+    }
+    
+    static prefix func -(_ I: GridCoords) -> GridCoords {
+        I.map{ -$0 }
     }
 }

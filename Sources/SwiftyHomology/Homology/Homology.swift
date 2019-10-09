@@ -5,7 +5,6 @@
 //  Created by Taketo Sano on 2018/06/02.
 //
 
-import Foundation
 import SwiftyMath
 
 public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Module> where BaseModule.BaseRing: EuclideanRing {
@@ -81,19 +80,19 @@ public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Modul
     }
     
     public func cycleMatrix(_ I: GridCoords) -> DMatrix<R> {
-        return dElim(I).kernelMatrix
+        dElim(I).kernelMatrix
     }
     
     public func cycleTransitionMatrix(_ I: GridCoords) -> DMatrix<R> {
-        return dElim(I).kernelTransitionMatrix
+        dElim(I).kernelTransitionMatrix
     }
     
     public func boundaryMatrix(_ I: GridCoords) -> DMatrix<R> {
-        return dElim(I).imageMatrix
+        dElim(I).imageMatrix
     }
     
     public func boundaryTransitionMatrix(_ I: GridCoords) -> DMatrix<R> {
-        return dElim(I).imageTransitionMatrix
+        dElim(I).imageTransitionMatrix
     }
     
     private func dElim(_ I: GridCoords) -> MatrixEliminationResult<DynamicSize, DynamicSize, R> {

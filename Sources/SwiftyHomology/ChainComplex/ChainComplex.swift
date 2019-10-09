@@ -5,7 +5,6 @@
 //  Created by Taketo Sano on 2018/05/21.
 //
 
-import Foundation
 import SwiftyMath
 
 public typealias ChainComplex1<M: Module> = ChainComplex<_1, M>
@@ -24,36 +23,36 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
     }
     
     public subscript(I: GridCoords) -> ModuleObject<BaseModule> {
-        return grid[I]
+        grid[I]
     }
     
     public subscript(I: Int...) -> ModuleObject<BaseModule> {
-        return self[I]
+        self[I]
     }
     
     public var gridDim: Int {
-        return GridDim.intValue
+        GridDim.intValue
     }
     
-    public func shifted(_ shift: GridCoords) -> ChainComplex<GridDim, BaseModule> {
+    public func shifted(_ shift: GridCoords) -> Self {
         assert(shift.count == gridDim)
-        return ChainComplex(grid: grid.shifted(shift), differential: d.shifted(shift))
+        return .init(grid: grid.shifted(shift), differential: d.shifted(shift))
     }
     
     public func isFreeToFree(at I: GridCoords) -> Bool {
-        return grid[I].isFree && grid[I.shifted(d.multiDegree)].isFree
+        grid[I].isFree && grid[I.shifted(d.multiDegree)].isFree
     }
     
     public var differential: Differential {
-        return d
+        d
     }
     
     public func differential(at I: GridCoords) -> Differential.Hom {
-        return d[I]
+        d[I]
     }
     
     public func differentialMatrix(at I: GridCoords) -> DMatrix<R> {
-        return d.asMatrix(at: I, from: self, to: self)
+        d.asMatrix(at: I, from: self, to: self)
     }
     
     public func assertChainComplex(at I0: GridCoords, debug: Bool = false) {
@@ -93,32 +92,20 @@ extension ChainComplex where GridDim == _1 {
         self.init(grid: ModuleGrid1(supported: supported, sequence: sequence), differential: Differential(degree: type.degree, maps: d))
     }
     
-    // chain complex (degree: -1)
-    @available(*, deprecated, message: "use ChainComplex1(type: .descending, ...) ")
-    public static func descending<S: Sequence>(supported: S, sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) -> ChainComplex1<BaseModule> where S.Element == Int {
-        return .init(type: .descending, supported: supported, sequence: sequence, differential: d)
-    }
-    
-    // cochain complex (degree: +1)
-    @available(*, deprecated, message: "use ChainComplex1(type: .ascending, ...) ")
-    public static func ascending<S: Sequence>(supported: S, sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) -> ChainComplex1<BaseModule> where S.Element == Int {
-        return .init(type: .ascending, supported: supported, sequence: sequence, differential: d)
-    }
-
-    public func shifted(_ shift: Int) -> ChainComplex<GridDim, BaseModule> {
-        return shifted([shift])
+    public func shifted(_ shift: Int) -> Self {
+        shifted([shift])
     }
     
     public func isFreeToFree(at i: Int) -> Bool {
-        return isFreeToFree(at: [i])
+        isFreeToFree(at: [i])
     }
     
     public func differential(at i: Int) -> Differential.Hom {
-        return differential(at: [i])
+        differential(at: [i])
     }
     
     public func differentialMatrix(at i: Int) -> DMatrix<R> {
-        return differentialMatrix(at: [i])
+        differentialMatrix(at: [i])
     }
     
     public func assertChainComplex(at i: Int, debug: Bool = false) {
@@ -152,13 +139,13 @@ extension ChainComplex where GridDim == _2 {
 
 extension ChainComplex {
     public var dual: ChainComplex<GridDim, Dual<BaseModule>> {
-        return ChainComplex<GridDim, Dual<BaseModule>>(grid: grid.dual, differential: d.dual)
+        ChainComplex<GridDim, Dual<BaseModule>>(grid: grid.dual, differential: d.dual)
     }
 }
 
 extension ChainComplex where BaseModule: FreeModuleType {
-    public func filtered(_ predicate: @escaping (BaseModule.Generator) -> Bool) -> ChainComplex<GridDim, BaseModule> {
-        return ChainComplex(
+    public func filtered(_ predicate: @escaping (BaseModule.Generator) -> Bool) -> Self {
+        ChainComplex(
             grid: ModuleGrid(supportedCoords: grid.supportedCoords) { I in
                 let Ci = self[I]
                 let gens = Ci.generators.compactMap{ z -> BaseModule.Generator? in
@@ -174,7 +161,7 @@ extension ChainComplex where BaseModule: FreeModuleType {
 
 extension ChainComplex1 where GridDim == _1, BaseModule: FreeModuleType {
     public func asBigraded(supportedCoords: [GridCoords] = [], secondaryDegree: @escaping (BaseModule.Generator) -> Int) -> ChainComplex2<BaseModule> {
-        return ChainComplex2(
+        ChainComplex2(
             grid: ModuleGrid(supportedCoords: supportedCoords) { I in
                 let (i, j) = (I[0], I[1])
                 let Ci = self[i]

@@ -5,7 +5,6 @@
 //  Created by Taketo Sano on 2018/05/23.
 //
 
-import Foundation
 import SwiftyMath
 
 public typealias ChainMap1<M: Module, N: Module> = ChainMap<_1, M, N> where M.BaseRing == N.BaseRing
@@ -24,16 +23,16 @@ public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2
     }
     
     public subscript(_ I: GridCoords) -> Hom {
-        return maps(I)
+        maps(I)
     }
     
     public subscript(_ I: Int...) -> Hom {
-        return self[I]
+        self[I]
     }
     
-    public func shifted(_ shift: GridCoords) -> ChainMap<GridDim, BaseModule1, BaseModule2> {
+    public func shifted(_ shift: GridCoords) -> Self {
         assert(shift.count == GridDim.intValue)
-        return ChainMap(multiDegree: multiDegree) { I in
+        return .init(multiDegree: multiDegree) { I in
             self[I.shifted(-shift)]
         }
     }
@@ -94,12 +93,12 @@ extension ChainMap where GridDim == _1 {
         self.init(multiDegree: [degree]) { I in maps(I[0]) }
     }
     
-    public func shifted(_ shift: Int) -> ChainMap<GridDim, BaseModule1, BaseModule2> {
-        return shifted([shift])
+    public func shifted(_ shift: Int) -> Self {
+        shifted([shift])
     }
     
     public func asMatrix(at i: Int, from: ChainComplex<GridDim, BaseModule1>, to: ChainComplex<GridDim, BaseModule2>) -> DMatrix<R> {
-        return asMatrix(at: [i], from: from, to: to)
+        asMatrix(at: [i], from: from, to: to)
     }
     
     public func assertChainMap(at i: Int, from: ChainComplex<GridDim, BaseModule1>, to: ChainComplex<GridDim, BaseModule2>, debug: Bool = false) {
@@ -108,13 +107,13 @@ extension ChainMap where GridDim == _1 {
 
     
     public var degree: Int {
-        return multiDegree[0]
+        multiDegree[0]
     }
 }
 
 extension ChainMap {
     public var dual: ChainMap<GridDim, Dual<BaseModule2>, Dual<BaseModule1>> {
-        return ChainMap<GridDim, Dual<BaseModule2>, Dual<BaseModule1>>(multiDegree: -multiDegree) { I in
+        ChainMap<GridDim, Dual<BaseModule2>, Dual<BaseModule1>>(multiDegree: -multiDegree) { I in
             ModuleHom<Dual<BaseModule2>, Dual<BaseModule1>> { g in
                 let J = I.shifted(-self.multiDegree)
                 let f = self[J]

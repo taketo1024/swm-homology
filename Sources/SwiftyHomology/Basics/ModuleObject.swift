@@ -5,7 +5,6 @@
 //  Created by Taketo Sano on 2018/06/02.
 //
 
-import Foundation
 import SwiftyMath
 
 // A decomposed form of a freely & finitely presented module,
@@ -41,39 +40,39 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
 
     
     public subscript(i: Int) -> Summand {
-        return summands[i]
+        summands[i]
     }
     
     public func factorize(_ z: BaseModule) -> DVector<R> {
-        return factorizer(z)
+        factorizer(z)
     }
     
-    public static var zeroModule: ModuleObject<BaseModule> {
-        return ModuleObject([], {_ in DVector([])})
+    public static var zeroModule: Self {
+        .init([], {_ in .zero(size: 0) })
     }
     
     public var isZero: Bool {
-        return summands.isEmpty
+        summands.isEmpty
     }
     
     public var isFree: Bool {
-        return summands.allSatisfy { $0.isFree }
+        summands.allSatisfy { $0.isFree }
     }
     
     public var rank: Int {
-        return summands.filter{ $0.isFree }.count
+        summands.filter{ $0.isFree }.count
     }
     
     public var generators: [BaseModule] {
-        return summands.map{ $0.generator }
+        summands.map{ $0.generator }
     }
     
     public func generator(_ i: Int) -> BaseModule {
-        return summands[i].generator
+        summands[i].generator
     }
     
     public static func ==(a: ModuleObject<BaseModule>, b: ModuleObject<BaseModule>) -> Bool {
-        return a.summands == b.summands
+        a.summands == b.summands
     }
     
     public var description: String {
@@ -85,7 +84,7 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
         return group.keys.sorted().map { key in
             let list = group[key]!
             return list.first!.description + (list.count > 1 ? Format.sup(list.count) : "")
-            }.joined(separator: "⊕")
+        }.joined(separator: "⊕")
     }
     
     public func printDetail() {
@@ -106,7 +105,7 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
         }
         
         public var isFree: Bool {
-            return divisor == .zero
+            divisor == .zero
         }
         
         public var description: String {
@@ -161,6 +160,6 @@ extension ModuleObject {
 
 extension ModuleObject where R: Hashable {
     public var dictionaryDescription: [R : Int] {
-        return summands.group{ $0.divisor }.mapValues{ $0.count }
+        summands.group{ $0.divisor }.mapValues{ $0.count }
     }
 }
