@@ -132,7 +132,7 @@ extension ModuleObject where BaseModule: FreeModuleType {
         })
     }
     
-    func filter(_ f: @escaping (BaseModule.Generator) -> Bool) -> ModuleObject {
+    public func filter(_ f: @escaping (BaseModule.Generator) -> Bool) -> ModuleObject {
         let basis = generators.compactMap { z -> BaseModule.Generator? in
             assert(z.isGenerator)
             let a = z.unwrap()!
