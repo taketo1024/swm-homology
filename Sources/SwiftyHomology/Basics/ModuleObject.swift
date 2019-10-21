@@ -118,7 +118,7 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
     }
 }
 
-extension ModuleObject where BaseModule: FreeModuleType {
+extension ModuleObject where BaseModule: FreeModule {
     public init(basis: [BaseModule.Generator]) {
         let indexer = basis.indexer()
         self.init(basis: basis.map{ x in .wrap(x) }, factorizer: { z in
@@ -142,7 +142,7 @@ extension ModuleObject where BaseModule: FreeModuleType {
     }
 }
 
-extension ModuleHom where X: FreeModuleType, Y: FreeModuleType {
+extension ModuleHom where X: FreeModule, Y: FreeModule {
     public func asMatrix(from: ModuleObject<X>,to: ModuleObject<Y>) -> DMatrix<BaseRing> {
         DMatrix(size: (to.generators.count, from.generators.count)) { setEntry in
             from.generators.enumerated().forEach { (j, z) in

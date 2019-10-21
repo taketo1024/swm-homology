@@ -28,7 +28,7 @@ class HomologyTests: XCTestCase {
     
     typealias R = 𝐙
     typealias A = IntGenerator
-    typealias M = FreeModule<A, R>
+    typealias M = LinearCombination<A, R>
 
     var count = 0
     private func gens(_ n: Int) -> [A] {

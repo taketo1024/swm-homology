@@ -144,7 +144,7 @@ extension ChainComplex {
     }
 }
 
-extension ChainComplex where BaseModule: FreeModuleType {
+extension ChainComplex where BaseModule: FreeModule {
     public func filtered(_ predicate: @escaping (BaseModule.Generator) -> Bool) -> Self {
         ChainComplex(
             grid: ModuleGrid(supportedCoords: grid.supportedCoords) { I in
@@ -160,7 +160,7 @@ extension ChainComplex where BaseModule: FreeModuleType {
     }
 }
 
-extension ChainComplex1 where GridDim == _1, BaseModule: FreeModuleType {
+extension ChainComplex1 where GridDim == _1, BaseModule: FreeModule {
     public func asBigraded(supportedCoords: [GridCoords] = [], secondaryDegree: @escaping (BaseModule.Generator) -> Int) -> ChainComplex2<BaseModule> {
         ChainComplex2(
             grid: ModuleGrid(supportedCoords: supportedCoords) { I in
