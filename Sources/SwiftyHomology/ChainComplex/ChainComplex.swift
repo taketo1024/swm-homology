@@ -52,10 +52,6 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
         d[I]
     }
     
-    public func differentialMatrix(at I: GridCoords) -> DMatrix<R> {
-        d.asMatrix(at: I, from: self, to: self)
-    }
-    
     public func assertChainComplex(at I0: GridCoords, debug: Bool = false) {
         func print(_ msg: @autoclosure () -> String) {
             if debug { Swift.print(msg()) }
@@ -103,10 +99,6 @@ extension ChainComplex where GridDim == _1 {
     
     public func differential(at i: Int) -> Differential.Hom {
         differential(at: [i])
-    }
-    
-    public func differentialMatrix(at i: Int) -> DMatrix<R> {
-        differentialMatrix(at: [i])
     }
     
     public func assertChainComplex(at i: Int, debug: Bool = false) {

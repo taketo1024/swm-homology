@@ -215,13 +215,14 @@ class HomologyTests: XCTestCase {
         ]
         
         let C = generateChainComplex(matrices: d).dual
+        let δ = C.differential
         let H = C.homology
         
         C.assertChainComplex(range: 0 ... d.count)
         
-        XCTAssertEqual(C.differential.degree, 1)
-        XCTAssertEqual(C.differentialMatrix(at: 0), d[0].transposed)
-        XCTAssertEqual(C.differentialMatrix(at: 1), d[1].transposed)
+        XCTAssertEqual(δ.degree, 1)
+        XCTAssertEqual(δ[0].asMatrix(from: C[0], to: C[1]), d[0].transposed)
+        XCTAssertEqual(δ[1].asMatrix(from: C[1], to: C[2]), d[1].transposed)
 
         XCTAssertEqual(H[0].dictionaryDescription, [0 : 1])
         XCTAssertEqual(H[1].dictionaryDescription, [:])

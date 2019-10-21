@@ -100,7 +100,9 @@ public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Modul
             return E
         } else {
             assert(chainComplex.isFreeToFree(at: I))
-            let A = chainComplex.differentialMatrix(at: I)
+            let (C, d) = (chainComplex, chainComplex.differential)
+            let (C0, C1) = (C[I], C[I.shifted(d.multiDegree)])
+            let A = d[I].asMatrix(from: C0, to: C1)
             let E = MatrixEliminator.eliminate(target: A, form: .Diagonal)
             elimResult[I] = E
             return E

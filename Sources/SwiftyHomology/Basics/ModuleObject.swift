@@ -142,14 +142,14 @@ extension ModuleObject where BaseModule: FreeModule {
     }
 }
 
-extension ModuleHom where X: FreeModule, Y: FreeModule {
-    public func asMatrix(from: ModuleObject<X>,to: ModuleObject<Y>) -> DMatrix<BaseRing> {
-        DMatrix(size: (to.generators.count, from.generators.count)) { setEntry in
-            from.generators.enumerated().forEach { (j, z) in
-                let w = self.applied(to: z)
-                to.factorize(w).nonZeroComponents.forEach{ (i, _, a) in
-                    setEntry(i, j, a)
-                }
+extension ModuleHom {
+    public func asMatrix(from: ModuleObject<X>, to: ModuleObject<Y>) -> DMatrix<BaseRing> {
+        let (n, m) = (to.generators.count, from.generators.count)
+        return DMatrix(size: (n, m), concurrentIterations: m) { (j, setEntry) in
+            let x = from.generator(j)
+            let y = self.applied(to: x)
+            to.factorize(y).nonZeroComponents.forEach{ (i, _, a) in
+                setEntry(i, j, a)
             }
         }
     }
