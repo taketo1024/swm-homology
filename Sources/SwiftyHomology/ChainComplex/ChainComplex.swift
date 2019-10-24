@@ -11,6 +11,7 @@ public typealias ChainComplex1<M: Module> = ChainComplex<_1, M>
 public typealias ChainComplex2<M: Module> = ChainComplex<_2, M>
 
 public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
+    public typealias Coords = GridCoords<GridDim>
     public typealias R = BaseModule.BaseRing
     public typealias Element = BaseModule
     public typealias Differential = ChainMap<GridDim, BaseModule, BaseModule>
@@ -23,43 +24,42 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
         self.d = differential
     }
     
-    public subscript(I: GridCoords) -> ModuleObject<BaseModule> {
+    public subscript(I: Coords) -> ModuleObject<BaseModule> {
         grid[I]
     }
     
     public subscript(I: Int...) -> ModuleObject<BaseModule> {
-        self[I]
+        self[Coords(I)]
     }
     
     public var gridDim: Int {
         GridDim.intValue
     }
     
-    public func shifted(_ shift: GridCoords) -> Self {
-        assert(shift.count == gridDim)
-        return .init(grid: grid.shifted(shift), differential: d.shifted(shift))
+    public func shifted(_ shift: Coords) -> Self {
+        .init(grid: grid.shifted(shift), differential: d.shifted(shift))
     }
     
-    public func isFreeToFree(at I: GridCoords) -> Bool {
-        grid[I].isFree && grid[I.shifted(d.multiDegree)].isFree
+    public func isFreeToFree(at I: Coords) -> Bool {
+        grid[I].isFree && grid[I + d.multiDegree].isFree
     }
     
     public var differential: Differential {
         d
     }
     
-    public func differential(at I: GridCoords) -> Differential.Hom {
+    public func differential(at I: Coords) -> Differential.Hom {
         d[I]
     }
     
-    public func assertChainComplex(at I0: GridCoords, debug: Bool = false) {
+    public func assertChainComplex(at I0: Coords, debug: Bool = false) {
         func print(_ msg: @autoclosure () -> String) {
             if debug { Swift.print(msg()) }
         }
         
         let deg = d.multiDegree
-        let I1 = I0.shifted(deg)
-        let I2 = I1.shifted(deg)
+        let I1 = I0 + deg
+        let I2 = I1 + deg
         let (s0, s1, s2) = (self[I0], self[I1], self[I2])
         
         print("\(I0): \(s0) -> \(s1) -> \(s2)")
@@ -85,8 +85,8 @@ public enum ChainComplex1Type {
 }
 
 extension ChainComplex where GridDim == _1 {
-    public init<S: Sequence>(type: ChainComplex1Type = .descending, supported: S, sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) where S.Element == Int {
-        self.init(grid: ModuleGrid1(supported: supported, sequence: sequence), differential: Differential(degree: type.degree, maps: d))
+    public init(type: ChainComplex1Type = .descending, support: ClosedRange<Int>, sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) {
+        self.init(grid: ModuleGrid1(support: support, sequence: sequence), differential: Differential(degree: type.degree, maps: d))
     }
     
     public func shifted(_ shift: Int) -> Self {
@@ -133,40 +133,5 @@ extension ChainComplex where GridDim == _2 {
 extension ChainComplex {
     public var dual: ChainComplex<GridDim, Dual<BaseModule>> {
         ChainComplex<GridDim, Dual<BaseModule>>(grid: grid.dual, differential: d.dual)
-    }
-}
-
-extension ChainComplex where BaseModule: FreeModule {
-    public func filtered(_ predicate: @escaping (BaseModule.Generator) -> Bool) -> Self {
-        ChainComplex(
-            grid: ModuleGrid(supportedCoords: grid.supportedCoords) { I in
-                let Ci = self[I]
-                let gens = Ci.generators.compactMap{ z -> BaseModule.Generator? in
-                    let x = z.unwrap()!
-                    return (predicate(x)) ? x : nil
-                }
-                return ModuleObject(basis: gens)
-            },
-            differential: d
-        )
-    }
-}
-
-extension ChainComplex1 where GridDim == _1, BaseModule: FreeModule {
-    public func asBigraded(supportedCoords: [GridCoords] = [], secondaryDegree: @escaping (BaseModule.Generator) -> Int) -> ChainComplex2<BaseModule> {
-        ChainComplex2(
-            grid: ModuleGrid(supportedCoords: supportedCoords) { I in
-                let (i, j) = (I[0], I[1])
-                let Ci = self[i]
-                let gens = Ci.generators.compactMap{ z -> BaseModule.Generator? in
-                    let x = z.unwrap()!
-                    return (secondaryDegree(x) == j) ? x : nil
-                }
-                return ModuleObject(basis: gens)
-            },
-            differential: ChainMap2(multiDegree: [d.degree, 0]) { I in
-                self.differential(at: I[0])
-            }
-        )
     }
 }

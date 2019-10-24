@@ -8,10 +8,11 @@
 import SwiftyMath
 
 public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Module> where BaseModule.BaseRing: EuclideanRing {
+    public typealias Coords = GridCoords<GridDim>
     public typealias R = BaseModule.BaseRing
     
     public let chainComplex: ChainComplex<GridDim, BaseModule>
-    private var elimResult: [GridCoords: MatrixEliminationResult<DynamicSize, DynamicSize, R>]
+    private var elimResult: [Coords: MatrixEliminationResult<DynamicSize, DynamicSize, R>]
     
     public init(_ chainComplex: ChainComplex<GridDim, BaseModule>) {
         self.chainComplex = chainComplex
@@ -19,14 +20,14 @@ public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Modul
     }
     
     public func homology() -> ModuleGrid<GridDim, BaseModule> {
-        .init(supportedCoords: chainComplex.grid.supportedCoords) { I in
+        .init(support: chainComplex.grid.support) { I in
             let C = self.chainComplex
             
             let generators = C[I].generators
             let d = C.differential
             let Z = self.cycleMatrix(I)
             let T = self.cycleTransitionMatrix(I)
-            let B = self.boundaryMatrix(I.shifted(-d.multiDegree))
+            let B = self.boundaryMatrix(I - d.multiDegree)
             let (diag, Q, S) = self.calculateQuotient(Z, B, T)
             
             let hGenerators = generators * Q
@@ -39,7 +40,7 @@ public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Modul
         }
     }
     
-    public func cycleSubmodule(_ I: GridCoords) -> ModuleObject<BaseModule> {
+    public func cycleSubmodule(_ I: Coords) -> ModuleObject<BaseModule> {
         assert(chainComplex.isFreeToFree(at: I))
         let (Z, T) = (cycleMatrix(I), cycleTransitionMatrix(I))
         
@@ -50,10 +51,10 @@ public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Modul
         return ModuleObject(basis: gens, factorizer: factr)
     }
     
-    public func boundarySubmodule(_ I: GridCoords) -> ModuleObject<BaseModule> {
+    public func boundarySubmodule(_ I: Coords) -> ModuleObject<BaseModule> {
         assert(chainComplex.isFreeToFree(at: I))
         let d = chainComplex.differential
-        let J = I.shifted(-d.multiDegree)
+        let J = I - d.multiDegree
         let (B, T) = (boundaryMatrix(J), boundaryTransitionMatrix(J))
         
         let C_I = chainComplex[I]
@@ -68,10 +69,10 @@ public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Modul
         return ModuleObject(basis: gens, factorizer: factr)
     }
     
-    public func boundaryInverse(of b: BaseModule, at I: GridCoords) -> BaseModule? {
+    public func boundaryInverse(of b: BaseModule, at I: Coords) -> BaseModule? {
         assert(chainComplex.isFreeToFree(at: I))
         let d = chainComplex.differential
-        let J = I.shifted(-d.multiDegree)
+        let J = I - d.multiDegree
         if let v = dElim(J).invert(chainComplex[I].factorize(b)) {
             return (chainComplex[J].generators * v)[0]
         } else {
@@ -79,29 +80,29 @@ public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Modul
         }
     }
     
-    public func cycleMatrix(_ I: GridCoords) -> DMatrix<R> {
+    public func cycleMatrix(_ I: Coords) -> DMatrix<R> {
         dElim(I).kernelMatrix
     }
     
-    public func cycleTransitionMatrix(_ I: GridCoords) -> DMatrix<R> {
+    public func cycleTransitionMatrix(_ I: Coords) -> DMatrix<R> {
         dElim(I).kernelTransitionMatrix
     }
     
-    public func boundaryMatrix(_ I: GridCoords) -> DMatrix<R> {
+    public func boundaryMatrix(_ I: Coords) -> DMatrix<R> {
         dElim(I).imageMatrix
     }
     
-    public func boundaryTransitionMatrix(_ I: GridCoords) -> DMatrix<R> {
+    public func boundaryTransitionMatrix(_ I: Coords) -> DMatrix<R> {
         dElim(I).imageTransitionMatrix
     }
     
-    private func dElim(_ I: GridCoords) -> MatrixEliminationResult<DynamicSize, DynamicSize, R> {
+    private func dElim(_ I: Coords) -> MatrixEliminationResult<DynamicSize, DynamicSize, R> {
         if let E = elimResult[I] {
             return E
         } else {
             assert(chainComplex.isFreeToFree(at: I))
             let (C, d) = (chainComplex, chainComplex.differential)
-            let (C0, C1) = (C[I], C[I.shifted(d.multiDegree)])
+            let (C0, C1) = (C[I], C[I + d.multiDegree])
             let A = d[I].asMatrix(from: C0, to: C1)
             let E = MatrixEliminator.eliminate(target: A, form: .Diagonal)
             elimResult[I] = E

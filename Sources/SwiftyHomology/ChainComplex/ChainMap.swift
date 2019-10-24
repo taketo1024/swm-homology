@@ -11,33 +11,33 @@ public typealias ChainMap1<M: Module, N: Module> = ChainMap<_1, M, N> where M.Ba
 public typealias ChainMap2<M: Module, N: Module> = ChainMap<_2, M, N> where M.BaseRing == N.BaseRing
 
 public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2: Module> where BaseModule1.BaseRing == BaseModule2.BaseRing {
+    public typealias Coords = GridCoords<GridDim>
     public typealias R = BaseModule1.BaseRing
     public typealias Hom = ModuleHom<BaseModule1, BaseModule2>
     
-    public var multiDegree: [Int]
-    internal let maps: (GridCoords) -> Hom
+    public var multiDegree: Coords
+    internal let maps: (Coords) -> Hom
     
-    public init(multiDegree: GridCoords, maps: @escaping (GridCoords) -> Hom) {
+    public init(multiDegree: Coords, maps: @escaping (Coords) -> Hom) {
         self.multiDegree = multiDegree
         self.maps = maps
     }
     
-    public subscript(_ I: GridCoords) -> Hom {
+    public subscript(_ I: Coords) -> Hom {
         maps(I)
     }
     
     public subscript(_ I: Int...) -> Hom {
-        self[I]
+        self[Coords(I)]
     }
     
-    public func shifted(_ shift: GridCoords) -> Self {
-        assert(shift.count == GridDim.intValue)
-        return .init(multiDegree: multiDegree) { I in
-            self[I.shifted(-shift)]
+    public func shifted(_ shift: Coords) -> Self {
+        .init(multiDegree: multiDegree) { I in
+            self[I - shift]
         }
     }
     
-    public func assertChainMap(at I0: GridCoords, from C0: ChainComplex<GridDim, BaseModule1>, to C1: ChainComplex<GridDim, BaseModule2>, debug: Bool = false) {
+    public func assertChainMap(at I0: Coords, from C0: ChainComplex<GridDim, BaseModule1>, to C1: ChainComplex<GridDim, BaseModule2>, debug: Bool = false) {
         let (f, d0, d1) = (self, C0.differential, C1.differential)
         assert(d0.multiDegree == d1.multiDegree)
 
@@ -53,9 +53,9 @@ public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2
             Swift.print(msg())
         }
 
-        let I1 = I0.shifted(d0.multiDegree)
-        let I2 = I0.shifted( f.multiDegree)
-        let I3 = I1.shifted( f.multiDegree)
+        let I1 = I0 + d0.multiDegree
+        let I2 = I0 + f.multiDegree
+        let I3 = I1 + f.multiDegree
         let (s0, s3) = (C0[I0], C1[I3])
 
         print("\(I0): \(s0) -> \(s3)")
@@ -97,7 +97,7 @@ extension ChainMap {
     public var dual: ChainMap<GridDim, Dual<BaseModule2>, Dual<BaseModule1>> {
         ChainMap<GridDim, Dual<BaseModule2>, Dual<BaseModule1>>(multiDegree: -multiDegree) { I in
             ModuleHom<Dual<BaseModule2>, Dual<BaseModule1>> { g in
-                let J = I.shifted(-self.multiDegree)
+                let J = I - self.multiDegree
                 let f = self[J]
                 return .init(g ∘ f)
             }

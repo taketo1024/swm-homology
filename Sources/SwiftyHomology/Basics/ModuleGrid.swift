@@ -7,48 +7,46 @@
 
 import SwiftyMath
 
-public typealias GridCoords = [Int]
-
 public typealias ModuleGrid1<M: Module> = ModuleGrid<_1, M>
 public typealias ModuleGrid2<M: Module> = ModuleGrid<_2, M>
 
 public struct ModuleGrid<GridDim: StaticSizeType, BaseModule: Module> {
+    public typealias Coords = GridCoords<GridDim>
     public typealias R = BaseModule.BaseRing
     public typealias Vertex = ModuleObject<BaseModule>
     
-    public let supportedCoords: [GridCoords]
-    private let grid: (GridCoords) -> Vertex
-    private let gridCache: CacheDictionary<GridCoords, Vertex> = CacheDictionary.empty
+    public let support: ClosedRange<Coords>
+    private let grid: (Coords) -> Vertex
+    private let gridCache: CacheDictionary<Coords, Vertex> = CacheDictionary.empty
     
-    public init(supportedCoords: [GridCoords] = [], grid: @escaping (GridCoords) -> Vertex) {
-        self.supportedCoords = supportedCoords
+    public init(support: ClosedRange<Coords>, grid: @escaping (Coords) -> Vertex) {
+        self.support = support
         self.grid = grid
     }
     
-    public subscript(I: GridCoords) -> Vertex {
-        assert(I.count == gridDim)
-        return gridCache.useCacheOrSet(key: I) { self.grid(I) }
+    public subscript(I: Coords) -> Vertex {
+        gridCache.useCacheOrSet(key: I) { self.grid(I) }
     }
     
     public subscript(I: Int...) -> Vertex {
-        self[I]
+        self[GridCoords(I)]
     }
     
     public var gridDim: Int {
         GridDim.intValue
     }
     
-    public func shifted(_ shift: GridCoords) -> Self {
-        assert(shift.count == gridDim)
-        return .init(supportedCoords: supportedCoords.map{ $0.shifted(shift) }) { I in
-            self[I.shifted(-shift)]
+    public func shifted(_ shift: Coords) -> Self {
+        .init(support: (support.lowerBound + shift) ... (support.upperBound + shift) ) { I in
+            self[I - shift]
         }
     }
 }
 
 extension ModuleGrid where GridDim == _1 {
-    public init<S: Sequence>(supported: S, sequence: @escaping (Int) -> ModuleObject<BaseModule>) where S.Element == Int {
-        self.init(supportedCoords: supported.map{ [$0] }) { I in sequence(I[0]) }
+    public init(support: ClosedRange<Int>, sequence: @escaping (Int) -> ModuleObject<BaseModule>) {
+        let mSupport = Coords(support.lowerBound) ... Coords(support.upperBound)
+        self.init(support: mSupport) { I in sequence(I[0]) }
     }
     
     public func shifted(_ shift: Int) -> Self {
@@ -56,32 +54,23 @@ extension ModuleGrid where GridDim == _1 {
     }
     
     public func printSequence() {
-        let indices = supportedCoords.map{ $0[0] }.sorted()
+        let indices = support.lowerBound[0] ... support.upperBound[0]
         printSequence(indices)
     }
     
-    public func printSequence(_ range: ClosedRange<Int>) {
-        printSequence(range.toArray())
-    }
-    
-    private func printSequence(_ indices: [Int]) {
+    public func printSequence<S: Sequence>(_ indices: S) where S.Element == Int {
         print( Format.table(rows: [""], cols: indices, symbol: "i") { (_, i) in self[i].description } )
     }
 }
 
 extension ModuleGrid where GridDim == _2 {
     public func printTable() {
-        let indices = [0, 1].map { i in
-            Set(supportedCoords.map{ $0[i] }).sorted()
-        }
-        printTable(indices[0], indices[1])
+        let (i0, j0) = (support.lowerBound[0], support.lowerBound[1])
+        let (i1, j1) = (support.upperBound[0], support.upperBound[1])
+        printTable(i0 ... i1, j0 ... j1)
     }
     
-    public func printTable(_ range1: ClosedRange<Int>, _ range2: ClosedRange<Int>) {
-        printTable(range1.toArray(), range2.toArray())
-    }
-    
-    private func printTable(_ indices1: [Int], _ indices2: [Int]) {
+    public func printTable<S1: Sequence, S2: Sequence>(_ indices1: S1, _ indices2: S2) where S1.Element == Int, S2.Element == Int {
         print( Format.table(rows: indices2.reversed(), cols: indices1, symbol: "j\\i") { (j, i) -> String in
             let s = self[i, j].description
             return (s != "0") ? s : ""
@@ -91,17 +80,6 @@ extension ModuleGrid where GridDim == _2 {
 
 extension ModuleGrid {
     public var dual: ModuleGrid<GridDim, Dual<BaseModule>> {
-        ModuleGrid<GridDim, Dual<BaseModule>>{ I in self[I].dual }
-    }
-}
-
-internal extension Array where Element == Int {
-    func shifted(_ I: GridCoords) -> GridCoords {
-        assert(self.count == I.count)
-        return zip(self, I).map{ (x, y) in x + y }
-    }
-    
-    static prefix func -(_ I: GridCoords) -> GridCoords {
-        I.map{ -$0 }
+        .init(support: support) { I in self[I].dual }
     }
 }
