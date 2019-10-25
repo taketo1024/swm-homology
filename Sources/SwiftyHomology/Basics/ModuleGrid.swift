@@ -29,8 +29,7 @@ public struct ModuleGrid<GridDim: StaticSizeType, BaseModule: Module>: GridType 
     }
     
     public func shifted(_ shift: Coords) -> Self {
-        let mSupport = support.map { support in support.lowerBound + shift ... support.upperBound + shift }
-        return .init(support: mSupport ) { I in
+        .init(support: support.map{ $0 + shift } ) { I in
             self[I - shift]
         }
     }

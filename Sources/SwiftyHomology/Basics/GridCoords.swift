@@ -44,4 +44,24 @@ public struct GridCoords<GridDim: StaticSizeType>: ExpressibleByArrayLiteral, Co
     public static func < (c1: Self, c2: Self) -> Bool {
         (c1.coords != c2.coords) && zip(c1.coords, c2.coords).allSatisfy{ $0 <= $1 }
     }
+    
+    public static func +(range: ClosedRange<Self>, c: Self) -> ClosedRange<Self> {
+        (range.lowerBound + c) ... (range.lowerBound + c)
+    }
+    
+    public static func -(range: ClosedRange<Self>, c: Self) -> ClosedRange<Self> {
+        (range.lowerBound - c) ... (range.lowerBound - c)
+    }
+}
+
+extension ClosedRange where Bound == GridCoords<_1> {
+    public var range: ClosedRange<Int> {
+        lowerBound[0] ... upperBound[0]
+    }
+}
+
+extension ClosedRange where Bound == GridCoords<_2> {
+    public var range: (ClosedRange<Int>, ClosedRange<Int>) {
+        (lowerBound[0] ... upperBound[0], lowerBound[1] ... upperBound[1])
+    }
 }

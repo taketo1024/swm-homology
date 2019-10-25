@@ -40,8 +40,7 @@ extension GridType where GridDim == _1 {
     
     public func printSequence() {
         guard let support = support else { return }
-        let indices = support.lowerBound[0] ... support.upperBound[0]
-        printSequence(indices)
+        printSequence(support.range)
     }
     
     public func printSequence<S: Sequence>(_ indices: S) where S.Element == Int {
@@ -56,9 +55,8 @@ extension GridType where GridDim == _2 {
     
     public func printTable() {
         guard let support = support else { return }
-        let (i0, j0) = (support.lowerBound[0], support.lowerBound[1])
-        let (i1, j1) = (support.upperBound[0], support.upperBound[1])
-        printTable(i0 ... i1, j0 ... j1)
+        let (r0, r1) = support.range
+        printTable(r0, r1)
     }
     
     public func printTable<S1: Sequence, S2: Sequence>(_ indices1: S1, _ indices2: S2) where S1.Element == Int, S2.Element == Int {
