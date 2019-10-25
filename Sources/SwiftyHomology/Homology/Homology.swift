@@ -30,7 +30,7 @@ public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Modul
     public func homology(withGenerators: Bool = false, withVectorizer: Bool = false) -> ModuleGrid<GridDim, BaseModule> {
         .init(support: chainComplex.grid.support) { I in
             typealias Summand = ModuleObject<BaseModule>.Summand
-            typealias Vectorizer = ModuleObject<BaseModule>.Factorizer
+            typealias Vectorizer = ModuleObject<BaseModule>.Vectorizer
             
             let summands: [Summand]
             let vectorizer: Vectorizer
@@ -102,7 +102,7 @@ public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Modul
                 let Tf = Rk * Qm
                 
                 vectorizer = { z in
-                    let v = C[I].factorize(z)
+                    let v = C[I].vectorize(z)
                     let wf = Tf * v
                     let wt = (Tt * v).mapNonZeroComponents{ (i, _, a) in a % diag[i + s] }
                     return wf.concatVertically(wt)

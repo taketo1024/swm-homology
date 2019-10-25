@@ -75,7 +75,7 @@ public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2
             print("\t\(x) ->\t\(y1) ->\t\(z1)")
             print("")
             
-            assert(C1[I3].factorize(z0) == C1[I3].factorize(z1))
+            assert(C1[I3].vectorize(z0) == C1[I3].vectorize(z1))
         }
     }
 }

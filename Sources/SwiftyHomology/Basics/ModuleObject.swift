@@ -17,25 +17,25 @@ import SwiftyMath
 
 public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertible {
     public typealias R = BaseModule.BaseRing
-    public typealias Factorizer = (BaseModule) -> DVector<R>
+    public typealias Vectorizer = (BaseModule) -> DVector<R>
 
     public let summands: [Summand]
-    private let factorizer: Factorizer
+    private let vectorizer: Vectorizer
     
-    internal init(_ summands: [Summand], _ factorizer: @escaping Factorizer) {
+    internal init(_ summands: [Summand], _ vectorizer: @escaping Vectorizer) {
         self.summands = summands
-        self.factorizer = factorizer
+        self.vectorizer = vectorizer
     }
     
-    public init(basis: [BaseModule], factorizer: @escaping Factorizer) {
+    public init(basis: [BaseModule], vectorizer: @escaping Vectorizer) {
         let summands = basis.map{ z in Summand(z) }
-        self.init(summands, factorizer)
+        self.init(summands, vectorizer)
     }
     
-    public init(generators: [BaseModule], divisors: [R], factorizer: @escaping Factorizer) {
+    public init(generators: [BaseModule], divisors: [R], vectorizer: @escaping Vectorizer) {
         assert(generators.count == divisors.count)
         let summands = zip(generators, divisors).map{ (z, r) in Summand(z, r) }
-        self.init(summands, factorizer)
+        self.init(summands, vectorizer)
     }
 
     
@@ -43,8 +43,8 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
         summands[i]
     }
     
-    public func factorize(_ z: BaseModule) -> DVector<R> {
-        factorizer(z)
+    public func vectorize(_ z: BaseModule) -> DVector<R> {
+        vectorizer(z)
     }
     
     public static var zeroModule: Self {
@@ -123,7 +123,7 @@ extension ModuleObject where BaseModule: FreeModule {
         let indexer = basis.indexer()
         self.init(
             basis: basis.map{ x in .wrap(x) },
-            factorizer: { z in
+            vectorizer: { z in
                 DVector(size: (basis.count, 1)) { setEntry in
                     z.elements.forEach { (a, r) in
                         if let i = indexer(a) {
@@ -151,7 +151,7 @@ extension ModuleHom {
         return DMatrix(size: (n, m), concurrentIterations: m) { (j, setEntry) in
             let x = from.generator(j)
             let y = self.applied(to: x)
-            to.factorize(y).nonZeroComponents.forEach{ (i, _, a) in
+            to.vectorize(y).nonZeroComponents.forEach{ (i, _, a) in
                 setEntry(i, j, a)
             }
         }
@@ -165,7 +165,7 @@ extension ModuleObject {
         typealias DualObject = ModuleObject<Dual<BaseModule>>
         let summands = self.generators.enumerated().map { (i, _) in
             Dual<BaseModule> { z in
-                .wrap(self.factorize(z)[i])
+                .wrap(self.vectorize(z)[i])
             }
         }.map{ DualObject.Summand($0) }
         

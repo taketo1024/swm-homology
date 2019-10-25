@@ -68,7 +68,7 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module>: GridWra
             let z = d[I1].applied(to: y)
             print("\t\(x) ->\t\(y) ->\t\(z)")
             
-            assert(self[I2].factorize(z).isZero)
+            assert(self[I2].vectorize(z).isZero)
         }
     }
 }

@@ -56,7 +56,7 @@ class HomologyTests: XCTestCase {
                     let to = objs[i - 1]
                     let d = matrices[i - 1]
                     return ModuleEnd { z in
-                        return (to.generators * (d * from.factorize(z)))[0]
+                        return (to.generators * (d * from.vectorize(z)))[0]
                     }
                 } else {
                     return .zero
