@@ -46,11 +46,11 @@ public struct GridCoords<GridDim: StaticSizeType>: ExpressibleByArrayLiteral, Co
     }
     
     public static func +(range: ClosedRange<Self>, c: Self) -> ClosedRange<Self> {
-        (range.lowerBound + c) ... (range.lowerBound + c)
+        (range.lowerBound + c) ... (range.upperBound + c)
     }
     
     public static func -(range: ClosedRange<Self>, c: Self) -> ClosedRange<Self> {
-        (range.lowerBound - c) ... (range.lowerBound - c)
+        (range.lowerBound - c) ... (range.upperBound - c)
     }
     
     public static func allCoords(in range: ClosedRange<Self>) -> [Self] {
