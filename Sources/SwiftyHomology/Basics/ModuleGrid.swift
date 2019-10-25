@@ -33,6 +33,11 @@ public struct ModuleGrid<GridDim: StaticSizeType, BaseModule: Module>: GridType 
             self[I - shift]
         }
     }
+    
+    public func description(forObjectAt I: GridCoords<GridDim>) -> String {
+        let obj = self[I]
+        return obj.isZero ? "" : obj.description
+    }
 }
 
 extension ModuleGrid where GridDim == _1 {
