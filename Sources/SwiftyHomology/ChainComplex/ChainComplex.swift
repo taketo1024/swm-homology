@@ -10,7 +10,7 @@ import SwiftyMath
 public typealias ChainComplex1<M: Module> = ChainComplex<_1, M>
 public typealias ChainComplex2<M: Module> = ChainComplex<_2, M>
 
-public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module>: GridType {
+public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module>: GridWrapper {
     public typealias Coords = GridCoords<GridDim>
     public typealias Object = ModuleGrid<GridDim, BaseModule>.Object
     public typealias R = BaseModule.BaseRing
@@ -30,14 +30,6 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module>: GridTyp
             grid: ModuleGrid(support: support, grid: grid),
             differential: ChainMap(multiDegree: differentialDegree, maps: differential)
         )
-    }
-    
-    public subscript(I: Coords) -> ModuleObject<BaseModule> {
-        grid[I]
-    }
-    
-    public var support: ClosedRange<Coords>? {
-        grid.support
     }
     
     public func shifted(_ shift: Coords) -> Self {
