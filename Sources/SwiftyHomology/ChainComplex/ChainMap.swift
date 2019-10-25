@@ -35,7 +35,14 @@ public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2
         .init(multiDegree: multiDegree) { I in self[I - shift] }
     }
     
-    public func assertChainMap(at I0: Coords, from C0: ChainComplex<GridDim, BaseModule1>, to C1: ChainComplex<GridDim, BaseModule2>, debug: Bool = false) {
+    public func assertChainMap(from C0: ChainComplex<GridDim, BaseModule1>, to C1: ChainComplex<GridDim, BaseModule2>, debug: Bool = false) {
+        guard let support = C0.support else { return }
+        GridCoords.allCoords(in: support).forEach { I in
+            assertChainMap(from: C0, to: C1, at: I, debug: debug)
+        }
+    }
+    
+    public func assertChainMap(from C0: ChainComplex<GridDim, BaseModule1>, to C1: ChainComplex<GridDim, BaseModule2>, at I0: Coords, debug: Bool = false) {
         let (f, d0, d1) = (self, C0.differential, C1.differential)
         assert(d0.multiDegree == d1.multiDegree)
 
@@ -78,8 +85,8 @@ extension ChainMap where GridDim == _1 {
         self.init(multiDegree: [degree], maps: { I in maps(I[0]) })
     }
     
-    public func assertChainMap(at i: Int, from: ChainComplex<GridDim, BaseModule1>, to: ChainComplex<GridDim, BaseModule2>, debug: Bool = false) {
-        assertChainMap(at: [i], from: from, to: to, debug: debug)
+    public func assertChainMap(from: ChainComplex<GridDim, BaseModule1>, to: ChainComplex<GridDim, BaseModule2>, at i: Int, debug: Bool = false) {
+        assertChainMap(from: from, to: to, at: [i], debug: debug)
     }
     
     public var degree: Int {

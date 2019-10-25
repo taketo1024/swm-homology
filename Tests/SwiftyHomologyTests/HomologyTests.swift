@@ -80,7 +80,7 @@ class HomologyTests: XCTestCase {
         let C = generateChainComplex(matrices: d)
         let H = C.homology
         
-        C.assertChainComplex(range: 0 ... d.count)
+        C.assertChainComplex()
 
         XCTAssertEqual(H[-1].dictionaryDescription, [:])
         XCTAssertEqual(H[0].dictionaryDescription, [0: 1])
@@ -95,7 +95,7 @@ class HomologyTests: XCTestCase {
         let C = generateChainComplex(matrices: d)
         let H = C.homology
 
-        C.assertChainComplex(range: 0 ... d.count)
+        C.assertChainComplex()
         
         XCTAssertEqual(H[-1].dictionaryDescription, [:])
         XCTAssertEqual(H[0].dictionaryDescription, [:])
@@ -149,7 +149,7 @@ class HomologyTests: XCTestCase {
         let C = generateChainComplex(matrices: d)
         let H = C.homology
         
-        C.assertChainComplex(range: 0 ... d.count)
+        C.assertChainComplex()
         
         XCTAssertEqual(H[0].dictionaryDescription, [0: 1])
         XCTAssertEqual(H[1].dictionaryDescription, [:])
@@ -167,7 +167,7 @@ class HomologyTests: XCTestCase {
         let C = generateChainComplex(matrices: d)
         let H = C.homology
         
-        C.assertChainComplex(range: 0 ... d.count)
+        C.assertChainComplex()
         
         XCTAssertEqual(H[0].dictionaryDescription, [0: 1])
         XCTAssertEqual(H[1].dictionaryDescription, [:])
@@ -184,7 +184,7 @@ class HomologyTests: XCTestCase {
         let C = generateChainComplex(matrices: d)
         let H = C.homology
         
-        C.assertChainComplex(range: 0 ... d.count)
+        C.assertChainComplex()
         
         XCTAssertEqual(H[0].dictionaryDescription, [0: 1])
         XCTAssertEqual(H[1].dictionaryDescription, [0: 2])
@@ -201,7 +201,7 @@ class HomologyTests: XCTestCase {
         let C = generateChainComplex(matrices: d)
         let H = C.homology
         
-        C.assertChainComplex(range: 0 ... d.count)
+        C.assertChainComplex()
         
         XCTAssertEqual(H[0].dictionaryDescription, [0 : 1])
         XCTAssertEqual(H[1].dictionaryDescription, [2 : 1])
@@ -218,7 +218,7 @@ class HomologyTests: XCTestCase {
         let δ = C.differential
         let H = C.homology
         
-        C.assertChainComplex(range: 0 ... d.count)
+        C.assertChainComplex()
         
         XCTAssertEqual(δ.degree, 1)
         XCTAssertEqual(δ[0].asMatrix(from: C[0], to: C[1]), d[0].transposed)
@@ -228,5 +228,4 @@ class HomologyTests: XCTestCase {
         XCTAssertEqual(H[1].dictionaryDescription, [:])
         XCTAssertEqual(H[2].dictionaryDescription, [2 : 1])
     }
-
 }

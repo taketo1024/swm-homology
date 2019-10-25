@@ -52,6 +52,22 @@ public struct GridCoords<GridDim: StaticSizeType>: ExpressibleByArrayLiteral, Co
     public static func -(range: ClosedRange<Self>, c: Self) -> ClosedRange<Self> {
         (range.lowerBound - c) ... (range.lowerBound - c)
     }
+    
+    public static func allCoords(in range: ClosedRange<Self>) -> [Self] {
+        let n = GridDim.intValue
+        guard n > 0 else { return [] }
+        
+        let ranges = (0 ..< n).map { i in range.lowerBound[i] ... range.upperBound[i] }
+        
+        func gen(_ i: Int) -> [[Int]] {
+            let next = (i > 0) ? gen(i - 1) : [[]]
+            return ranges[i].flatMap { j in
+                next.map{ I in I + [j] }
+            }
+        }
+        
+        return gen(n - 1).map{ GridCoords($0) }
+    }
 }
 
 extension ClosedRange where Bound == GridCoords<_1> {

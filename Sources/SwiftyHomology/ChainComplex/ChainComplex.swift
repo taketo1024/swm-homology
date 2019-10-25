@@ -52,6 +52,13 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module>: GridTyp
         d
     }
     
+    public func assertChainComplex(debug: Bool = false) {
+        guard let support = support else { return }
+        GridCoords.allCoords(in: support).forEach { I in
+            assertChainComplex(at: I, debug: debug)
+        }
+    }
+    
     public func assertChainComplex(at I0: Coords, debug: Bool = false) {
         func print(_ msg: @autoclosure () -> String) {
             if debug { Swift.print(msg()) }
@@ -98,12 +105,6 @@ extension ChainComplex where GridDim == _1 {
     
     public func assertChainComplex(at i: Int, debug: Bool = false) {
         self.assertChainComplex(at: [i], debug: debug)
-    }
-
-    public func assertChainComplex(range: CountableClosedRange<Int>, debug: Bool = false) {
-        for i in range {
-            self.assertChainComplex(at: i, debug: debug)
-        }
     }
 }
 
