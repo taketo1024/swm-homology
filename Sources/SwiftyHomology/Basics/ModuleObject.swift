@@ -121,15 +121,18 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
 extension ModuleObject where BaseModule: FreeModule {
     public init(basis: [BaseModule.Generator]) {
         let indexer = basis.indexer()
-        self.init(basis: basis.map{ x in .wrap(x) }, factorizer: { z in
-            DVector<R>(size: (basis.count, 1)) { setEntry in
-                z.decomposed().forEach { (a, r) in
-                    if let i = indexer(a) {
-                        setEntry(i, 0, r)
+        self.init(
+            basis: basis.map{ x in .wrap(x) },
+            factorizer: { z in
+                DVector(size: (basis.count, 1)) { setEntry in
+                    z.elements.forEach { (a, r) in
+                        if let i = indexer(a) {
+                            setEntry(i, 0, r)
+                        }
                     }
                 }
             }
-        })
+        )
     }
     
     public func filter(_ f: @escaping (BaseModule.Generator) -> Bool) -> ModuleObject {
