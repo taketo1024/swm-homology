@@ -42,6 +42,6 @@ public struct GridCoords<GridDim: StaticSizeType>: ExpressibleByArrayLiteral, Co
     }
     
     public static func < (c1: Self, c2: Self) -> Bool {
-        c1.coords.lexicographicallyPrecedes(c2.coords)
+        (c1.coords != c2.coords) && zip(c1.coords, c2.coords).allSatisfy{ $0 <= $1 }
     }
 }

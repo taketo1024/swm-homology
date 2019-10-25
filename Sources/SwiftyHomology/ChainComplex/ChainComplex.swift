@@ -10,8 +10,9 @@ import SwiftyMath
 public typealias ChainComplex1<M: Module> = ChainComplex<_1, M>
 public typealias ChainComplex2<M: Module> = ChainComplex<_2, M>
 
-public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
+public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module>: GridType {
     public typealias Coords = GridCoords<GridDim>
+    public typealias Object = ModuleGrid<GridDim, BaseModule>.Object
     public typealias R = BaseModule.BaseRing
     public typealias Element = BaseModule
     public typealias Differential = ChainMap<GridDim, BaseModule, BaseModule>
@@ -24,16 +25,19 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
         self.d = differential
     }
     
+    public init(support: ClosedRange<Coords>, differentialDegree: Coords, grid: @escaping (Coords) -> ModuleGrid<GridDim, BaseModule>.Object, differential: @escaping (Coords) -> Differential.Object) {
+        self.init(
+            grid: ModuleGrid(support: support, grid: grid),
+            differential: ChainMap(multiDegree: differentialDegree, maps: differential)
+        )
+    }
+    
     public subscript(I: Coords) -> ModuleObject<BaseModule> {
         grid[I]
     }
     
-    public subscript(I: Int...) -> ModuleObject<BaseModule> {
-        self[Coords(I)]
-    }
-    
-    public var gridDim: Int {
-        GridDim.intValue
+    public var support: ClosedRange<Coords>? {
+        grid.support
     }
     
     public func shifted(_ shift: Coords) -> Self {
@@ -46,10 +50,6 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module> {
     
     public var differential: Differential {
         d
-    }
-    
-    public func differential(at I: Coords) -> Differential.Hom {
-        d[I]
     }
     
     public func assertChainComplex(at I0: Coords, debug: Bool = false) {
@@ -86,19 +86,14 @@ public enum ChainComplex1Type {
 
 extension ChainComplex where GridDim == _1 {
     public init(type: ChainComplex1Type = .descending, support: ClosedRange<Int>, sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) {
-        self.init(grid: ModuleGrid1(support: support, sequence: sequence), differential: Differential(degree: type.degree, maps: d))
-    }
-    
-    public func shifted(_ shift: Int) -> Self {
-        shifted([shift])
+        self.init(
+            grid: ModuleGrid1(support: support, sequence: sequence),
+            differential: Differential(degree: type.degree, maps: d)
+        )
     }
     
     public func isFreeToFree(at i: Int) -> Bool {
         isFreeToFree(at: [i])
-    }
-    
-    public func differential(at i: Int) -> Differential.Hom {
-        differential(at: [i])
     }
     
     public func assertChainComplex(at i: Int, debug: Bool = false) {
@@ -109,24 +104,6 @@ extension ChainComplex where GridDim == _1 {
         for i in range {
             self.assertChainComplex(at: i, debug: debug)
         }
-    }
-    
-    public func printSequence() {
-        grid.printSequence()
-    }
-    
-    public func printSequence(_ range: ClosedRange<Int>) {
-        grid.printSequence(range)
-    }
-}
-
-extension ChainComplex where GridDim == _2 {
-    public func printTable() {
-        grid.printTable()
-    }
-    
-    public func printTable(_ range1: ClosedRange<Int>, _ range2: ClosedRange<Int>) {
-        grid.printTable(range1, range2)
     }
 }
 

@@ -10,31 +10,29 @@ import SwiftyMath
 public typealias ChainMap1<M: Module, N: Module> = ChainMap<_1, M, N> where M.BaseRing == N.BaseRing
 public typealias ChainMap2<M: Module, N: Module> = ChainMap<_2, M, N> where M.BaseRing == N.BaseRing
 
-public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2: Module> where BaseModule1.BaseRing == BaseModule2.BaseRing {
+public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2: Module>: GridType where BaseModule1.BaseRing == BaseModule2.BaseRing {
     public typealias Coords = GridCoords<GridDim>
+    public typealias Object = ModuleHom<BaseModule1, BaseModule2>
     public typealias R = BaseModule1.BaseRing
-    public typealias Hom = ModuleHom<BaseModule1, BaseModule2>
     
     public var multiDegree: Coords
-    internal let maps: (Coords) -> Hom
+    internal let maps: (Coords) -> Object
     
-    public init(multiDegree: Coords, maps: @escaping (Coords) -> Hom) {
+    public init(multiDegree: Coords, maps: @escaping (Coords) -> Object) {
         self.multiDegree = multiDegree
         self.maps = maps
     }
     
-    public subscript(_ I: Coords) -> Hom {
+    public subscript(_ I: Coords) -> Object {
         maps(I)
     }
     
-    public subscript(_ I: Int...) -> Hom {
-        self[Coords(I)]
+    public var support: ClosedRange<Coords>? {
+        nil
     }
     
     public func shifted(_ shift: Coords) -> Self {
-        .init(multiDegree: multiDegree) { I in
-            self[I - shift]
-        }
+        .init(multiDegree: multiDegree) { I in self[I - shift] }
     }
     
     public func assertChainMap(at I0: Coords, from C0: ChainComplex<GridDim, BaseModule1>, to C1: ChainComplex<GridDim, BaseModule2>, debug: Bool = false) {
@@ -76,12 +74,8 @@ public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2
 }
 
 extension ChainMap where GridDim == _1 {
-    public init(degree: Int, maps: @escaping (Int) -> Hom) {
-        self.init(multiDegree: [degree]) { I in maps(I[0]) }
-    }
-    
-    public func shifted(_ shift: Int) -> Self {
-        shifted([shift])
+    public init(degree: Int, maps: @escaping (Int) -> Object) {
+        self.init(multiDegree: [degree], maps: { I in maps(I[0]) })
     }
     
     public func assertChainMap(at i: Int, from: ChainComplex<GridDim, BaseModule1>, to: ChainComplex<GridDim, BaseModule2>, debug: Bool = false) {
@@ -95,8 +89,8 @@ extension ChainMap where GridDim == _1 {
 
 extension ChainMap {
     public var dual: ChainMap<GridDim, Dual<BaseModule2>, Dual<BaseModule1>> {
-        ChainMap<GridDim, Dual<BaseModule2>, Dual<BaseModule1>>(multiDegree: -multiDegree) { I in
-            ModuleHom<Dual<BaseModule2>, Dual<BaseModule1>> { g in
+        .init(multiDegree: -multiDegree) { I in
+            ModuleHom { g in
                 let J = I - self.multiDegree
                 let f = self[J]
                 return .init(g ∘ f)
