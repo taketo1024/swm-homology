@@ -113,3 +113,30 @@ extension ChainComplex {
         ChainComplex<GridDim, Dual<BaseModule>>(grid: grid.dual, differential: d.dual)
     }
 }
+
+extension ChainComplex1 where GridDim == _1, BaseModule: FreeModule {
+    public func asBigraded(secondarySupport: ClosedRange<Int>? = nil, differentialSecondaryDegree: Int = 0, secondaryDegreeMap: @escaping (BaseModule.Generator) -> Int) -> ChainComplex2<BaseModule> {
+        let support = { () -> ClosedRange<GridCoords<_2>>? in
+            if let s1 = self.support, let s2 = secondarySupport {
+                return [s1.lowerBound[0], s2.lowerBound] ... [s1.upperBound[0], s2.upperBound]
+            } else {
+                return nil
+            }
+        }()
+        
+        return ChainComplex2(
+            support: support,
+            differentialDegree: [differential.degree, differentialSecondaryDegree],
+            grid: { I in
+                let (i, j) = (I[0], I[1])
+                let Ci = self[i]
+                let gens = Ci.generators.compactMap{ z -> BaseModule.Generator? in
+                    let x = z.unwrap()!
+                    return (secondaryDegreeMap(x) == j) ? x : nil
+                }
+                return ModuleObject(basis: gens)
+            },
+            differential: { I in self.differential[I[0]] }
+        )
+    }
+}
