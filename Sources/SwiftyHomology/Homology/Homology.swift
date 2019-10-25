@@ -56,8 +56,8 @@ public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Modul
             
             let E0 = MatrixEliminator.eliminate(target: A0, form: .Smith)
             let diag = E0.result.diagonalComponents.exclude{ $0.isZero }
-            let r0 = diag.count
-            let s0 = diag.firstIndex { d in !d.isIdentity } ?? r0
+            let r = diag.count
+            let s = diag.firstIndex { d in !d.isIdentity } ?? r
             
             //  P = [ Ps | Pr | Pm ] is the basis-trans matrix from C1 to C1' ⊕ C1".
             //  - gens * Ps collapses to 0,
@@ -65,14 +65,14 @@ public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Modul
             //  - gens * Pm * Ker(B1) gives the basis for the free-part.
             
             let P = E0.leftInverse
-            let Pm = P.submatrix(colRange: r0 ..< P.size.cols)
+            let Pm = P.submatrix(colRange: r ..< P.size.cols)
             let B1 = A1 * Pm
             let E1 = MatrixEliminator.eliminate(target: B1, form: .Diagonal)
             
             if withGenerators {
                 let gens = C[I].generators
-                let Pr = P.submatrix(colRange: s0 ..< r0)
-                let tor = zip(gens * Pr, diag[s0 ..< r0]).map{ (z, d) in Summand(z, d) }
+                let Pr = P.submatrix(colRange: s ..< r)
+                let tor = zip(gens * Pr, diag[s ..< r]).map{ (z, d) in Summand(z, d) }
                 
                 let Z1 = E1.kernelMatrix
                 let free = (gens * (Pm * Z1)).map { z in Summand(z) }
@@ -81,7 +81,7 @@ public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Modul
             } else {
                 let k = E1.nullity
                 let free = (0 ..< k).map { _ in Summand(.zero) }
-                let tor = diag[s0 ..< r0].map { d in Summand(.zero, d) }
+                let tor = diag[s ..< r].map { d in Summand(.zero, d) }
                 
                 summands = free + tor
             }
@@ -94,11 +94,19 @@ public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Modul
                 //  Thus T = [Rk * Qm; Qr] (size: (r - s + k) × m ) maps C1 -> H = H_free ⊕ H_tor.
                 
                 let Q = E0.left
-                let Qr = Q.submatrix(rowRange: s0 ..< r0)
-                let Qm = Q.submatrix(rowRange: r0 ..< Q.size.rows)
+                let Qr = Q.submatrix(rowRange: s ..< r)
+                let Tt = Qr.mapNonZeroComponents { (i, _, a) in a % diag[i + s] }
+                
+                let Qm = Q.submatrix(rowRange: r ..< Q.size.rows)
                 let Rk = E1.kernelTransitionMatrix
-                let T = (Rk * Qm).concatVertically(Qr)
-                vectorizer = { z in T * C[I].factorize(z) }
+                let Tf = Rk * Qm
+                
+                vectorizer = { z in
+                    let v = C[I].factorize(z)
+                    let wf = Tf * v
+                    let wt = (Tt * v).mapNonZeroComponents{ (i, _, a) in a % diag[i + s] }
+                    return wf.concatVertically(wt)
+                }
                 
             } else {
                 vectorizer = { _ in DVector.zero(size: summands.count) }
