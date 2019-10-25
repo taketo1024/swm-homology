@@ -12,183 +12,105 @@ public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Modul
     public typealias R = BaseModule.BaseRing
     
     public let chainComplex: ChainComplex<GridDim, BaseModule>
-    private var elimResult: [Coords: MatrixEliminationResult<DynamicSize, DynamicSize, R>]
+    private var matrixCache: CacheDictionary<Coords, DMatrix<R>>
     
     public init(_ chainComplex: ChainComplex<GridDim, BaseModule>) {
         self.chainComplex = chainComplex
-        self.elimResult = [:]
+        self.matrixCache = .empty
     }
     
-    public func homology() -> ModuleGrid<GridDim, BaseModule> {
-        .init(support: chainComplex.grid.support) { I in
-            let C = self.chainComplex
-            
-            let generators = C[I].generators
-            let d = C.differential
-            let Z = self.cycleMatrix(I)
-            let T = self.cycleTransitionMatrix(I)
-            let B = self.boundaryMatrix(I - d.multiDegree)
-            let (diag, Q, S) = self.calculateQuotient(Z, B, T)
-            
-            let hGenerators = generators * Q
-            let summands = hGenerators.enumerated().map { (i, z) in
-                ModuleObject.Summand(z, diag[i])
-            }
-            let factr = { z in S * C[I].factorize(z) }
-            
-            return ModuleObject(summands, factr)
-        }
-    }
-    
-    public func cycleSubmodule(_ I: Coords) -> ModuleObject<BaseModule> {
-        assert(chainComplex.isFreeToFree(at: I))
-        let (Z, T) = (cycleMatrix(I), cycleTransitionMatrix(I))
-        
-        let C = chainComplex[I]
-        let gens = C.generators * Z
-        let factr = { z in T * C.factorize(z) }
-        
-        return ModuleObject(basis: gens, factorizer: factr)
-    }
-    
-    public func boundarySubmodule(_ I: Coords) -> ModuleObject<BaseModule> {
-        assert(chainComplex.isFreeToFree(at: I))
-        let d = chainComplex.differential
-        let J = I - d.multiDegree
-        let (B, T) = (boundaryMatrix(J), boundaryTransitionMatrix(J))
-        
-        let C_I = chainComplex[I]
-        let gens = C_I.generators * B
-        let diag = dElim(J).result.diagonalComponents
-        let factr = { (b: BaseModule) -> DVector<R> in
-            let v = T * C_I.factorize(b)
-            return DVector(size: v.size) { setEntry in
-                v.nonZeroComponents.forEach { (i, _, a) in setEntry(i, 0, a / diag[i]) }
-            }
-        }
-        return ModuleObject(basis: gens, factorizer: factr)
-    }
-    
-    public func boundaryInverse(of b: BaseModule, at I: Coords) -> BaseModule? {
-        assert(chainComplex.isFreeToFree(at: I))
-        let d = chainComplex.differential
-        let J = I - d.multiDegree
-        if let v = dElim(J).invert(chainComplex[I].factorize(b)) {
-            return (chainComplex[J].generators * v)[0]
-        } else {
-            return nil
-        }
-    }
-    
-    public func cycleMatrix(_ I: Coords) -> DMatrix<R> {
-        dElim(I).kernelMatrix
-    }
-    
-    public func cycleTransitionMatrix(_ I: Coords) -> DMatrix<R> {
-        dElim(I).kernelTransitionMatrix
-    }
-    
-    public func boundaryMatrix(_ I: Coords) -> DMatrix<R> {
-        dElim(I).imageMatrix
-    }
-    
-    public func boundaryTransitionMatrix(_ I: Coords) -> DMatrix<R> {
-        dElim(I).imageTransitionMatrix
-    }
-    
-    private func dElim(_ I: Coords) -> MatrixEliminationResult<DynamicSize, DynamicSize, R> {
-        if let E = elimResult[I] {
-            return E
-        } else {
-            assert(chainComplex.isFreeToFree(at: I))
+    private func matrix(at I: Coords) -> DMatrix<R> {
+        matrixCache.useCacheOrSet(key: I) {
             let (C, d) = (chainComplex, chainComplex.differential)
             let (C0, C1) = (C[I], C[I + d.multiDegree])
-            let A = d[I].asMatrix(from: C0, to: C1)
-            let E = MatrixEliminator.eliminate(target: A, form: .Diagonal)
-            elimResult[I] = E
-            return E
+            return d[I].asMatrix(from: C0, to: C1)
         }
     }
     
-    // Calculates the quotient module Im(A) / Im(B).
-    //
-    //        Im(B)  ⊂  Im(A) ⊂ R^n
-    //          ↑         ↑   /
-    //         B|        A|  / T
-    //          |   TB    | ↓
-    //    0 -> R^l >---> R^k --->> Q -> 0
-    //          ↑         |
-    //          |        P|
-    //          |    S    ↓
-    //    0 -> R^l >---> R^k --->> Q -> 0
-    //
-    // If
-    //
-    //     TB  ~>  S = [ I |   |   ]
-    //                 [   | D |   ]
-    //                 [   |   | O ]
-    //                 [   |   | O ]
-    //
-    // then
-    //
-    //      Q = R^k / Im(I ⊕ D ⊕ O)
-    //        = (0 ⊕ .. ⊕ 0) ⊕ (R/d_1 ⊕ .. ⊕ R/d_r) ⊕ (R ⊕ .. ⊕ R)
-    //                          ~~~~~~~~~~~~~~~~~~~    ~~~~~~~~~~~~
-    //                               tor-part            free-part
-    
-    private func calculateQuotient(_ A: DMatrix<R>, _ B: DMatrix<R>, _ T: DMatrix<R>) -> (factors: [R], generatingMatrix: DMatrix<R>, transitionMatrix: DMatrix<R>) {
-        assert(A.size.rows == B.size.rows) // n
-        assert(A.size.cols == T.size.rows) // k
-        assert(A.size.rows >= A.size.cols) // n >= k
-        assert(A.size.cols >= B.size.cols) // k >= l
-        
-        let (k, l) = (A.size.cols, B.size.cols)
-        let elim = MatrixEliminator.eliminate(target: T * B, form: .Smith)
-        let d = elim.result.diagonalComponents.exclude{ $0.isInvertible } + [R.zero] * (k - l)
-        let s = d.count
-        
-        let P    = elim.left       .submatrix(rowRange: (k - s) ..< k)
-        let Pinv = elim.leftInverse.submatrix(colRange: (k - s) ..< k)
-        let (A2, T2) = (A * Pinv, P * T)
-        
-        assert(T2 * A2 == DMatrix<R>.identity(size: s))
-        
-        return (d, A2, T2)
-    }
-}
+    public func homology(withGenerators: Bool = false, withVectorizer: Bool = false) -> ModuleGrid<GridDim, BaseModule> {
+        .init(support: chainComplex.grid.support) { I in
+            typealias Summand = ModuleObject<BaseModule>.Summand
+            typealias Vectorizer = ModuleObject<BaseModule>.Factorizer
+            
+            let summands: [Summand]
+            let vectorizer: Vectorizer
+            
+            //
+            //       A0        A1
+            //  C0 -----> C1 -----> C2
+            //            |
+            //            | P
+            //       B0   |
+            //  C0 -----> C1'
+            //             ⊕
+            //            C1"-----> C2
+            //                 B1
+            //
+            //  H = H_free ⊕ H_tor,
+            //  H_free = Ker(B1),
+            //  H_tor  = Coker(B0).
 
-extension HomologyCalculator where GridDim == _1 {
-    public func cycleSubmodule(_ i: Int) -> ModuleObject<BaseModule> {
-        cycleSubmodule([i])
-    }
-    
-    public func boundarySubmodule(_ i: Int) -> ModuleObject<BaseModule> {
-        boundarySubmodule([i])
-    }
-    
-    public func boundaryInverse(of b: BaseModule, at i: Int) -> BaseModule? {
-        boundaryInverse(of: b, at: [i])
-    }
-    
-    public func cycleMatrix(_ i: Int) -> DMatrix<R> {
-        cycleMatrix([i])
-    }
-    
-    public func cycleTransitionMatrix(_ i: Int) -> DMatrix<R> {
-        cycleTransitionMatrix([i])
-    }
-    
-    public func boundaryMatrix(_ i: Int) -> DMatrix<R> {
-        boundaryMatrix([i])
-    }
-    
-    public func boundaryTransitionMatrix(_ i: Int) -> DMatrix<R> {
-        boundaryTransitionMatrix([i])
+            
+            let (C, d) = (self.chainComplex, self.chainComplex.differential)
+            let (A0, A1) = (self.matrix(at: I - d.multiDegree), self.matrix(at: I))
+            
+            let E0 = MatrixEliminator.eliminate(target: A0, form: .Smith)
+            let diag = E0.result.diagonalComponents.exclude{ $0.isZero }
+            let r0 = diag.count
+            let s0 = diag.firstIndex { d in !d.isIdentity } ?? r0
+            
+            //  P = [ Ps | Pr | Pm ] is the basis-trans matrix from C1 to C1' ⊕ C1".
+            //  - gens * Ps collapses to 0,
+            //  - gens * Pr gives the basis for the tor-part, and
+            //  - gens * Pm * Ker(B1) gives the basis for the free-part.
+            
+            let P = E0.leftInverse
+            let Pm = P.submatrix(colRange: r0 ..< P.size.cols)
+            let B1 = A1 * Pm
+            let E1 = MatrixEliminator.eliminate(target: B1, form: .Diagonal)
+            
+            if withGenerators {
+                let gens = C[I].generators
+                let Pr = P.submatrix(colRange: s0 ..< r0)
+                let tor = zip(gens * Pr, diag[s0 ..< r0]).map{ (z, d) in Summand(z, d) }
+                
+                let Z1 = E1.kernelMatrix
+                let free = (gens * (Pm * Z1)).map { z in Summand(z) }
+                
+                summands = free + tor
+            } else {
+                let k = E1.nullity
+                let free = (0 ..< k).map { _ in Summand(.zero) }
+                let tor = diag[s0 ..< r0].map { d in Summand(.zero, d) }
+                
+                summands = free + tor
+            }
+            
+            if withVectorizer {
+                //  Q = P^{-1} = [Qs; Qr; Qm].
+                //  - Qr (size: (r - s) × m ) maps C1 -> H_tor,
+                //  - Qm (size: (m - r) × m ) maps C1 -> C1", and
+                //  - Rk (size: k × (m - r) ) maps C1" -> Ker(B1) = H_free.
+                //  Thus T = [Rk * Qm; Qr] (size: (r - s + k) × m ) maps C1 -> H = H_free ⊕ H_tor.
+                
+                let Q = E0.left
+                let Qr = Q.submatrix(rowRange: s0 ..< r0)
+                let Qm = Q.submatrix(rowRange: r0 ..< Q.size.rows)
+                let Rk = E1.kernelTransitionMatrix
+                let T = (Rk * Qm).concatVertically(Qr)
+                vectorizer = { z in T * C[I].factorize(z) }
+                
+            } else {
+                vectorizer = { _ in DVector.zero(size: summands.count) }
+            }
+            
+            return ModuleObject(summands, vectorizer)
+        }
     }
 }
 
 extension ChainComplex where R: EuclideanRing {
-    public var homology: ModuleGrid<GridDim, BaseModule> {
-        HomologyCalculator(self).homology()
+    public func homology(withGenerators b1: Bool = false, withVectorizer b2: Bool = false) -> ModuleGrid<GridDim, BaseModule> {
+        HomologyCalculator(self).homology(withGenerators: b1, withVectorizer: b2)
     }
 }
