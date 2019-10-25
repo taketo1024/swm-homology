@@ -25,7 +25,7 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module>: GridTyp
         self.d = differential
     }
     
-    public init(support: ClosedRange<Coords>, differentialDegree: Coords, grid: @escaping (Coords) -> ModuleGrid<GridDim, BaseModule>.Object, differential: @escaping (Coords) -> Differential.Object) {
+    public init(support: ClosedRange<Coords>?, differentialDegree: Coords, grid: @escaping (Coords) -> ModuleGrid<GridDim, BaseModule>.Object, differential: @escaping (Coords) -> Differential.Object) {
         self.init(
             grid: ModuleGrid(support: support, grid: grid),
             differential: ChainMap(multiDegree: differentialDegree, maps: differential)
@@ -85,7 +85,7 @@ public enum ChainComplex1Type {
 }
 
 extension ChainComplex where GridDim == _1 {
-    public init(type: ChainComplex1Type = .descending, support: ClosedRange<Int>, sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) {
+    public init(type: ChainComplex1Type = .descending, support: ClosedRange<Int>?, sequence: @escaping (Int) -> ModuleObject<BaseModule>, differential d: @escaping (Int) -> ModuleHom<BaseModule, BaseModule>) {
         self.init(
             grid: ModuleGrid1(support: support, sequence: sequence),
             differential: Differential(degree: type.degree, maps: d)
