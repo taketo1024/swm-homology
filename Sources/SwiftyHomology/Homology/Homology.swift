@@ -56,6 +56,7 @@ public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Modul
             
             let E0 = MatrixEliminator.eliminate(target: A0, form: .Smith)
             let diag = E0.result.diagonalComponents.exclude{ $0.isZero }
+            let m = A0.size.rows // == A1.size.cols
             let r = diag.count
             let s = diag.firstIndex { d in !d.isIdentity } ?? r
             
@@ -64,14 +65,13 @@ public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Modul
             //  - gens * Pr gives the basis for the tor-part, and
             //  - gens * Pm * Ker(B1) gives the basis for the free-part.
             
-            let P = E0.leftInverse
-            let Pm = P.submatrix(colRange: r ..< P.size.cols)
+            let Pm = E0.leftInverse(restrictedToCols: r ..< m)
             let B1 = A1 * Pm
             let E1 = MatrixEliminator.eliminate(target: B1, form: .Diagonal)
             
             if withGenerators {
                 let gens = C[I].generators
-                let Pr = P.submatrix(colRange: s ..< r)
+                let Pr = E0.leftInverse(restrictedToCols: s ..< r)
                 let tor = zip(gens * Pr, diag[s ..< r]).map{ (z, d) in Summand(z, d) }
                 
                 let Z1 = E1.kernelMatrix
@@ -93,11 +93,10 @@ public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Modul
                 //  - Rk (size: k × (m - r) ) maps C1" -> Ker(B1) = H_free.
                 //  Thus T = [Rk * Qm; Qr] (size: (r - s + k) × m ) maps C1 -> H = H_free ⊕ H_tor.
                 
-                let Q = E0.left
-                let Qr = Q.submatrix(rowRange: s ..< r)
+                let Qr = E0.left(restrictedToRows: s ..< r)
                 let Tt = Qr.mapNonZeroComponents { (i, _, a) in a % diag[i + s] }
                 
-                let Qm = Q.submatrix(rowRange: r ..< Q.size.rows)
+                let Qm = E0.left(restrictedToRows: r ..< m)
                 let Rk = E1.kernelTransitionMatrix
                 let Tf = Rk * Qm
                 
