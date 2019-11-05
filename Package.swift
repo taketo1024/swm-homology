@@ -11,12 +11,13 @@ let package = Package(
             targets: ["SwiftyHomology"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/taketo1024/SwiftyMath.git", .branch("develop")),
+        .package(url: "https://github.com/taketo1024/SwiftyMath.git", from: "2.0.0"),
+        .package(url: "https://github.com/taketo1024/SwiftyMath-solver.git", from: "1.0.0"),
     ],
     targets: [
         .target(
             name: "SwiftyHomology",
-            dependencies: ["SwiftyMath"],
+            dependencies: ["SwiftyMath", "SwiftySolver"],
 			path: "Sources/SwiftyHomology"),
         .testTarget(
             name: "SwiftyHomologyTests",

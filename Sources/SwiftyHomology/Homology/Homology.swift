@@ -6,6 +6,7 @@
 //
 
 import SwiftyMath
+import SwiftySolver
 
 public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Module> where BaseModule.BaseRing: EuclideanRing {
     public typealias Coords = GridCoords<GridDim>
@@ -72,10 +73,12 @@ public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Modul
             if withGenerators {
                 let gens = C[I].generators
                 let Pr = E0.leftInverse(restrictedToCols: s ..< r)
-                let tor = zip(gens * Pr, diag[s ..< r]).map{ (z, d) in Summand(z, d) }
+                let tor_gens = BaseModule.combine(basis: gens, matrix: Pr)
+                let tor = zip(tor_gens, diag[s ..< r]).map{ (z, d) in Summand(z, d) }
                 
                 let Z1 = E1.kernelMatrix
-                let free = (gens * (Pm * Z1)).map { z in Summand(z) }
+                let free_gens = BaseModule.combine(basis: gens, matrix: Pm * Z1)
+                let free = free_gens.map { z in Summand(z) }
                 
                 summands = free + tor
             } else {
