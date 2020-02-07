@@ -70,6 +70,12 @@ public struct GridCoords<GridDim: StaticSizeType>: ExpressibleByArrayLiteral, Co
     }
 }
 
+extension GridCoords where GridDim == _2 {
+    public var coords: (Int, Int) {
+        (self[0], self[1])
+    }
+}
+
 extension ClosedRange where Bound == GridCoords<_1> {
     public var range: ClosedRange<Int> {
         lowerBound[0] ... upperBound[0]
