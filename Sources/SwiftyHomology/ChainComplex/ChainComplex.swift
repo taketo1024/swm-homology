@@ -64,8 +64,8 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module>: GridWra
         print("\(I0): \(s0) -> \(s1) -> \(s2)")
         
         for x in s0.generators {
-            let y = d[I0].applied(to: x)
-            let z = d[I1].applied(to: y)
+            let y = d[I0](x)
+            let z = d[I1](y)
             print("\t\(x) ->\t\(y) ->\t\(z)")
             
             assert(self[I2].vectorize(z).isZero)

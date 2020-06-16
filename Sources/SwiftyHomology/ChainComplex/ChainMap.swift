@@ -66,12 +66,12 @@ public struct ChainMap<GridDim: StaticSizeType, BaseModule1: Module, BaseModule2
         print("\(I0): \(s0) -> \(s3)")
 
         for x in s0.generators {
-            let y0 = d0[I0].applied(to: x)
-            let z0 =  f[I1].applied(to: y0)
+            let y0 = d0[I0](x)
+            let z0 =  f[I1](y0)
             print("\t\(x) ->\t\(y0) ->\t\(z0)")
 
-            let y1 =  f[I0].applied(to: x)
-            let z1 = d1[I2].applied(to: y1)
+            let y1 =  f[I0](x)
+            let z1 = d1[I2](y1)
             print("\t\(x) ->\t\(y1) ->\t\(z1)")
             print("")
             

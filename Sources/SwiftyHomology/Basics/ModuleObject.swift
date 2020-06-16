@@ -150,7 +150,7 @@ extension ModuleHom {
         let (n, m) = (to.generators.count, from.generators.count)
         return DMatrix(size: (n, m), concurrentIterations: m) { (j, setEntry) in
             let x = from.generator(j)
-            let y = self.applied(to: x)
+            let y = self(x)
             to.vectorize(y).nonZeroComponents.forEach{ (i, _, a) in
                 setEntry(i, j, a)
             }
@@ -172,7 +172,7 @@ extension ModuleObject {
         let factr = { (f: Dual<BaseModule>) -> DVector<R> in
             DVector(size: (self.generators.count, 1)) { setEntry in
                 self.generators.enumerated().forEach { (i, z) in
-                    let a = f.applied(to: z).value
+                    let a = f(z).value
                     if !a.isZero {
                         setEntry(i, 0, a)
                     }
