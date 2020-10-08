@@ -132,3 +132,41 @@ extension ChainComplex1 where GridDim == _1, BaseModule: FreeModule {
         )
     }
 }
+
+extension ChainComplex where BaseModule: FreeModule, GridDim == _1 {
+    public func generateGraph() -> SimpleDirectedGraph {
+        typealias A = BaseModule.Generator
+        
+        let C = self
+        guard let support = C.support else {
+            fatalError()
+        }
+        
+        var graph = SimpleDirectedGraph()
+        var dict = [A : Int]()
+        
+        for i in support.range {
+            for _x in C[i].generators {
+                let x = _x.unwrap()!
+                let id = graph.addVertex(label: x.description, group: i)
+                dict[x] = id
+            }
+        }
+        
+        for i in support.range {
+            let d = C.differential[i]
+            for _x in C[i].generators {
+                let x = _x.unwrap()!
+                for (y, a) in d(x).elements where a != .zero {
+                    let from = dict[x]!
+                    let to   = dict[y]!
+                    let label = a.description
+                    let dash = label.starts(with: "-")
+                    graph.addEdge(from: from, to: to, label: "", dashes: dash)
+                }
+            }
+        }
+        
+        return graph
+    }
+}
