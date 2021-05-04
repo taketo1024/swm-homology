@@ -14,7 +14,7 @@ let package = Package(
         .package(
 			name: "SwiftyMath",
 			url: "https://github.com/taketo1024/SwiftyMath.git",
-			from: "2.1.0"
+			from: "2.1.1"
 		),
         .package(
 			name: "SwiftySolver",

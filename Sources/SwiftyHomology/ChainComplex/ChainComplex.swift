@@ -134,22 +134,20 @@ extension ChainComplex1 where GridDim == _1, BaseModule: FreeModule {
 }
 
 extension ChainComplex where BaseModule: FreeModule, GridDim == _1 {
-    public func generateGraph() -> SimpleDirectedGraph {
-        typealias A = BaseModule.Generator
-        
+    public func generateGraph() -> SimpleDirectedGraph<BaseModule.Generator, BaseModule.BaseRing> {
         let C = self
         guard let support = C.support else {
             fatalError()
         }
         
-        var graph = SimpleDirectedGraph()
-        var dict = [A : Int]()
+        typealias Graph = SimpleDirectedGraph<BaseModule.Generator, BaseModule.BaseRing>
+        var graph = Graph()
+        var map: [BaseModule.Generator: Graph.Vertex] = [:]
         
         for i in support.range {
             for _x in C[i].generators {
                 let x = _x.unwrap()!
-                let id = graph.addVertex(label: x.description, group: i)
-                dict[x] = id
+                map[x] = graph.addVertex(value: x, options: ["group": i])
             }
         }
         
@@ -158,11 +156,9 @@ extension ChainComplex where BaseModule: FreeModule, GridDim == _1 {
             for _x in C[i].generators {
                 let x = _x.unwrap()!
                 for (y, a) in d(x).elements where a != .zero {
-                    let from = dict[x]!
-                    let to   = dict[y]!
-                    let label = a.description
-                    let dash = label.starts(with: "-")
-                    graph.addEdge(from: from, to: to, label: "", dashes: dash)
+                    if let from = map[x], let to = map[y] {
+                        graph.addEdge(from: from, to: to, value: a)
+                    }
                 }
             }
         }
