@@ -13,7 +13,7 @@ public protocol HomologyComputable: Ring {
 }
 
 extension ChainComplex where BaseModule.BaseRing: HomologyComputable {
-    func homology(options: HomologyCalculatorOptions = []) -> ModuleGrid<GridDim, BaseModule> {
+    public func homology(options: HomologyCalculatorOptions = []) -> ModuleGrid<GridDim, BaseModule> {
         BaseModule.BaseRing.computeHomology(chainComplex: self, options: options)
     }
 }

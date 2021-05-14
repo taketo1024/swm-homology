@@ -20,3 +20,11 @@ extension SNFComputable {
 extension Int: SNFComputable {
     public typealias HomologyComputingMatrixImpl = DefaultMatrixImpl<Int>
 }
+
+extension RationalNumber: SNFComputable {
+    public typealias HomologyComputingMatrixImpl = DefaultMatrixImpl<RationalNumber>
+}
+
+extension 𝐅₂: SNFComputable {
+    public typealias HomologyComputingMatrixImpl = DefaultMatrixImpl<𝐅₂>
+}
