@@ -17,38 +17,37 @@ import SwiftyMath
 
 public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertible {
     public typealias R = BaseModule.BaseRing
-    public typealias Vectorizer = (BaseModule) -> DVector<R>
+    public typealias Vectorizer = (BaseModule) -> VectorD<R>
 
     public let summands: [Summand]
     private let vectorizer: Vectorizer
     
-    internal init(_ summands: [Summand], _ vectorizer: @escaping Vectorizer) {
+    internal init(summands: [Summand], vectorizer: @escaping Vectorizer) {
         self.summands = summands
         self.vectorizer = vectorizer
     }
     
-    public init(basis: [BaseModule], vectorizer: @escaping Vectorizer) {
-        let summands = basis.map{ z in Summand(z) }
-        self.init(summands, vectorizer)
+    public init(generators: [BaseModule], vectorizer: @escaping Vectorizer) {
+        let summands = generators.map{ z in Summand(z) }
+        self.init(summands: summands, vectorizer: vectorizer)
     }
     
     public init(generators: [BaseModule], divisors: [R], vectorizer: @escaping Vectorizer) {
         assert(generators.count == divisors.count)
         let summands = zip(generators, divisors).map{ (z, r) in Summand(z, r) }
-        self.init(summands, vectorizer)
+        self.init(summands: summands, vectorizer: vectorizer)
     }
 
-    
     public subscript(i: Int) -> Summand {
         summands[i]
     }
     
-    public func vectorize(_ z: BaseModule) -> DVector<R> {
+    public func vectorize(_ z: BaseModule) -> VectorD<R> {
         vectorizer(z)
     }
     
     public static var zeroModule: Self {
-        .init([], {_ in .zero(size: 0) })
+        .init(summands: [], vectorizer: { _ in .zero(size: 0) } )
     }
     
     public var isZero: Bool {
@@ -70,6 +69,35 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
     public func generator(_ i: Int) -> BaseModule {
         summands[i].generator
     }
+    
+    public func filter(_ predicate: @escaping (Summand) -> Bool) -> ModuleObject {
+        let (reduced, table) = summands
+            .enumerated()
+            .reduce(into: ([], [:])) {
+                (res: inout (summands: [Summand], table: [Int : Int]), next) in
+                
+                let (i, z) = next
+                if predicate(z) {
+                    let j = res.0.count
+                    res.summands.append(z)
+                    res.table[i] = j
+                }
+            }
+        
+        let N = reduced.count
+        let vectorizer = { (z: BaseModule) -> VectorD<R> in
+            let vec = vectorize(z)
+            return .init(size: N) { setEntry in
+                vec.nonZeroComponents.forEach { (i, _, r) in
+                    if let j = table[i]  {
+                        setEntry(j, r)
+                    }
+                }
+            }
+        }
+        return ModuleObject(summands: reduced, vectorizer: vectorizer)
+    }
+
     
     public static func ==(a: ModuleObject<BaseModule>, b: ModuleObject<BaseModule>) -> Bool {
         a.summands == b.summands
@@ -119,42 +147,20 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
 }
 
 extension ModuleObject where BaseModule: FreeModule {
-    public init(basis: [BaseModule.Generator]) {
-        let indexer = basis.indexer()
+    public init(generators: [BaseModule.Generator]) {
+        let indexer = generators.indexer()
         self.init(
-            basis: basis.map{ x in .wrap(x) },
+            generators: generators.map{ x in .wrap(x) },
             vectorizer: { z in
-                DVector(size: (basis.count, 1)) { setEntry in
+                VectorD(size: generators.count) { setEntry in
                     z.elements.forEach { (a, r) in
                         if let i = indexer(a) {
-                            setEntry(i, 0, r)
+                            setEntry(i, r)
                         }
                     }
                 }
             }
         )
-    }
-    
-    public func filter(_ f: @escaping (BaseModule.Generator) -> Bool) -> ModuleObject {
-        let basis = generators.compactMap { z -> BaseModule.Generator? in
-            assert(z.isGenerator)
-            let a = z.unwrap()!
-            return f(a) ? a : nil
-        }
-        return ModuleObject(basis: basis)
-    }
-}
-
-extension ModuleHom {
-    public func asMatrix(from: ModuleObject<X>, to: ModuleObject<Y>) -> DMatrix<BaseRing> {
-        let (n, m) = (to.generators.count, from.generators.count)
-        return DMatrix(size: (n, m), concurrentIterations: m) { (j, setEntry) in
-            let x = from.generator(j)
-            let y = self(x)
-            to.vectorize(y).nonZeroComponents.forEach{ (i, _, a) in
-                setEntry(i, j, a)
-            }
-        }
     }
 }
 
@@ -169,17 +175,17 @@ extension ModuleObject {
             }
         }.map{ DualObject.Summand($0) }
         
-        let factr = { (f: Dual<BaseModule>) -> DVector<R> in
-            DVector(size: (self.generators.count, 1)) { setEntry in
+        let vectorizer = { (f: Dual<BaseModule>) -> VectorD<R> in
+            VectorD(size: self.generators.count) { setEntry in
                 self.generators.enumerated().forEach { (i, z) in
                     let a = f(z).value
                     if !a.isZero {
-                        setEntry(i, 0, a)
+                        setEntry(i, a)
                     }
                 }
             }
         }
-        return ModuleObject<Dual<BaseModule>>(summands, factr)
+        return ModuleObject<Dual<BaseModule>>(summands: summands, vectorizer: vectorizer)
     }
 }
 

@@ -12,20 +12,20 @@ let package = Package(
     ],
     dependencies: [
         .package(
-			name: "SwiftyMath",
-			url: "https://github.com/taketo1024/SwiftyMath.git",
-			from: "2.1.1"
-		),
+            name: "SwiftyMath",
+            url: "https://github.com/taketo1024/SwiftyMath.git",
+            from: "2.1.1"
+        ),
         .package(
-			name: "SwiftySolver",
-			url: "https://github.com/taketo1024/SwiftyMath-solver.git",
-			from: "1.1.0"
-		),
+            name: "SwiftyEigen",
+            url: "../SwiftyEigen",
+            from: "0.1.0"
+        ),
     ],
     targets: [
         .target(
             name: "SwiftyHomology",
-            dependencies: ["SwiftyMath", "SwiftySolver"],
+            dependencies: ["SwiftyMath", "SwiftyEigen"],
 			path: "Sources/SwiftyHomology"),
         .testTarget(
             name: "SwiftyHomologyTests",
