@@ -13,18 +13,18 @@ let package = Package(
     dependencies: [
         .package(
             name: "SwiftyMath",
-            url: "https://github.com/taketo1024/SwiftyMath.git",
-            from: "2.1.1"
+            url: "../SwiftyMath",
+            .branch("matrix-improve")
         ),
         .package(
             name: "SwiftyEigen",
             url: "../SwiftyEigen",
-            from: "0.1.0"
+            .branch("matrix-improve")
         ),
         .package(
             name: "SwiftySolver",
             url: "../SwiftySolver",
-            from: "1.1.0"
+            .branch("matrix-improve")
         ),
     ],
     targets: [
