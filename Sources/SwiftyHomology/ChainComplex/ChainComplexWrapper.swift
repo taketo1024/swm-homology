@@ -43,8 +43,8 @@ extension ChainComplexWrapper where GridDim == _1 {
     }
 }
 
-extension ChainComplexWrapper where BaseModule.BaseRing: EuclideanRing {
-    public func homology(withGenerators b1: Bool = false, withVectorizer b2: Bool = false) -> ModuleGrid<GridDim, BaseModule> {
-        chainComplex.homology(withGenerators: b1, withVectorizer: b2)
+extension ChainComplexWrapper where BaseModule.BaseRing: HomologyComputable {
+    public func homology(options: HomologyCalculatorOptions = []) -> ModuleGrid<GridDim, BaseModule> {
+        chainComplex.homology(options: options)
     }
 }

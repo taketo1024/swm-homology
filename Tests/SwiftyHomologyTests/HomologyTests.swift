@@ -9,66 +9,13 @@ import XCTest
 import SwiftyMath
 @testable import SwiftyHomology
 
-struct IntGenerator: FreeModuleGenerator {
-    let index: Int
-    init(_ index: Int) {
-        self.index = index
-    }
-    
-    static func < (lhs: IntGenerator, rhs: IntGenerator) -> Bool {
-        return lhs.index < rhs.index
-    }
-    
-    var description: String {
-        return "e\(Format.sub(index))"
-    }
-}
-
 class HomologyTests: XCTestCase {
     
     typealias R = 𝐙
-    typealias A = IntGenerator
-    typealias M = LinearCombination<A, R>
     typealias Matrix = MatrixDxD<R>
 
-    var count = 0
-    private func gens(_ n: Int) -> [A] {
-        defer {
-            count += n
-        }
-        return (1 ... n).map{ A(count + $0) }
-    }
-    
-    private func generateChainComplex(matrices: [Matrix]) -> ChainComplex1<M> {
-        let bases = matrices.map { d in
-            gens(d.size.rows)
-        } + [gens(matrices.last!.size.cols)]
-        
-        let objs = bases.map { ModuleObject<M>(generators: $0) }
-        
-        return ChainComplex1<M>(
-            support: 0 ... bases.count - 1,
-            sequence: { i in
-                bases.indices.contains(i) ? objs[i] : .zeroModule
-            },
-            differential: { i in
-                if matrices.indices.contains(i - 1) {
-                    let from = objs[i]
-                    let to = objs[i - 1]
-                    let d = matrices[i - 1]
-                    return ModuleEnd { z in
-                        .combine(basis: to.generators, vector: d * from.vectorize(z))
-                    }
-                } else {
-                    return .zero
-                }
-            }
-        )
-    }
-    
     override func setUp() {
         super.setUp()
-        count = 0
     }
     
     override func tearDown() {
@@ -78,7 +25,7 @@ class HomologyTests: XCTestCase {
     
     func test1() {
         let d = (1 ... 3).map{ _ in Matrix.zero(size: (1, 1)) }
-        let C = generateChainComplex(matrices: d)
+        let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
         
         C.assertChainComplex()
@@ -93,7 +40,7 @@ class HomologyTests: XCTestCase {
 
     func test2() {
         let d = (1 ... 3).map{ i in i.isOdd ? Matrix.identity(size: 1) : Matrix.zero(size: (1, 1)) }
-        let C = generateChainComplex(matrices: d)
+        let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
 
         C.assertChainComplex()
@@ -108,7 +55,7 @@ class HomologyTests: XCTestCase {
 
     func test3() {
         let d = (1 ... 3).map{ i in i.isOdd ? 2 * Matrix.identity(size: 1) : Matrix.zero(size: (1, 1)) }
-        let C = generateChainComplex(matrices: d)
+        let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
 
         for i in 0 ... d.count {
@@ -126,7 +73,7 @@ class HomologyTests: XCTestCase {
     func testShift() {
         let shift = -3
         let d = (1 ... 3).map{ i in i.isOdd ? 2 * Matrix.identity(size: 1) : Matrix.zero(size: (1, 1)) }
-        let C = generateChainComplex(matrices: d).shifted(shift)
+        let C = Util.generateChainComplex(matrices: d).shifted(shift)
         let H = C.homology()
         
         for i in 0 ... d.count {
@@ -147,10 +94,12 @@ class HomologyTests: XCTestCase {
             Matrix(size: (4, 1), grid: [-1, 1, -1, 1] )
         ]
         
-        let C = generateChainComplex(matrices: d)
-        let H = C.homology()
+        let C = Util.generateChainComplex(matrices: d)
+        let H = C.homology(options: [.withGenerators])
         
         C.assertChainComplex()
+        
+        H[0].printDetail()
         
         XCTAssertEqual(H[0].dictionaryDescription, [0: 1])
         XCTAssertEqual(H[1].dictionaryDescription, [:])
@@ -165,7 +114,7 @@ class HomologyTests: XCTestCase {
             Matrix(size: (6, 4), grid: [1, 0, 0, 1, -1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, -1, 0, -1, -1, 0, 0, 0, 1, 1] ),
         ]
         
-        let C = generateChainComplex(matrices: d)
+        let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
         
         C.assertChainComplex()
@@ -182,7 +131,7 @@ class HomologyTests: XCTestCase {
             Matrix(size: (27, 18), grid: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1] )
         ]
         
-        let C = generateChainComplex(matrices: d)
+        let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
         
         C.assertChainComplex()
@@ -199,7 +148,7 @@ class HomologyTests: XCTestCase {
             Matrix(size: (15, 10), grid: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, -1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1] ),
         ]
         
-        let C = generateChainComplex(matrices: d)
+        let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
         
         C.assertChainComplex()
@@ -215,7 +164,7 @@ class HomologyTests: XCTestCase {
             Matrix(size: (15, 10), grid: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, -1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1] ),
         ]
         
-        let C = generateChainComplex(matrices: d).dual
+        let C = Util.generateChainComplex(matrices: d).dual
         let δ = C.differential
         let H = C.homology()
         
@@ -236,8 +185,8 @@ class HomologyTests: XCTestCase {
             Matrix(size: (6, 4), grid: [1, 0, 0, 1, -1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, -1, 0, -1, -1, 0, 0, 0, 1, 1] ),
         ]
 
-        let C = generateChainComplex(matrices: d)
-        let H = C.homology(withGenerators: true, withVectorizer: true)
+        let C = Util.generateChainComplex(matrices: d)
+        let H = C.homology(options: [.withGenerators, .withVectorizer])
         let H2 = H[2]
         
         let z = H2.generator(0)
@@ -251,8 +200,8 @@ class HomologyTests: XCTestCase {
             Matrix(size: (27, 18), grid: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1] )
         ]
 
-        let C = generateChainComplex(matrices: d)
-        let H = C.homology(withGenerators: true, withVectorizer: true)
+        let C = Util.generateChainComplex(matrices: d)
+        let H = C.homology(options: [.withGenerators, .withVectorizer])
         let H1 = H[1]
         
         let z = H1.generator(0)
@@ -268,8 +217,8 @@ class HomologyTests: XCTestCase {
             Matrix(size: (15, 10), grid: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, -1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1] ),
         ]
         
-        let C = generateChainComplex(matrices: d)
-        let H = C.homology(withGenerators: true, withVectorizer: true)
+        let C = Util.generateChainComplex(matrices: d)
+        let H = C.homology(options: [.withGenerators, .withVectorizer])
         let H1 = H[1]
         
         let z = H1.generator(0)
