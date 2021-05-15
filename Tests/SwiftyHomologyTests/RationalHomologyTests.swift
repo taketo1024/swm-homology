@@ -9,9 +9,9 @@ import XCTest
 import SwiftyMath
 @testable import SwiftyHomology
 
-class HomologyTests: XCTestCase {
+class RationalHomologyTests: XCTestCase {
     
-    typealias R = 𝐙
+    typealias R = 𝐐
     typealias Matrix = MatrixDxD<R>
 
     override func setUp() {
@@ -63,9 +63,9 @@ class HomologyTests: XCTestCase {
         }
         
         XCTAssertEqual(H[-1].dictionaryDescription, [:])
-        XCTAssertEqual(H[0].dictionaryDescription, [2:1])
+        XCTAssertEqual(H[0].dictionaryDescription, [:])
         XCTAssertEqual(H[1].dictionaryDescription, [:])
-        XCTAssertEqual(H[2].dictionaryDescription, [2:1])
+        XCTAssertEqual(H[2].dictionaryDescription, [:])
         XCTAssertEqual(H[3].dictionaryDescription, [:])
         XCTAssertEqual(H[4].dictionaryDescription, [:])
     }
@@ -81,9 +81,9 @@ class HomologyTests: XCTestCase {
         }
         
         XCTAssertEqual(H[-1 + shift].dictionaryDescription, [:])
-        XCTAssertEqual(H[ 0 + shift].dictionaryDescription, [2:1])
+        XCTAssertEqual(H[ 0 + shift].dictionaryDescription, [:])
         XCTAssertEqual(H[ 1 + shift].dictionaryDescription, [:])
-        XCTAssertEqual(H[ 2 + shift].dictionaryDescription, [2:1])
+        XCTAssertEqual(H[ 2 + shift].dictionaryDescription, [:])
         XCTAssertEqual(H[ 3 + shift].dictionaryDescription, [:])
     }
     
@@ -95,7 +95,7 @@ class HomologyTests: XCTestCase {
         ]
         
         let C = Util.generateChainComplex(matrices: d)
-        let H = C.homology(options: [.withGenerators])
+        let H = C.homology()
         
         C.assertChainComplex()
         
@@ -152,7 +152,7 @@ class HomologyTests: XCTestCase {
         C.assertChainComplex()
         
         XCTAssertEqual(H[0].dictionaryDescription, [0 : 1])
-        XCTAssertEqual(H[1].dictionaryDescription, [2 : 1])
+        XCTAssertEqual(H[1].dictionaryDescription, [:])
         XCTAssertEqual(H[2].dictionaryDescription, [:])
     }
     
@@ -174,10 +174,30 @@ class HomologyTests: XCTestCase {
 
         XCTAssertEqual(H[0].dictionaryDescription, [0 : 1])
         XCTAssertEqual(H[1].dictionaryDescription, [:])
-        XCTAssertEqual(H[2].dictionaryDescription, [2 : 1])
+        XCTAssertEqual(H[2].dictionaryDescription, [:])
     }
     
-    func testVectorizer_S2() {
+    func test_D3_withGenerators() {
+        let d = [
+            Matrix(size: (4, 6), grid: [-1, -1, 0, -1, 0, 0, 1, 0, -1, 0, -1, 0, 0, 1, 1, 0, 0, -1, 0, 0, 0, 1, 1, 1] ),
+            Matrix(size: (6, 4), grid: [1, 1, 0, 0, -1, 0, 1, 0, 1, 0, 0, 1, 0, -1, -1, 0, 0, 1, 0, -1, 0, 0, 1, 1] ),
+            Matrix(size: (4, 1), grid: [-1, 1, -1, 1] )
+        ]
+        
+        let C = Util.generateChainComplex(matrices: d)
+        let H = C.homology(options: [.withGenerators, .withVectorizer])
+        
+        C.assertChainComplex()
+        
+        if H[0].rank == 1 {
+            let z = H[0].generator(0)
+            XCTAssertEqual(H[0].vectorize(z), VectorD(size: 1, grid: [1]) )
+        } else {
+            XCTFail()
+        }
+    }
+    
+    func test_S2_withGenerators() {
         let d = [
             Matrix(size: (4, 6), grid: [-1, -1, 0, 0, 0, 1, 1, 0, -1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, -1, -1, -1] ),
             Matrix(size: (6, 4), grid: [1, 0, 0, 1, -1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, -1, 0, -1, -1, 0, 0, 0, 1, 1] ),
@@ -186,13 +206,17 @@ class HomologyTests: XCTestCase {
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology(options: [.withGenerators, .withVectorizer])
         let H2 = H[2]
-        
-        let z = H2.generator(0)
-        XCTAssertEqual(H2.vectorize(z).serialize(), [1])
-        XCTAssertEqual(H2.vectorize(2 * z).serialize(), [2])
+
+        if H2.rank == 1 {
+            let z = H2.generator(0)
+            XCTAssertEqual(H2.vectorize(z).serialize(), [1])
+            XCTAssertEqual(H2.vectorize(2 * z).serialize(), [2])
+        } else {
+            XCTFail()
+        }
     }
 
-    func testVectorizer_T2() {
+    func test_T2_withGenerators() {
         let d = [
             Matrix(size: (9, 27), grid: [-1, -1, 0, -1, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 1, 0, -1, 0, 0, 0, 0, 0, 0, -1, -1, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, -1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, -1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, -1, 0, 1, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 1, -1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, -1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1] ),
             Matrix(size: (27, 18), grid: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1] )
@@ -201,15 +225,19 @@ class HomologyTests: XCTestCase {
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology(options: [.withGenerators, .withVectorizer])
         let H1 = H[1]
-        
-        let z = H1.generator(0)
-        let w = H1.generator(1)
-        XCTAssertEqual(H1.vectorize(z).serialize(), [1, 0])
-        XCTAssertEqual(H1.vectorize(w).serialize(), [0, 1])
-        XCTAssertEqual(H1.vectorize(z - 2 * w).serialize(), [1, -2])
-    }
 
-    func testVectorizer_RP2() {
+        if H1.rank == 2 {
+            let z = H1.generator(0)
+            let w = H1.generator(1)
+            XCTAssertEqual(H1.vectorize(z).serialize(), [1, 0])
+            XCTAssertEqual(H1.vectorize(w).serialize(), [0, 1])
+            XCTAssertEqual(H1.vectorize(z - 2 * w).serialize(), [1, -2])
+        } else {
+            XCTFail()
+        }
+    }
+    
+    func test_RP2_withGenerators() {
         let d = [
             Matrix(size: (6, 15), grid: [-1, -1, 0, 0, 0, 0, 0, -1, -1, 0, -1, 0, 0, 0, 0, 1, 0, -1, -1, 0, -1, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 1, 1, 0, 1, 1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 1, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1] ),
             Matrix(size: (15, 10), grid: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, -1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1] ),
@@ -217,10 +245,12 @@ class HomologyTests: XCTestCase {
         
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology(options: [.withGenerators, .withVectorizer])
-        let H1 = H[1]
         
-        let z = H1.generator(0)
-        XCTAssertEqual(H1.vectorize(z).serialize(), [1])
-        XCTAssertEqual(H1.vectorize(2 * z).serialize(), [0])
+        C.assertChainComplex()
+        
+        XCTAssertEqual(H[0].dictionaryDescription, [0 : 1])
+        XCTAssertEqual(H[1].dictionaryDescription, [:])
+        XCTAssertEqual(H[2].dictionaryDescription, [:])
     }
+    
 }

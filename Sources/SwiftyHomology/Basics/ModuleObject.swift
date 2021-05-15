@@ -20,7 +20,7 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
     public typealias Vectorizer = (BaseModule) -> VectorD<R>
 
     public let summands: [Summand]
-    private let vectorizer: Vectorizer
+    internal let vectorizer: Vectorizer
     
     internal init(summands: [Summand], vectorizer: @escaping Vectorizer) {
         self.summands = summands

@@ -24,3 +24,9 @@ extension Module {
         }
     }
 }
+
+extension MatrixInterface {
+    init<OtherImpl>(_ other: MatrixInterface<OtherImpl, n, m>) where OtherImpl.BaseRing == BaseRing {
+        self.init(Impl.init(size: other.size, grid: other.serialize()))
+    }
+}

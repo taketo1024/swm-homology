@@ -12,11 +12,12 @@ public protocol LUDecomposable: HomologyComputable where HomologyComputingMatrix
 
 extension LUDecomposable {
     public static func computeHomology<GridDim, BaseModule>(chainComplex: ChainComplex<GridDim, BaseModule>, options: HomologyCalculatorOptions) -> ModuleGrid<GridDim, BaseModule> where BaseModule.BaseRing == Self {
-        let H = HomologyCalculator<GridDim, BaseModule>(chainComplex: chainComplex, options: options)
-        return H.calculateByLU(usingMatrixImpl: HomologyComputingMatrixImpl.self)
+        typealias H = HomologyCalculator<GridDim, BaseModule, HomologyComputingMatrixImpl>
+        let h = H(chainComplex: chainComplex, options: options)
+        return h.calculateByLU()
     }
 }
 
-//extension RationalNumber: LUDecomposable {
-//    public typealias HomologyComputingMatrixImpl = EigenRationalMatrix
-//}
+extension RationalNumber: LUDecomposable {
+    public typealias HomologyComputingMatrixImpl = EigenRationalMatrix
+}

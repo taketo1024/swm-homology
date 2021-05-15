@@ -18,20 +18,16 @@ extension Matrix where Impl: SparseMatrixImpl {
     }
 }
 
-extension HomologyCalculator where BaseModule.BaseRing: EuclideanRing {
-    public func calculateBySNF<Impl: MatrixImpl>(usingMatrixImpl: Impl.Type) -> ModuleGrid<GridDim, BaseModule> {
-        typealias Coords = GridCoords<GridDim>
-        typealias Matrix = MatrixInterface<DefaultMatrixImpl<BaseRing>, DynamicSize, DynamicSize> // TODO make generic
-        
-        let matrixCache: CacheDictionary<Coords, Matrix> = .empty
-        
-        func matrix(at I: Coords) -> Matrix {
-            matrixCache.useCacheOrSet(key: I) {
-                self.matrix(at: I, matrixType: Matrix.self)
-            }
-        }
-        
+extension HomologyCalculator where BaseRing: SNFComputable {
+    // TODO these are temporary, since MatrixEliminator only supports DefaultMatrix.
+    private typealias DefaultMatrix = MatrixInterface<DefaultMatrixImpl<BaseRing>, DynamicSize, DynamicSize>
+    private func _matrix(at I: Coords) -> DefaultMatrix {
+        matrix(at: I) as! DefaultMatrix
+    }
+    
+    public func calculateBySNF() -> Homology {
         return .init(support: chainComplex.grid.support) { I in
+            typealias Matrix = MatrixInterface<DefaultMatrixImpl<BaseRing>, DynamicSize, DynamicSize>
             typealias Summand = ModuleObject<BaseModule>.Summand
             typealias Vectorizer = ModuleObject<BaseModule>.Vectorizer
 
@@ -54,7 +50,7 @@ extension HomologyCalculator where BaseModule.BaseRing: EuclideanRing {
             //  H_tor  = Coker(B0).
 
             let (C, d) = (self.chainComplex, self.chainComplex.differential)
-            let (A0, A1) = (matrix(at: I - d.multiDegree), matrix(at: I))
+            let (A0, A1) = (self._matrix(at: I - d.multiDegree), self._matrix(at: I))
 
             let E0 = MatrixEliminator.eliminate(target: A0, form: .Smith)
             let diag = E0.result.diagonalComponents.exclude{ $0.isZero }

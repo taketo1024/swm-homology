@@ -8,23 +8,16 @@
 import SwiftyMath
 import SwiftyEigen
 
-public protocol SNFComputable: HomologyComputable, EuclideanRing where HomologyComputingMatrixImpl.BaseRing == Self {}
+public protocol SNFComputable: HomologyComputable where Self: EuclideanRing, HomologyComputingMatrixImpl.BaseRing == Self {}
 
 extension SNFComputable {
     public static func computeHomology<GridDim, BaseModule>(chainComplex: ChainComplex<GridDim, BaseModule>, options: HomologyCalculatorOptions) -> ModuleGrid<GridDim, BaseModule> where BaseModule.BaseRing == Self {
-        let H = HomologyCalculator<GridDim, BaseModule>(chainComplex: chainComplex, options: options)
-        return H.calculateBySNF(usingMatrixImpl: HomologyComputingMatrixImpl.self)
+        typealias H = HomologyCalculator<GridDim, BaseModule, HomologyComputingMatrixImpl>
+        let h = H(chainComplex: chainComplex, options: options)
+        return h.calculateBySNF()
     }
 }
 
 extension Int: SNFComputable {
     public typealias HomologyComputingMatrixImpl = DefaultMatrixImpl<Int>
-}
-
-extension RationalNumber: SNFComputable {
-    public typealias HomologyComputingMatrixImpl = DefaultMatrixImpl<RationalNumber>
-}
-
-extension 𝐅₂: SNFComputable {
-    public typealias HomologyComputingMatrixImpl = DefaultMatrixImpl<𝐅₂>
 }
