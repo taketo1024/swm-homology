@@ -11,53 +11,50 @@ extension HomologyCalculator where _MatrixImpl: MatrixImpl_LU {
     public func calculateByLU() -> Homology {
         .init(support: chainComplex.grid.support) { I in
             
-            //       A0        A1
-            //  C0 -----> C1 -----> C2
-            //
+            //      a0       a1
+            //  X -----> Y -----> Z
+            //           |
+            //           |
+            //           |
+            //  X -----> Y1
+            //           ⊕
+            //           Y2
+            //           ⊕
+            //           Y3 ----> Z
+
+            let C = self.chainComplex
+            let d = C.differential
+            let (a0, a1) = (self.matrix(at: I - d.multiDegree), self.matrix(at: I))
             
-            let d = self.chainComplex.differential
+            let e0 = a0.luDecomposition()
+//          let Y1 = e0.image     // y x y1
+            let Y23 = e0.cokernel // y x (y - y1)
+            let b1 = a1 * Y23     // z x (y - y1)
             
-            let (A0, A1) = (self.matrix(at: I - d.multiDegree), self.matrix(at: I))
-            let (e0, e1) = (A0.luDecomposition(), A1.luDecomposition())
-            let (k, l) = (e1.nullity, e0.rank)
+            let e1 = b1.luDecomposition()
+            let r = e1.nullity
             
-            if k == l {
+            if r == 0 {
                 return .zeroModule
             } else if !self.options.contains(.withGenerators) && !self.options.contains(.withVectorizer) {
-                return self.onlyStructure(rank: k - l)
+                return self.onlyStructure(rank: r)
             } else {
-                let Z = e1.kernel
-                let B = e0.image
-                return self.homology(index: I, cycles: Z, boundaries: B)
+                let K = e1.kernel // (y - y1) x y2
+                let Y2 = Y23 * K  // y x y2
+                return self.homology(index: I, matrix: Y2)
             }
         }
     }
     
-    private func homology(index I: Coords, cycles Z: Matrix, boundaries B: Matrix) -> Homology.Object {
-        
-        //
-        //   B    ⊂    Z  -->>  H
-        //   |         |        |
-        //   v    T    v        v
-        //  R^l  ---> R^k -->> R^{k-l}
-        //
-        
-        let (k, l) = (Z.size.cols, B.size.cols)
-        
-        let T = Z.luDecomposition().solve(B)! // Z * T = B
-        let e = T.luDecomposition()           // Z * PLUQ = B
-        
-        let P = e.P.inverse!
-        let ZP = Z * P
-        let H = ZP.submatrix(colRange: l ..< k)
-        
+    private func homology(index I: Coords, matrix H: Matrix) -> Homology.Object {
+        let r = H.size.cols
         let summands = self.options.contains(.withGenerators)
             ? self.homologyGenerators(index: I, matrix: H)
-            : self.onlyStructure(rank: k - l).summands
+            : self.onlyStructure(rank: r).summands
         
         let vectorizer = self.options.contains(.withVectorizer)
             ? self.homologyVectorizer(index: I, matrix: H)
-            : self.onlyStructure(rank: k - l).vectorizer
+            : self.onlyStructure(rank: r).vectorizer
         
         return ModuleObject(summands: summands, vectorizer: vectorizer)
     }
