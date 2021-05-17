@@ -9,10 +9,10 @@ import SwiftyMath
 
 extension ModuleHom {
     public func asMatrix(from: ModuleObject<X>, to: ModuleObject<Y>) -> MatrixDxD<BaseRing> {
-        asMatrix(from: from, to: to, matrixType: MatrixDxD<BaseRing>.self)
+        asMatrix(from: from, to: to, implType: DefaultMatrixImpl<BaseRing>.self)
     }
     
-    public func asMatrix<Impl: MatrixImpl>(from: ModuleObject<X>, to: ModuleObject<Y>, matrixType: MatrixInterface<Impl, DynamicSize, DynamicSize>.Type) -> MatrixInterface<Impl, DynamicSize, DynamicSize> where Impl.BaseRing == BaseRing {
+    public func asMatrix<Impl: MatrixImpl>(from: ModuleObject<X>, to: ModuleObject<Y>, implType: Impl.Type) -> MatrixIF<Impl, DynamicSize, DynamicSize> where Impl.BaseRing == BaseRing {
         
         let (n, m) = (to.generators.count, from.generators.count)
         let comps = Array(0 ..< m).parallelFlatMap { j -> [MatrixComponent<BaseRing>] in

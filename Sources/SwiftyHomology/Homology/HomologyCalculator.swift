@@ -20,7 +20,7 @@ public class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Module, _Ma
     where BaseModule.BaseRing == _MatrixImpl.BaseRing {
     
     public typealias Homology = ModuleGrid<GridDim, BaseModule>
-    public typealias Matrix = MatrixInterface<_MatrixImpl, DynamicSize, DynamicSize>
+    public typealias Matrix = MatrixIF<_MatrixImpl, DynamicSize, DynamicSize>
     public typealias BaseRing = BaseModule.BaseRing
 
     typealias Coords = GridCoords<GridDim>
@@ -38,7 +38,7 @@ public class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Module, _Ma
         matrixCache.useCacheOrSet(key: I) {
             let (C, d) = (chainComplex, chainComplex.differential)
             let (C0, C1) = (C[I], C[I + d.multiDegree])
-            return d[I].asMatrix(from: C0, to: C1, matrixType: Matrix.self)
+            return d[I].asMatrix(from: C0, to: C1, implType: _MatrixImpl.self)
         }
     }
     

@@ -72,7 +72,7 @@ public final class LUHomologyCalculator<GridDim: StaticSizeType, BaseModule: Mod
         let e = H.luDecomposition()
         
         return { (z: BaseModule) in
-            let x = MatrixInterface<_MatrixImpl, DynamicSize, _1>(C.vectorize(z))
+            let x = MatrixIF<_MatrixImpl, DynamicSize, _1>(C.vectorize(z))
             let y = e.solve(x) // Hy = x
             return VectorD(y!)
         }
