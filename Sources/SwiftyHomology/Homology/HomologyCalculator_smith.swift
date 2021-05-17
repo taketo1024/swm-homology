@@ -10,7 +10,7 @@ import SwiftySolver
 
 extension Matrix where Impl: SparseMatrixImpl {
     func mapNonZeroComponents(_ f: @escaping (MatrixComponent<BaseRing>) -> BaseRing) -> Self {
-        Self.commonInit(size: size) { setEntry in
+        .init(size: size) { setEntry in
             nonZeroComponents.forEach { (i, j, a) in
                 setEntry(i, j, f((i, j, a)))
             }
