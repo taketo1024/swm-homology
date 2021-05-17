@@ -7,8 +7,8 @@
 
 import SwiftyMath
 
-extension HomologyCalculator where _MatrixImpl: MatrixImpl_LU {
-    public func calculateByLU() -> Homology {
+public final class LUHomologyCalculator<GridDim: StaticSizeType, BaseModule: Module, _MatrixImpl: MatrixImpl_LU>: HomologyCalculator<GridDim, BaseModule, _MatrixImpl> where BaseModule.BaseRing == _MatrixImpl.BaseRing {
+    public override func calculate() -> Homology {
         .init(support: chainComplex.grid.support) { I in
             
             //      a0       a1

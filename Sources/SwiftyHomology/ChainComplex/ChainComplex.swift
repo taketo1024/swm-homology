@@ -73,6 +73,12 @@ public struct ChainComplex<GridDim: StaticSizeType, BaseModule: Module>: GridWra
     }
 }
 
+extension ChainComplex where BaseModule.BaseRing: EuclideanRing {
+    public func homology(options: HomologyCalculatorOptions = []) -> ModuleGrid<GridDim, BaseModule> {
+        DefaultHomologyCalculator(chainComplex: self, options: options).calculate()
+    }
+}
+
 public enum ChainComplex1Type {
     case ascending, descending
     public var degree: Int {

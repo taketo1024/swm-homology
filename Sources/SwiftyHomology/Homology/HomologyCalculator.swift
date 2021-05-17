@@ -16,7 +16,7 @@ public struct HomologyCalculatorOptions: OptionSet {
     public static let withVectorizer = Self(rawValue: 1 << 1)
 }
 
-public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Module, _MatrixImpl: MatrixImpl>
+public class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Module, _MatrixImpl: MatrixImpl>
     where BaseModule.BaseRing == _MatrixImpl.BaseRing {
     
     public typealias Homology = ModuleGrid<GridDim, BaseModule>
@@ -40,5 +40,9 @@ public final class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Modul
             let (C0, C1) = (C[I], C[I + d.multiDegree])
             return d[I].asMatrix(from: C0, to: C1, matrixType: Matrix.self)
         }
+    }
+    
+    public func calculate() -> Homology {
+        fatalError("Use concrete subclasses.")
     }
 }

@@ -8,26 +8,9 @@
 import SwiftyMath
 import SwiftySolver
 
-extension Matrix where Impl: SparseMatrixImpl {
-    func mapNonZeroComponents(_ f: @escaping (MatrixComponent<BaseRing>) -> BaseRing) -> Self {
-        .init(size: size) { setEntry in
-            nonZeroComponents.forEach { (i, j, a) in
-                setEntry(i, j, f((i, j, a)))
-            }
-        }
-    }
-}
-
-extension HomologyCalculator where BaseRing: SNFComputable {
-    // TODO these are temporary, since MatrixEliminator only supports DefaultMatrix.
-    private typealias DefaultMatrix = MatrixInterface<DefaultMatrixImpl<BaseRing>, DynamicSize, DynamicSize>
-    private func _matrix(at I: Coords) -> DefaultMatrix {
-        matrix(at: I) as! DefaultMatrix
-    }
-    
-    public func calculateBySNF() -> Homology {
+public final class DefaultHomologyCalculator<GridDim: StaticSizeType, BaseModule: Module>: HomologyCalculator<GridDim, BaseModule, DefaultMatrixImpl<BaseModule.BaseRing>> where BaseModule.BaseRing: EuclideanRing {
+    public override func calculate() -> Homology {
         return .init(support: chainComplex.grid.support) { I in
-            typealias Matrix = MatrixInterface<DefaultMatrixImpl<BaseRing>, DynamicSize, DynamicSize>
             typealias Summand = ModuleObject<BaseModule>.Summand
             typealias Vectorizer = ModuleObject<BaseModule>.Vectorizer
 
@@ -50,7 +33,7 @@ extension HomologyCalculator where BaseRing: SNFComputable {
             //  H_tor  = Coker(B0).
 
             let (C, d) = (self.chainComplex, self.chainComplex.differential)
-            let (A0, A1) = (self._matrix(at: I - d.multiDegree), self._matrix(at: I))
+            let (A0, A1) = (self.matrix(at: I - d.multiDegree), self.matrix(at: I))
 
             let E0 = MatrixEliminator.eliminate(target: A0, form: .Smith)
             let diag = E0.result.diagonalComponents.exclude{ $0.isZero }
@@ -112,6 +95,16 @@ extension HomologyCalculator where BaseRing: SNFComputable {
             }
 
             return ModuleObject(summands: summands, vectorizer: vectorizer)
+        }
+    }
+}
+
+private extension Matrix where Impl: SparseMatrixImpl {
+    func mapNonZeroComponents(_ f: @escaping (MatrixComponent<BaseRing>) -> BaseRing) -> Self {
+        .init(size: size) { setEntry in
+            nonZeroComponents.forEach { (i, j, a) in
+                setEntry(i, j, f((i, j, a)))
+            }
         }
     }
 }
