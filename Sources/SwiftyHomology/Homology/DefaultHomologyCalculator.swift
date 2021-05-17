@@ -100,7 +100,7 @@ public final class DefaultHomologyCalculator<GridDim: StaticSizeType, BaseModule
 }
 
 private extension Matrix where Impl: SparseMatrixImpl {
-    func mapNonZeroComponents(_ f: @escaping (MatrixComponent<BaseRing>) -> BaseRing) -> Self {
+    func mapNonZeroComponents(_ f: @escaping (MatrixEntry<BaseRing>) -> BaseRing) -> Self {
         .init(size: size) { setEntry in
             nonZeroComponents.forEach { (i, j, a) in
                 setEntry(i, j, f((i, j, a)))
