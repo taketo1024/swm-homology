@@ -7,7 +7,7 @@
 
 import SwiftyMath
 
-public final class LUHomologyCalculator<Index: AdditiveGroup & Hashable, BaseModule: Module, _MatrixImpl: MatrixImpl_LU>: HomologyCalculator<Index, BaseModule, _MatrixImpl> where BaseModule.BaseRing == _MatrixImpl.BaseRing {
+public final class LUHomologyCalculator<C: ChainComplexType, _MatrixImpl: MatrixImpl_LU>: HomologyCalculator<C, _MatrixImpl> where C.BaseModule.BaseRing == _MatrixImpl.BaseRing {
     public override func calculate() -> Homology {
         .init { I in
             

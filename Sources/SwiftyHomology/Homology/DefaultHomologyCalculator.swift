@@ -7,7 +7,7 @@
 
 import SwiftyMath
 
-public final class DefaultHomologyCalculator<Index: AdditiveGroup & Hashable, BaseModule: Module>: HomologyCalculator<Index, BaseModule, DefaultMatrixImpl<BaseModule.BaseRing>> where BaseModule.BaseRing: EuclideanRing {
+public final class DefaultHomologyCalculator<C: ChainComplexType>: HomologyCalculator<C, DefaultMatrixImpl<C.BaseModule.BaseRing>> where C.BaseModule.BaseRing: EuclideanRing {
     public override func calculate() -> Homology {
         return .init { I in
             typealias Summand = Homology.Object.Summand

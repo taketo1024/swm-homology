@@ -12,6 +12,12 @@ public protocol ChainComplexType: ModuleGridType {
     var differential: Differential { get }
 }
 
+extension ChainComplexType where BaseModule.BaseRing: EuclideanRing {
+    public func homology(options: HomologyCalculatorOptions = []) -> ModuleGrid<Index, BaseModule> {
+        DefaultHomologyCalculator(chainComplex: self, options: options).calculate()
+    }
+}
+
 public typealias ChainComplex1<M: Module> = ChainComplex<Int, M>
 public typealias ChainComplex2<M: Module> = ChainComplex<MultiIndex<_2>, M>
 
@@ -68,15 +74,7 @@ public struct ChainComplex<Index: AdditiveGroup & Hashable, BaseModule: Module>:
             assert(self[i2].vectorize(z).isZero)
         }
     }
-}
 
-extension ChainComplex where BaseModule.BaseRing: EuclideanRing {
-    public func homology(options: HomologyCalculatorOptions = []) -> BaseGrid {
-        DefaultHomologyCalculator(chainComplex: self, options: options).calculate()
-    }
-}
-
-extension ChainComplex {
     public var dual: ChainComplex<Index, Dual<BaseModule>> {
         ChainComplex<Index, Dual<BaseModule>>(grid: grid.dual, differential: differential.dual)
     }

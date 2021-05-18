@@ -16,20 +16,21 @@ public struct HomologyCalculatorOptions: OptionSet {
     public static let withVectorizer = Self(rawValue: 1 << 1)
 }
 
-public class HomologyCalculator<Index: AdditiveGroup & Hashable, BaseModule: Module, _MatrixImpl: MatrixImpl>
-    where BaseModule.BaseRing == _MatrixImpl.BaseRing {
+public class HomologyCalculator<C: ChainComplexType, _MatrixImpl: MatrixImpl>
+where C.BaseModule.BaseRing == _MatrixImpl.BaseRing {
     
-    public typealias Homology = ModuleGrid<Index, BaseModule>
+    public typealias Homology = ModuleGrid<C.Index, C.BaseModule>
 
+    typealias Index = C.Index
+    typealias BaseModule = C.BaseModule
     typealias BaseRing = BaseModule.BaseRing
     typealias Matrix = MatrixIF<_MatrixImpl, DynamicSize, DynamicSize>
     
-
-    public let chainComplex: ChainComplex<Index, BaseModule>
+    public let chainComplex: C
     public let options: HomologyCalculatorOptions
     internal let matrixCache: CacheDictionary<Index, Matrix> = .empty
 
-    public init(chainComplex: ChainComplex<Index, BaseModule>, options: HomologyCalculatorOptions) {
+    public init(chainComplex: C, options: HomologyCalculatorOptions) {
         self.chainComplex = chainComplex
         self.options = options
     }
