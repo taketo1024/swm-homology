@@ -7,9 +7,9 @@
 
 import SwiftyMath
 
-public final class LUHomologyCalculator<GridDim: StaticSizeType, BaseModule: Module, _MatrixImpl: MatrixImpl_LU>: HomologyCalculator<GridDim, BaseModule, _MatrixImpl> where BaseModule.BaseRing == _MatrixImpl.BaseRing {
+public final class LUHomologyCalculator<Index: AdditiveGroup & Hashable, BaseModule: Module, _MatrixImpl: MatrixImpl_LU>: HomologyCalculator<Index, BaseModule, _MatrixImpl> where BaseModule.BaseRing == _MatrixImpl.BaseRing {
     public override func calculate() -> Homology {
-        .init(support: chainComplex.grid.support) { I in
+        .init { I in
             
             //      a0       a1
             //  X -----> Y -----> Z
@@ -24,7 +24,7 @@ public final class LUHomologyCalculator<GridDim: StaticSizeType, BaseModule: Mod
 
             let C = self.chainComplex
             let d = C.differential
-            let (a0, a1) = (self.matrix(at: I - d.multiDegree), self.matrix(at: I))
+            let (a0, a1) = (self.matrix(at: I - d.degree), self.matrix(at: I))
             
             let e0 = a0.luDecomposition()
 //          let Y1 = e0.image     // y x y1
@@ -46,7 +46,7 @@ public final class LUHomologyCalculator<GridDim: StaticSizeType, BaseModule: Mod
         }
     }
     
-    private func homology(index I: Coords, matrix H: Matrix) -> Homology.Object {
+    private func homology(index I: Index, matrix H: Matrix) -> Homology.Object {
         let r = H.size.cols
         let summands = self.options.contains(.withGenerators)
             ? self.homologyGenerators(index: I, matrix: H)
@@ -59,7 +59,7 @@ public final class LUHomologyCalculator<GridDim: StaticSizeType, BaseModule: Mod
         return ModuleObject(summands: summands, vectorizer: vectorizer)
     }
     
-    private func homologyGenerators(index I: Coords, matrix H: Matrix) -> [Homology.Object.Summand] {
+    private func homologyGenerators(index I: Index, matrix H: Matrix) -> [Homology.Object.Summand] {
         let gens = BaseModule.combine(
             basis: chainComplex[I].generators,
             matrix: MatrixDxD(H)
@@ -67,7 +67,7 @@ public final class LUHomologyCalculator<GridDim: StaticSizeType, BaseModule: Mod
         return gens.map{ z in .init(z) }
     }
     
-    private func homologyVectorizer(index I: Coords, matrix H: Matrix) -> Homology.Object.Vectorizer {
+    private func homologyVectorizer(index I: Index, matrix H: Matrix) -> Homology.Object.Vectorizer {
         let C = chainComplex[I]
         let e = H.luDecomposition()
         

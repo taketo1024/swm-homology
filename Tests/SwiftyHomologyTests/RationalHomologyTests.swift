@@ -28,8 +28,6 @@ class RationalHomologyTests: XCTestCase {
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
         
-        C.assertChainComplex()
-
         XCTAssertEqual(H[-1].dictionaryDescription, [:])
         XCTAssertEqual(H[0].dictionaryDescription, [0: 1])
         XCTAssertEqual(H[1].dictionaryDescription, [0: 1])
@@ -43,8 +41,6 @@ class RationalHomologyTests: XCTestCase {
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
 
-        C.assertChainComplex()
-        
         XCTAssertEqual(H[-1].dictionaryDescription, [:])
         XCTAssertEqual(H[0].dictionaryDescription, [:])
         XCTAssertEqual(H[1].dictionaryDescription, [:])
@@ -58,10 +54,6 @@ class RationalHomologyTests: XCTestCase {
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
 
-        for i in 0 ... d.count {
-            C.assertChainComplex(at: i)
-        }
-        
         XCTAssertEqual(H[-1].dictionaryDescription, [:])
         XCTAssertEqual(H[0].dictionaryDescription, [:])
         XCTAssertEqual(H[1].dictionaryDescription, [:])
@@ -75,10 +67,6 @@ class RationalHomologyTests: XCTestCase {
         let d = (1 ... 3).map{ i in i.isOdd ? 2 * Matrix.identity(size: (1, 1)) : Matrix.zero(size: (1, 1)) }
         let C = Util.generateChainComplex(matrices: d).shifted(shift)
         let H = C.homology()
-        
-        for i in 0 ... d.count {
-            C.assertChainComplex(at: i + shift)
-        }
         
         XCTAssertEqual(H[-1 + shift].dictionaryDescription, [:])
         XCTAssertEqual(H[ 0 + shift].dictionaryDescription, [:])
@@ -97,8 +85,6 @@ class RationalHomologyTests: XCTestCase {
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
         
-        C.assertChainComplex()
-        
         XCTAssertEqual(H[0].dictionaryDescription, [0: 1])
         XCTAssertEqual(H[1].dictionaryDescription, [:])
         XCTAssertEqual(H[2].dictionaryDescription, [:])
@@ -115,8 +101,6 @@ class RationalHomologyTests: XCTestCase {
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
         
-        C.assertChainComplex()
-        
         XCTAssertEqual(H[0].dictionaryDescription, [0: 1])
         XCTAssertEqual(H[1].dictionaryDescription, [:])
         XCTAssertEqual(H[2].dictionaryDescription, [0: 1])
@@ -131,8 +115,6 @@ class RationalHomologyTests: XCTestCase {
         
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
-        
-        C.assertChainComplex()
         
         XCTAssertEqual(H[0].dictionaryDescription, [0: 1])
         XCTAssertEqual(H[1].dictionaryDescription, [0: 2])
@@ -149,8 +131,6 @@ class RationalHomologyTests: XCTestCase {
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
         
-        C.assertChainComplex()
-        
         XCTAssertEqual(H[0].dictionaryDescription, [0 : 1])
         XCTAssertEqual(H[1].dictionaryDescription, [:])
         XCTAssertEqual(H[2].dictionaryDescription, [:])
@@ -165,8 +145,6 @@ class RationalHomologyTests: XCTestCase {
         let C = Util.generateChainComplex(matrices: d).dual
         let δ = C.differential
         let H = C.homology()
-        
-        C.assertChainComplex()
         
         XCTAssertEqual(δ.degree, 1)
         XCTAssertEqual(δ[0].asMatrix(from: C[0], to: C[1]), d[0].transposed)
@@ -186,8 +164,6 @@ class RationalHomologyTests: XCTestCase {
         
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology(options: [.withGenerators, .withVectorizer])
-        
-        C.assertChainComplex()
         
         if H[0].rank == 1 {
             let z = H[0].generator(0)
@@ -245,8 +221,6 @@ class RationalHomologyTests: XCTestCase {
         
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology(options: [.withGenerators, .withVectorizer])
-        
-        C.assertChainComplex()
         
         XCTAssertEqual(H[0].dictionaryDescription, [0 : 1])
         XCTAssertEqual(H[1].dictionaryDescription, [:])

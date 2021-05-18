@@ -16,29 +16,29 @@ public struct HomologyCalculatorOptions: OptionSet {
     public static let withVectorizer = Self(rawValue: 1 << 1)
 }
 
-public class HomologyCalculator<GridDim: StaticSizeType, BaseModule: Module, _MatrixImpl: MatrixImpl>
+public class HomologyCalculator<Index: AdditiveGroup & Hashable, BaseModule: Module, _MatrixImpl: MatrixImpl>
     where BaseModule.BaseRing == _MatrixImpl.BaseRing {
     
-    public typealias Homology = ModuleGrid<GridDim, BaseModule>
-    public typealias Matrix = MatrixIF<_MatrixImpl, DynamicSize, DynamicSize>
-    public typealias BaseRing = BaseModule.BaseRing
+    public typealias Homology = ModuleGrid<Index, BaseModule>
 
-    typealias Coords = GridCoords<GridDim>
+    typealias BaseRing = BaseModule.BaseRing
+    typealias Matrix = MatrixIF<_MatrixImpl, DynamicSize, DynamicSize>
+    
 
-    public let chainComplex: ChainComplex<GridDim, BaseModule>
+    public let chainComplex: ChainComplex<Index, BaseModule>
     public let options: HomologyCalculatorOptions
-    internal let matrixCache: CacheDictionary<Coords, Matrix> = .empty
+    internal let matrixCache: CacheDictionary<Index, Matrix> = .empty
 
-    public init(chainComplex: ChainComplex<GridDim, BaseModule>, options: HomologyCalculatorOptions) {
+    public init(chainComplex: ChainComplex<Index, BaseModule>, options: HomologyCalculatorOptions) {
         self.chainComplex = chainComplex
         self.options = options
     }
     
-    internal func matrix(at I: Coords) -> Matrix {
-        matrixCache.useCacheOrSet(key: I) {
+    internal func matrix(at i: Index) -> Matrix {
+        matrixCache.useCacheOrSet(key: i) {
             let (C, d) = (chainComplex, chainComplex.differential)
-            let (C0, C1) = (C[I], C[I + d.multiDegree])
-            return d[I].asMatrix(from: C0, to: C1, implType: _MatrixImpl.self)
+            let (C0, C1) = (C[i], C[i + d.degree])
+            return d[i].asMatrix(from: C0, to: C1, implType: _MatrixImpl.self)
         }
     }
     

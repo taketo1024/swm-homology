@@ -7,11 +7,11 @@
 
 import SwiftyMath
 
-public final class DefaultHomologyCalculator<GridDim: StaticSizeType, BaseModule: Module>: HomologyCalculator<GridDim, BaseModule, DefaultMatrixImpl<BaseModule.BaseRing>> where BaseModule.BaseRing: EuclideanRing {
+public final class DefaultHomologyCalculator<Index: AdditiveGroup & Hashable, BaseModule: Module>: HomologyCalculator<Index, BaseModule, DefaultMatrixImpl<BaseModule.BaseRing>> where BaseModule.BaseRing: EuclideanRing {
     public override func calculate() -> Homology {
-        return .init(support: chainComplex.grid.support) { I in
-            typealias Summand = ModuleObject<BaseModule>.Summand
-            typealias Vectorizer = ModuleObject<BaseModule>.Vectorizer
+        return .init { I in
+            typealias Summand = Homology.Object.Summand
+            typealias Vectorizer = Homology.Object.Vectorizer
 
             let summands: [Summand]
             let vectorizer: Vectorizer
@@ -32,7 +32,7 @@ public final class DefaultHomologyCalculator<GridDim: StaticSizeType, BaseModule
             //  H_tor  = Coker(B0).
 
             let (C, d) = (self.chainComplex, self.chainComplex.differential)
-            let (A0, A1) = (self.matrix(at: I - d.multiDegree), self.matrix(at: I))
+            let (A0, A1) = (self.matrix(at: I - d.degree), self.matrix(at: I))
 
             let E0 = A0.eliminate(form: .Smith)
             let diag = E0.diagonalEntries

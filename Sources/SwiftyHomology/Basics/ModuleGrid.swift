@@ -7,48 +7,42 @@
 
 import SwiftyMath
 
-public typealias ModuleGrid1<M: Module> = ModuleGrid<_1, M>
-public typealias ModuleGrid2<M: Module> = ModuleGrid<_2, M>
+public protocol ModuleGridType: GridType where Object == ModuleObject<BaseModule> {
+    associatedtype BaseModule: Module
+}
 
-public struct ModuleGrid<GridDim: StaticSizeType, BaseModule: Module>: GridType {
-    public typealias Coords = GridCoords<GridDim>
+public typealias ModuleGrid1<M: Module> = ModuleGrid<Int, M>
+public typealias ModuleGrid2<M: Module> = ModuleGrid<MultiIndex<_2>, M>
+
+public struct ModuleGrid<Index: AdditiveGroup & Hashable, BaseModule: Module>: ModuleGridType {
     public typealias Object = ModuleObject<BaseModule>
     public typealias R = BaseModule.BaseRing
     
-    public let support: ClosedRange<Coords>?
-    private let grid: (Coords) -> Object
-    private let gridCache: CacheDictionary<Coords, Object> = CacheDictionary.empty
+    private let grid: (Index) -> Object
+    private let gridCache: CacheDictionary<Index, Object> = CacheDictionary.empty
     
-    public init(support: ClosedRange<Coords>? = nil, grid: @escaping (Coords) -> Object) {
-        self.support = support
+    public init(grid: @escaping (Index) -> Object) {
         self.grid = grid
     }
     
-    public subscript(I: Coords) -> Object {
+    public subscript(I: Index) -> Object {
         gridCache.useCacheOrSet(key: I) { self.grid(I) }
     }
     
-    public func shifted(_ shift: Coords) -> Self {
-        .init(support: support.map{ $0 + shift } ) { I in
-            self[I - shift]
+    public func shifted(_ shift: Index) -> Self {
+        .init { i in
+            self[i - shift]
         }
     }
     
-    public func description(forObjectAt I: GridCoords<GridDim>) -> String {
-        let obj = self[I]
+    public func description(forObjectAt i: Index) -> String {
+        let obj = self[i]
         return obj.isZero ? "" : obj.description
     }
 }
 
-extension ModuleGrid where GridDim == _1 {
-    public init(support: ClosedRange<Int>? = nil, sequence: @escaping (Int) -> ModuleObject<BaseModule>) {
-        let mSupport = support.map { support in Coords(support.lowerBound) ... Coords(support.upperBound) }
-        self.init(support: mSupport) { I in sequence(I[0]) }
-    }
-}
-
 extension ModuleGrid {
-    public var dual: ModuleGrid<GridDim, Dual<BaseModule>> {
-        .init(support: support) { I in self[I].dual }
+    public var dual: ModuleGrid<Index, Dual<BaseModule>> {
+        .init { i in self[i].dual }
     }
 }

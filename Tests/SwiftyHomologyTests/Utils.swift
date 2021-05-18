@@ -28,10 +28,10 @@ struct Util {
         let objs = bases.map { ModuleObject<M>(generators: $0) }
         
         return ChainComplex1<M>(
-            support: 0 ... bases.count - 1,
-            sequence: { i in
+            grid: { i in
                 bases.indices.contains(i) ? objs[i] : .zeroModule
             },
+            degree: -1,
             differential: { i in
                 if matrices.indices.contains(i - 1) {
                     let from = objs[i]
