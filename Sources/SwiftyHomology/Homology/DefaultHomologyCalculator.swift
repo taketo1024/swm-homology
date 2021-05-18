@@ -6,7 +6,6 @@
 //
 
 import SwiftyMath
-import SwiftySolver
 
 public final class DefaultHomologyCalculator<GridDim: StaticSizeType, BaseModule: Module>: HomologyCalculator<GridDim, BaseModule, DefaultMatrixImpl<BaseModule.BaseRing>> where BaseModule.BaseRing: EuclideanRing {
     public override func calculate() -> Homology {
@@ -35,8 +34,8 @@ public final class DefaultHomologyCalculator<GridDim: StaticSizeType, BaseModule
             let (C, d) = (self.chainComplex, self.chainComplex.differential)
             let (A0, A1) = (self.matrix(at: I - d.multiDegree), self.matrix(at: I))
 
-            let E0 = MatrixEliminator.eliminate(target: A0, form: .Smith)
-            let diag = E0.result.diagonalComponents.exclude{ $0.isZero }
+            let E0 = A0.eliminate(form: .Smith)
+            let diag = E0.diagonalEntries
             let m = A0.size.rows // == A1.size.cols
             let r = diag.count
             let s = diag.firstIndex { d in !d.isIdentity } ?? r
@@ -48,7 +47,7 @@ public final class DefaultHomologyCalculator<GridDim: StaticSizeType, BaseModule
 
             let Pm = E0.leftInverse(restrictedToCols: r ..< m)
             let B1 = A1 * Pm
-            let E1 = MatrixEliminator.eliminate(target: B1, form: .Diagonal)
+            let E1 = B1.eliminate(form: .Diagonal)
 
             if self.options.contains(.withGenerators) {
                 let gens = C[I].generators
@@ -77,7 +76,7 @@ public final class DefaultHomologyCalculator<GridDim: StaticSizeType, BaseModule
                 //  Thus T = [Rk * Qm; Qr] (size: (r - s + k) × m ) maps C1 -> H = H_free ⊕ H_tor.
 
                 let Qr = E0.left(restrictedToRows: s ..< r)
-                let Tt = Qr.mapNonZeroComponents { (i, _, a) in a % diag[i + s] }
+                let Tt = Qr.mapNonZeroEntries { (i, _, a) in a % diag[i + s] }
 
                 let Qm = E0.left(restrictedToRows: r ..< m)
                 let Rk = E1.kernelTransitionMatrix
@@ -86,7 +85,7 @@ public final class DefaultHomologyCalculator<GridDim: StaticSizeType, BaseModule
                 vectorizer = { z in
                     let v = C[I].vectorize(z)
                     let wf = Tf * v
-                    let wt = (Tt * v).mapNonZeroComponents{ (i, _, a) in a % diag[i + s] }
+                    let wt = (Tt * v).mapNonZeroEntries{ (i, _, a) in a % diag[i + s] }
                     return wf.stack(wt)
                 }
 
@@ -100,9 +99,9 @@ public final class DefaultHomologyCalculator<GridDim: StaticSizeType, BaseModule
 }
 
 private extension Matrix where Impl: SparseMatrixImpl {
-    func mapNonZeroComponents(_ f: @escaping (MatrixEntry<BaseRing>) -> BaseRing) -> Self {
+    func mapNonZeroEntries(_ f: @escaping (MatrixEntry<BaseRing>) -> BaseRing) -> Self {
         .init(size: size) { setEntry in
-            nonZeroComponents.forEach { (i, j, a) in
+            nonZeroEntries.forEach { (i, j, a) in
                 setEntry(i, j, f((i, j, a)))
             }
         }

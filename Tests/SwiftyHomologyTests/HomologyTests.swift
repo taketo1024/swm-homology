@@ -39,7 +39,7 @@ class HomologyTests: XCTestCase {
     }
 
     func test2() {
-        let d = (1 ... 3).map{ i in i.isOdd ? Matrix.identity(size: 1) : Matrix.zero(size: (1, 1)) }
+        let d = (1 ... 3).map{ i in i.isOdd ? Matrix.identity(size: (1, 1)) : Matrix.zero(size: (1, 1)) }
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
 
@@ -54,7 +54,7 @@ class HomologyTests: XCTestCase {
     }
 
     func test3() {
-        let d = (1 ... 3).map{ i in i.isOdd ? 2 * Matrix.identity(size: 1) : Matrix.zero(size: (1, 1)) }
+        let d = (1 ... 3).map{ i in i.isOdd ? 2 * Matrix.identity(size: (1, 1)) : Matrix.zero(size: (1, 1)) }
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
 
@@ -72,7 +72,7 @@ class HomologyTests: XCTestCase {
     
     func testShift() {
         let shift = -3
-        let d = (1 ... 3).map{ i in i.isOdd ? 2 * Matrix.identity(size: 1) : Matrix.zero(size: (1, 1)) }
+        let d = (1 ... 3).map{ i in i.isOdd ? 2 * Matrix.identity(size: (1, 1)) : Matrix.zero(size: (1, 1)) }
         let C = Util.generateChainComplex(matrices: d).shifted(shift)
         let H = C.homology()
         

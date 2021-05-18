@@ -14,7 +14,7 @@ extension Module {
 
     internal static func combine<n, m>(basis: [Self], matrix A: Matrix<n, m, BaseRing>) -> [Self] {
         assert(basis.count == A.size.rows)
-        let cols = A.nonZeroComponents.group{ $0.col }
+        let cols = A.nonZeroEntries.group{ $0.col }
         
         return Array(0 ..< A.size.cols).parallelMap { j in
             guard let col = cols[j] else {

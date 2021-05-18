@@ -16,21 +16,11 @@ let package = Package(
             url: "../SwiftyMath",
             .branch("matrix-improve")
         ),
-        .package(
-            name: "SwiftyEigen",
-            url: "../SwiftyEigen",
-            .branch("matrix-improve")
-        ),
-        .package(
-            name: "SwiftySolver",
-            url: "../SwiftySolver",
-            .branch("matrix-improve")
-        ),
     ],
     targets: [
         .target(
             name: "SwiftyHomology",
-            dependencies: ["SwiftyMath", "SwiftyEigen", "SwiftySolver"],
+            dependencies: ["SwiftyMath"],
 			path: "Sources/SwiftyHomology"),
         .testTarget(
             name: "SwiftyHomologyTests",

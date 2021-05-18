@@ -88,7 +88,7 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
         let vectorizer = { (z: BaseModule) -> VectorD<R> in
             let vec = vectorize(z)
             return .init(size: N) { setEntry in
-                vec.nonZeroComponents.forEach { (i, _, r) in
+                vec.nonZeroColEntries.forEach { (i, r) in
                     if let j = table[i]  {
                         setEntry(j, r)
                     }
