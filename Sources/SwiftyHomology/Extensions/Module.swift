@@ -8,11 +8,11 @@
 import SwiftyMath
 
 extension Module {
-    internal static func combine<n>(basis: [Self], vector: ColVector<n, BaseRing>) -> Self {
+    internal static func combine<n>(basis: [Self], vector: ColVector<BaseRing, n>) -> Self {
         combine(basis: basis, matrix: vector)[0]
     }
 
-    internal static func combine<n, m>(basis: [Self], matrix A: Matrix<n, m, BaseRing>) -> [Self] {
+    internal static func combine<n, m>(basis: [Self], matrix A: Matrix<BaseRing, n, m>) -> [Self] {
         assert(basis.count == A.size.rows)
         let cols = A.nonZeroEntries.group{ $0.col }
         
