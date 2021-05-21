@@ -56,7 +56,7 @@ public final class LUHomologyCalculator<C: ChainComplexType, _MatrixImpl: Matrix
             ? self.homologyVectorizer(index: I, matrix: H)
             : self.onlyStructure(rank: r).vectorizer
         
-        return ModuleObject(summands: summands, vectorizer: vectorizer)
+        return ModuleStructure(summands: summands, vectorizer: vectorizer)
     }
     
     private func homologyGenerators(index I: Index, matrix H: Matrix) -> [Homology.Object.Summand] {

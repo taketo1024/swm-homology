@@ -7,7 +7,7 @@
 
 import SwiftyMath
 
-public protocol GridType {
+public protocol IndexedStructure {
     associatedtype Index: AdditiveGroup & Hashable
     associatedtype Object
     
@@ -16,13 +16,13 @@ public protocol GridType {
     func description(forObjectAt i: Index) -> String
 }
 
-extension GridType {
+extension IndexedStructure {
     public func description(forObjectAt i: Index) -> String {
         "\(self[i])"
     }
 }
 
-extension GridType where Index == Int {
+extension IndexedStructure where Index == Int {
     public func shifted(_ i: Int) -> Self {
         shifted(Index(i))
     }
@@ -32,7 +32,7 @@ extension GridType where Index == Int {
     }
 }
 
-extension GridType where Index == MultiIndex<_2> {
+extension IndexedStructure where Index == MultiIndex<_2> {
     public subscript(i: Int, j: Int) -> Object {
         self[Index(i, j)]
     }

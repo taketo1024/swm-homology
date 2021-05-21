@@ -7,15 +7,15 @@
 
 import SwiftyMath
 
-public protocol ModuleGridType: GridType where Object == ModuleObject<BaseModule> {
+public protocol GradedModuleStructureType: IndexedStructure where Object == ModuleStructure<BaseModule> {
     associatedtype BaseModule: Module
 }
 
-public typealias ModuleGrid1<M: Module> = ModuleGrid<Int, M>
-public typealias ModuleGrid2<M: Module> = ModuleGrid<MultiIndex<_2>, M>
+public typealias ModuleGrid1<M: Module> = GradedModuleStructure<Int, M>
+public typealias ModuleGrid2<M: Module> = GradedModuleStructure<MultiIndex<_2>, M>
 
-public struct ModuleGrid<Index: AdditiveGroup & Hashable, BaseModule: Module>: ModuleGridType {
-    public typealias Object = ModuleObject<BaseModule>
+public struct GradedModuleStructure<Index: AdditiveGroup & Hashable, BaseModule: Module>: GradedModuleStructureType {
+    public typealias Object = ModuleStructure<BaseModule>
     public typealias R = BaseModule.BaseRing
     
     private let grid: (Index) -> Object
@@ -41,8 +41,8 @@ public struct ModuleGrid<Index: AdditiveGroup & Hashable, BaseModule: Module>: M
     }
 }
 
-extension ModuleGrid {
-    public var dual: ModuleGrid<Index, DualModule<BaseModule>> {
+extension GradedModuleStructure {
+    public var dual: GradedModuleStructure<Index, DualModule<BaseModule>> {
         .init { i in self[i].dual }
     }
 }

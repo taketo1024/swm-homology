@@ -7,13 +7,13 @@
 
 import SwiftyMath
 
-public protocol ChainComplexType: ModuleGridType {
+public protocol ChainComplexType: GradedModuleStructureType {
     typealias Differential = ChainMap<Index, BaseModule, BaseModule>
     var differential: Differential { get }
 }
 
 extension ChainComplexType where BaseModule.BaseRing: EuclideanRing {
-    public func homology(options: HomologyCalculatorOptions = []) -> ModuleGrid<Index, BaseModule> {
+    public func homology(options: HomologyCalculatorOptions = []) -> GradedModuleStructure<Index, BaseModule> {
         DefaultHomologyCalculator(chainComplex: self, options: options).calculate()
     }
 }
@@ -22,7 +22,7 @@ public typealias ChainComplex1<M: Module> = ChainComplex<Int, M>
 public typealias ChainComplex2<M: Module> = ChainComplex<MultiIndex<_2>, M>
 
 public struct ChainComplex<Index: AdditiveGroup & Hashable, BaseModule: Module>: ChainComplexType {
-    public typealias BaseGrid = ModuleGrid<Index, BaseModule>
+    public typealias BaseGrid = GradedModuleStructure<Index, BaseModule>
     public typealias Object = BaseGrid.Object
     public typealias Differential = ChainMap<Index, BaseModule, BaseModule>
     
@@ -36,7 +36,7 @@ public struct ChainComplex<Index: AdditiveGroup & Hashable, BaseModule: Module>:
     
     public init(grid: @escaping (Index) -> Object, degree: Index, differential: @escaping (Index) -> Differential.Object) {
         self.init(
-            grid: ModuleGrid(grid: grid),
+            grid: GradedModuleStructure(grid: grid),
             differential: ChainMap(degree: degree, maps: differential)
         )
     }

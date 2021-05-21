@@ -10,7 +10,7 @@ import SwiftyMath
 public typealias ChainMap1<M: Module, N: Module> = ChainMap<Int, M, N> where M.BaseRing == N.BaseRing
 public typealias ChainMap2<M: Module, N: Module> = ChainMap<MultiIndex<_2>, M, N> where M.BaseRing == N.BaseRing
 
-public struct ChainMap<Index: AdditiveGroup & Hashable, BaseModule1: Module, BaseModule2: Module>: GridType where BaseModule1.BaseRing == BaseModule2.BaseRing {
+public struct ChainMap<Index: AdditiveGroup & Hashable, BaseModule1: Module, BaseModule2: Module>: IndexedStructure where BaseModule1.BaseRing == BaseModule2.BaseRing {
     public typealias Object = ModuleHom<BaseModule1, BaseModule2>
     public typealias R = BaseModule1.BaseRing
     

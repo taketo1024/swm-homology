@@ -25,7 +25,7 @@ struct Util {
             gens(d.size.rows)
         } + [gens(matrices.last!.size.cols)]
         
-        let objs = bases.map { ModuleObject<M>(generators: $0) }
+        let objs = bases.map { ModuleStructure<M>(generators: $0) }
         
         return ChainComplex1<M>(
             grid: { i in

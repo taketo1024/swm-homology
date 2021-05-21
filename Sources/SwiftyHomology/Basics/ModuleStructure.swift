@@ -15,7 +15,7 @@ import SwiftyMath
 // See: https://en.wikipedia.org/wiki/Free_presentation
 //      https://en.wikipedia.org/wiki/Structure_theorem_for_finitely_generated_modules_over_a_principal_ideal_domain#Invariant_factor_decomposition
 
-public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertible {
+public struct ModuleStructure<BaseModule: Module>: Equatable, CustomStringConvertible {
     public typealias R = BaseModule.BaseRing
     public typealias Vectorizer = (BaseModule) -> AnySizeVector<R>
 
@@ -70,7 +70,7 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
         summands[i].generator
     }
     
-    public func filter(_ predicate: @escaping (Summand) -> Bool) -> ModuleObject {
+    public func filter(_ predicate: @escaping (Summand) -> Bool) -> ModuleStructure {
         let (reduced, table) = summands
             .enumerated()
             .reduce(into: ([], [:])) {
@@ -95,11 +95,11 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
                 }
             }
         }
-        return ModuleObject(summands: reduced, vectorizer: vectorizer)
+        return ModuleStructure(summands: reduced, vectorizer: vectorizer)
     }
 
     
-    public static func ==(a: ModuleObject<BaseModule>, b: ModuleObject<BaseModule>) -> Bool {
+    public static func ==(a: ModuleStructure<BaseModule>, b: ModuleStructure<BaseModule>) -> Bool {
         a.summands == b.summands
     }
     
@@ -146,7 +146,7 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
     }
 }
 
-extension ModuleObject where BaseModule: LinearCombinationType {
+extension ModuleStructure where BaseModule: LinearCombinationType {
     // TODO: rename to `rawGenerators`
     public init(generators: [BaseModule.Generator]) {
         let indexer = generators.makeIndexer()
@@ -165,11 +165,11 @@ extension ModuleObject where BaseModule: LinearCombinationType {
     }
 }
 
-extension ModuleObject {
-    public var dual: ModuleObject<DualModule<BaseModule>> {
+extension ModuleStructure {
+    public var dual: ModuleStructure<DualModule<BaseModule>> {
         assert(isFree)
         
-        typealias DualObject = ModuleObject<DualModule<BaseModule>>
+        typealias DualObject = ModuleStructure<DualModule<BaseModule>>
         let summands = self.generators.enumerated().map { (i, _) in
             DualModule<BaseModule> { z in
                 .init(self.vectorize(z)[i])
@@ -186,11 +186,11 @@ extension ModuleObject {
                 }
             }
         }
-        return ModuleObject<DualModule<BaseModule>>(summands: summands, vectorizer: vectorizer)
+        return ModuleStructure<DualModule<BaseModule>>(summands: summands, vectorizer: vectorizer)
     }
 }
 
-extension ModuleObject where R: Hashable {
+extension ModuleStructure where R: Hashable {
     public var dictionaryDescription: [R : Int] {
         summands.group{ $0.divisor }.mapValues{ $0.count }
     }

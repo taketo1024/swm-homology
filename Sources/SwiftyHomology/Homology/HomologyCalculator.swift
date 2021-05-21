@@ -19,7 +19,7 @@ public struct HomologyCalculatorOptions: OptionSet {
 public class HomologyCalculator<C: ChainComplexType, _MatrixImpl: MatrixImpl>
 where C.BaseModule.BaseRing == _MatrixImpl.BaseRing {
     
-    public typealias Homology = ModuleGrid<C.Index, C.BaseModule>
+    public typealias Homology = GradedModuleStructure<C.Index, C.BaseModule>
 
     typealias Index = C.Index
     typealias BaseModule = C.BaseModule
