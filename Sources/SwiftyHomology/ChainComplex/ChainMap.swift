@@ -7,7 +7,7 @@
 
 import SwiftyMath
 
-public struct ChainMap<C1: ChainComplexType, C2: ChainComplexType>: IndexedStructure
+public struct ChainMap<C1: ChainComplexType, C2: ChainComplexType>: GradedStructure
 where C1.Index == C2.Index,
       C1.BaseModule.BaseRing == C2.BaseModule.BaseRing
 {
@@ -21,6 +21,10 @@ where C1.Index == C2.Index,
     public init(degree: Index, maps: @escaping (Index) -> Object) {
         self.degree = degree
         self.maps = maps
+    }
+    
+    public init<D1, D2>(_ f: ChainMap<D1, D2>) where D1.Index == Index, D1.BaseModule == C1.BaseModule, D2.BaseModule == C2.BaseModule {
+        self.init(degree: f.degree, maps: f.maps)
     }
     
     public subscript(_ i: Index) -> Object {

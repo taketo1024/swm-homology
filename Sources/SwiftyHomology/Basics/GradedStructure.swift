@@ -7,7 +7,7 @@
 
 import SwiftyMath
 
-public protocol IndexedStructure {
+public protocol GradedStructure {
     associatedtype Index: AdditiveGroup & Hashable
     associatedtype Object
     
@@ -16,13 +16,13 @@ public protocol IndexedStructure {
     func description(forObjectAt i: Index) -> String
 }
 
-extension IndexedStructure {
+extension GradedStructure {
     public func description(forObjectAt i: Index) -> String {
         "\(self[i])"
     }
 }
 
-extension IndexedStructure where Index == Int {
+extension GradedStructure where Index == Int {
     public func shifted(_ i: Int) -> Self {
         shifted(Index(i))
     }
@@ -32,7 +32,7 @@ extension IndexedStructure where Index == Int {
     }
 }
 
-extension IndexedStructure where Index == MultiIndex<_2> {
+extension GradedStructure where Index == MultiIndex<_2> {
     public subscript(i: Int, j: Int) -> Object {
         self[Index(i, j)]
     }

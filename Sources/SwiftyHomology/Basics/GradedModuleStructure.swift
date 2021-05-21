@@ -7,7 +7,7 @@
 
 import SwiftyMath
 
-public protocol GradedModuleStructureType: IndexedStructure where Object == ModuleStructure<BaseModule> {
+public protocol GradedModuleStructureType: GradedStructure where Object == ModuleStructure<BaseModule> {
     associatedtype BaseModule: Module
 }
 
