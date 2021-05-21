@@ -8,7 +8,7 @@
 import SwiftyMath
 
 public protocol ChainComplexType: GradedModuleStructureType {
-    typealias Differential = ChainMap<Index, BaseModule, BaseModule>
+    typealias Differential = ChainMap<Self, Self>
     var differential: Differential { get }
 }
 
@@ -24,7 +24,7 @@ public typealias ChainComplex2<M: Module> = ChainComplex<MultiIndex<_2>, M>
 public struct ChainComplex<Index: AdditiveGroup & Hashable, BaseModule: Module>: ChainComplexType {
     public typealias BaseGrid = GradedModuleStructure<Index, BaseModule>
     public typealias Object = BaseGrid.Object
-    public typealias Differential = ChainMap<Index, BaseModule, BaseModule>
+    public typealias Differential = ChainMap<Self, Self>
     
     public let grid: BaseGrid
     public let differential: Differential

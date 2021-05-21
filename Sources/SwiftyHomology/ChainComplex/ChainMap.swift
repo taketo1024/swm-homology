@@ -7,12 +7,13 @@
 
 import SwiftyMath
 
-public typealias ChainMap1<M: Module, N: Module> = ChainMap<Int, M, N> where M.BaseRing == N.BaseRing
-public typealias ChainMap2<M: Module, N: Module> = ChainMap<MultiIndex<_2>, M, N> where M.BaseRing == N.BaseRing
-
-public struct ChainMap<Index: AdditiveGroup & Hashable, BaseModule1: Module, BaseModule2: Module>: IndexedStructure where BaseModule1.BaseRing == BaseModule2.BaseRing {
-    public typealias Object = ModuleHom<BaseModule1, BaseModule2>
-    public typealias R = BaseModule1.BaseRing
+public struct ChainMap<C1: ChainComplexType, C2: ChainComplexType>: IndexedStructure
+where C1.Index == C2.Index,
+      C1.BaseModule.BaseRing == C2.BaseModule.BaseRing
+{
+    public typealias Index = C1.Index
+    public typealias Object = ModuleHom<C1.BaseModule, C2.BaseModule>
+    public typealias R = C1.BaseModule.BaseRing
     
     public var degree: Index
     internal let maps: (Index) -> Object
@@ -30,8 +31,8 @@ public struct ChainMap<Index: AdditiveGroup & Hashable, BaseModule1: Module, Bas
         .init(degree: degree) { i in self[i - shift] }
     }
     
-    public func assertChainMap(from C0: ChainComplex<Index, BaseModule1>, to C1: ChainComplex<Index, BaseModule2>, at i0: Index, debug: Bool = false) {
-        let (f, d0, d1) = (self, C0.differential, C1.differential)
+    public func assertChainMap(from c1: C1, to c2: C2, at i0: Index, debug: Bool = false) {
+        let (f, d0, d1) = (self, c1.differential, c2.differential)
         assert(d0.degree == d1.degree)
 
         //          d0
@@ -49,7 +50,7 @@ public struct ChainMap<Index: AdditiveGroup & Hashable, BaseModule1: Module, Bas
         let i1 = i0 + d0.degree
         let i2 = i0 + f.degree
         let i3 = i1 + f.degree
-        let (s0, s3) = (C0[i0], C1[i3])
+        let (s0, s3) = (c1[i0], c2[i3])
 
         print("\(i0): \(s0) -> \(s3)")
 
@@ -63,13 +64,13 @@ public struct ChainMap<Index: AdditiveGroup & Hashable, BaseModule1: Module, Bas
             print("\t\(x) ->\t\(y1) ->\t\(z1)")
             print("")
             
-            assert(C1[i3].vectorize(z0) == C1[i3].vectorize(z1))
+            assert(c2[i3].vectorize(z0) == c2[i3].vectorize(z1))
         }
     }
 }
 
 extension ChainMap {
-    public var dual: ChainMap<Index, DualModule<BaseModule2>, DualModule<BaseModule1>> {
+    public var dual: ChainMap<ChainComplex<Index, DualModule<C2.BaseModule>>, ChainComplex<Index, DualModule<C1.BaseModule>>> {
         .init(degree: -degree) { i in
             ModuleHom { g in
                 let j = i - self.degree
