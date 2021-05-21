@@ -12,7 +12,7 @@ import SwiftyMath
 class RationalHomologyTests: XCTestCase {
     
     typealias R = 𝐐
-    typealias Matrix = MatrixDxD<R>
+    typealias Matrix = AnySizeMatrix<R>
 
     override func setUp() {
         super.setUp()
@@ -167,7 +167,7 @@ class RationalHomologyTests: XCTestCase {
         
         if H[0].rank == 1 {
             let z = H[0].generator(0)
-            XCTAssertEqual(H[0].vectorize(z), VectorD(size: 1, grid: [1]) )
+            XCTAssertEqual(H[0].vectorize(z), AnySizeVector(size: 1, grid: [1]) )
         } else {
             XCTFail()
         }

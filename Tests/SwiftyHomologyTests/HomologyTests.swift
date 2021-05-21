@@ -12,7 +12,7 @@ import SwiftyMath
 class HomologyTests: XCTestCase {
     
     typealias R = 𝐙
-    typealias Matrix = MatrixDxD<R>
+    typealias Matrix = AnySizeMatrix<R>
 
     override func setUp() {
         super.setUp()

@@ -24,11 +24,11 @@ where C.BaseModule.BaseRing == _MatrixImpl.BaseRing {
     typealias Index = C.Index
     typealias BaseModule = C.BaseModule
     typealias BaseRing = BaseModule.BaseRing
-    typealias Matrix = MatrixIF<_MatrixImpl, DynamicSize, DynamicSize>
+    typealias Matrix = MatrixIF<_MatrixImpl, anySize, anySize>
     
     public let chainComplex: C
     public let options: HomologyCalculatorOptions
-    internal let matrixCache: CacheDictionary<Index, Matrix> = .empty
+    internal let matrixCache: Cache<Index, Matrix> = .empty
 
     public init(chainComplex: C, options: HomologyCalculatorOptions) {
         self.chainComplex = chainComplex
@@ -36,7 +36,7 @@ where C.BaseModule.BaseRing == _MatrixImpl.BaseRing {
     }
     
     internal func matrix(at i: Index) -> Matrix {
-        matrixCache.useCacheOrSet(key: i) {
+        matrixCache.getOrSet(key: i) {
             let (C, d) = (chainComplex, chainComplex.differential)
             let (C0, C1) = (C[i], C[i + d.degree])
             return d[i].asMatrix(from: C0, to: C1, implType: _MatrixImpl.self)

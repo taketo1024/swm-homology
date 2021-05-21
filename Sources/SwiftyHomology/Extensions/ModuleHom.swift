@@ -7,12 +7,12 @@
 
 import SwiftyMath
 
-extension ModuleHom {
-    public func asMatrix(from: ModuleObject<X>, to: ModuleObject<Y>) -> MatrixDxD<BaseRing> {
+extension ModuleHom where Domain: Module, Codomain: Module, Domain.BaseRing == Codomain.BaseRing {
+    public func asMatrix(from: ModuleObject<Domain>, to: ModuleObject<Codomain>) -> AnySizeMatrix<BaseRing> {
         asMatrix(from: from, to: to, implType: DefaultMatrixImpl<BaseRing>.self)
     }
     
-    public func asMatrix<Impl: MatrixImpl>(from: ModuleObject<X>, to: ModuleObject<Y>, implType: Impl.Type) -> MatrixIF<Impl, DynamicSize, DynamicSize> where Impl.BaseRing == BaseRing {
+    public func asMatrix<Impl: MatrixImpl>(from: ModuleObject<Domain>, to: ModuleObject<Codomain>, implType: Impl.Type) -> MatrixIF<Impl, anySize, anySize> where Impl.BaseRing == BaseRing {
         
         let (n, m) = (to.generators.count, from.generators.count)
         let entries = Array(0 ..< m).parallelFlatMap { j -> [MatrixEntry<BaseRing>] in

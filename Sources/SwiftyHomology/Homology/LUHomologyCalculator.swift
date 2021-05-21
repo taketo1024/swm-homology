@@ -62,7 +62,7 @@ public final class LUHomologyCalculator<C: ChainComplexType, _MatrixImpl: Matrix
     private func homologyGenerators(index I: Index, matrix H: Matrix) -> [Homology.Object.Summand] {
         let gens = BaseModule.combine(
             basis: chainComplex[I].generators,
-            matrix: MatrixDxD(H)
+            matrix: AnySizeMatrix(H)
         )
         return gens.map{ z in .init(z) }
     }
@@ -72,9 +72,9 @@ public final class LUHomologyCalculator<C: ChainComplexType, _MatrixImpl: Matrix
         let e = H.luDecomposition()
         
         return { (z: BaseModule) in
-            let x = MatrixIF<_MatrixImpl, DynamicSize, _1>(C.vectorize(z))
+            let x = MatrixIF<_MatrixImpl, anySize, _1>(C.vectorize(z))
             let y = e.solve(x) // Hy = x
-            return VectorD(y!)
+            return AnySizeVector(y!)
         }
     }
     

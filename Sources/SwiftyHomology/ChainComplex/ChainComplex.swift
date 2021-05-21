@@ -75,8 +75,8 @@ public struct ChainComplex<Index: AdditiveGroup & Hashable, BaseModule: Module>:
         }
     }
 
-    public var dual: ChainComplex<Index, Dual<BaseModule>> {
-        ChainComplex<Index, Dual<BaseModule>>(grid: grid.dual, differential: differential.dual)
+    public var dual: ChainComplex<Index, DualModule<BaseModule>> {
+        ChainComplex<Index, DualModule<BaseModule>>(grid: grid.dual, differential: differential.dual)
     }
 }
 

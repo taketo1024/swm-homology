@@ -9,7 +9,7 @@ import SwiftyMath
 @testable import SwiftyHomology
 
 struct Util {
-    static func generateChainComplex<R>(matrices: [MatrixDxD<R>]) -> ChainComplex1<LinearCombination<R, Generator>> {
+    static func generateChainComplex<R>(matrices: [AnySizeMatrix<R>]) -> ChainComplex1<LinearCombination<R, Generator>> {
         typealias A = Generator
         typealias M = LinearCombination<R, A>
 

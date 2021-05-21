@@ -19,14 +19,14 @@ public struct ModuleGrid<Index: AdditiveGroup & Hashable, BaseModule: Module>: M
     public typealias R = BaseModule.BaseRing
     
     private let grid: (Index) -> Object
-    private let gridCache: CacheDictionary<Index, Object> = CacheDictionary.empty
+    private let gridCache: Cache<Index, Object> = Cache.empty
     
     public init(grid: @escaping (Index) -> Object) {
         self.grid = grid
     }
     
     public subscript(I: Index) -> Object {
-        gridCache.useCacheOrSet(key: I) { self.grid(I) }
+        gridCache.getOrSet(key: I) { self.grid(I) }
     }
     
     public func shifted(_ shift: Index) -> Self {
@@ -42,7 +42,7 @@ public struct ModuleGrid<Index: AdditiveGroup & Hashable, BaseModule: Module>: M
 }
 
 extension ModuleGrid {
-    public var dual: ModuleGrid<Index, Dual<BaseModule>> {
+    public var dual: ModuleGrid<Index, DualModule<BaseModule>> {
         .init { i in self[i].dual }
     }
 }

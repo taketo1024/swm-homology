@@ -1,4 +1,4 @@
-// swift-tools-version:5.2
+// swift-tools-version:5.3
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -14,14 +14,14 @@ let package = Package(
         .package(
             name: "SwiftyMath",
             url: "../SwiftyMath",
-            .branch("matrix-improve")
+            .branch("master")
         ),
     ],
     targets: [
         .target(
             name: "SwiftyHomology",
-            dependencies: ["SwiftyMath"],
-			path: "Sources/SwiftyHomology"),
+            dependencies: ["SwiftyMath"]
+		),
         .testTarget(
             name: "SwiftyHomologyTests",
             dependencies: ["SwiftyHomology"]),

@@ -17,7 +17,7 @@ import SwiftyMath
 
 public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertible {
     public typealias R = BaseModule.BaseRing
-    public typealias Vectorizer = (BaseModule) -> VectorD<R>
+    public typealias Vectorizer = (BaseModule) -> AnySizeVector<R>
 
     public let summands: [Summand]
     internal let vectorizer: Vectorizer
@@ -42,7 +42,7 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
         summands[i]
     }
     
-    public func vectorize(_ z: BaseModule) -> VectorD<R> {
+    public func vectorize(_ z: BaseModule) -> AnySizeVector<R> {
         vectorizer(z)
     }
     
@@ -85,7 +85,7 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
             }
         
         let N = reduced.count
-        let vectorizer = { (z: BaseModule) -> VectorD<R> in
+        let vectorizer = { (z: BaseModule) -> AnySizeVector<R> in
             let vec = vectorize(z)
             return .init(size: N) { setEntry in
                 vec.nonZeroColEntries.forEach { (i, r) in
@@ -149,11 +149,11 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
 extension ModuleObject where BaseModule: LinearCombinationType {
     // TODO: rename to `rawGenerators`
     public init(generators: [BaseModule.Generator]) {
-        let indexer = generators.indexer()
+        let indexer = generators.makeIndexer()
         self.init(
             generators: generators.map{ x in .init(x) },
             vectorizer: { z in
-                VectorD(size: generators.count) { setEntry in
+                AnySizeVector(size: generators.count) { setEntry in
                     z.elements.forEach { (a, r) in
                         if let i = indexer(a) {
                             setEntry(i, r)
@@ -166,18 +166,18 @@ extension ModuleObject where BaseModule: LinearCombinationType {
 }
 
 extension ModuleObject {
-    public var dual: ModuleObject<Dual<BaseModule>> {
+    public var dual: ModuleObject<DualModule<BaseModule>> {
         assert(isFree)
         
-        typealias DualObject = ModuleObject<Dual<BaseModule>>
+        typealias DualObject = ModuleObject<DualModule<BaseModule>>
         let summands = self.generators.enumerated().map { (i, _) in
-            Dual<BaseModule> { z in
-                .wrap(self.vectorize(z)[i])
+            DualModule<BaseModule> { z in
+                .init(self.vectorize(z)[i])
             }
         }.map{ DualObject.Summand($0) }
         
-        let vectorizer = { (f: Dual<BaseModule>) -> VectorD<R> in
-            VectorD(size: self.generators.count) { setEntry in
+        let vectorizer = { (f: DualModule<BaseModule>) -> AnySizeVector<R> in
+            AnySizeVector(size: self.generators.count) { setEntry in
                 self.generators.enumerated().forEach { (i, z) in
                     let a = f(z).value
                     if !a.isZero {
@@ -186,7 +186,7 @@ extension ModuleObject {
                 }
             }
         }
-        return ModuleObject<Dual<BaseModule>>(summands: summands, vectorizer: vectorizer)
+        return ModuleObject<DualModule<BaseModule>>(summands: summands, vectorizer: vectorizer)
     }
 }
 

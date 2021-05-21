@@ -90,7 +90,7 @@ public final class DefaultHomologyCalculator<C: ChainComplexType>: HomologyCalcu
                 }
 
             } else {
-                vectorizer = { _ in VectorD.zero(size: summands.count) }
+                vectorizer = { _ in AnySizeVector.zero(size: summands.count) }
             }
 
             return ModuleObject(summands: summands, vectorizer: vectorizer)

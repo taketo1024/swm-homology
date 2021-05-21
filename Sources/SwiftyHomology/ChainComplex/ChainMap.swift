@@ -69,7 +69,7 @@ public struct ChainMap<Index: AdditiveGroup & Hashable, BaseModule1: Module, Bas
 }
 
 extension ChainMap {
-    public var dual: ChainMap<Index, Dual<BaseModule2>, Dual<BaseModule1>> {
+    public var dual: ChainMap<Index, DualModule<BaseModule2>, DualModule<BaseModule1>> {
         .init(degree: -degree) { i in
             ModuleHom { g in
                 let j = i - self.degree
