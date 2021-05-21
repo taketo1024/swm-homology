@@ -95,7 +95,7 @@ extension ChainComplex1 where Index == Int {
     }
 }
 
-//extension ChainComplex where BaseModule: FreeModule, GridDim == _1 {
+//extension ChainComplex where BaseModule: LinearCombinationType, GridDim == _1 {
 //    public func generateGraph() -> SimpleDirectedGraph<BaseModule.Generator, BaseModule.BaseRing> {
 //        let C = self
 //        guard let support = C.support else {

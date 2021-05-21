@@ -146,12 +146,12 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
     }
 }
 
-extension ModuleObject where BaseModule: FreeModule {
+extension ModuleObject where BaseModule: LinearCombinationType {
     // TODO: rename to `rawGenerators`
     public init(generators: [BaseModule.Generator]) {
         let indexer = generators.indexer()
         self.init(
-            generators: generators.map{ x in .wrap(x) },
+            generators: generators.map{ x in .init(x) },
             vectorizer: { z in
                 VectorD(size: generators.count) { setEntry in
                     z.elements.forEach { (a, r) in

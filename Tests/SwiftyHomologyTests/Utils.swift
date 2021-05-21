@@ -9,9 +9,9 @@ import SwiftyMath
 @testable import SwiftyHomology
 
 struct Util {
-    static func generateChainComplex<R>(matrices: [MatrixDxD<R>]) -> ChainComplex1<LinearCombination<Generator, R>> {
+    static func generateChainComplex<R>(matrices: [MatrixDxD<R>]) -> ChainComplex1<LinearCombination<R, Generator>> {
         typealias A = Generator
-        typealias M = LinearCombination<A, R>
+        typealias M = LinearCombination<R, A>
 
         var count = 0
         func gens(_ n: Int) -> [A] {
@@ -47,7 +47,7 @@ struct Util {
         )
     }
     
-    struct Generator: FreeModuleGenerator {
+    struct Generator: LinearCombinationGenerator {
         let index: Int
         init(_ index: Int) {
             self.index = index
