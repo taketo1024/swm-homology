@@ -147,6 +147,7 @@ public struct ModuleObject<BaseModule: Module>: Equatable, CustomStringConvertib
 }
 
 extension ModuleObject where BaseModule: FreeModule {
+    // TODO: rename to `rawGenerators`
     public init(generators: [BaseModule.Generator]) {
         let indexer = generators.indexer()
         self.init(
