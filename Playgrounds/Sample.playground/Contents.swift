@@ -24,10 +24,10 @@ let C = ChainComplex1<M>(
     ]
 )
 
-print("C_*(S^2; \(R.symbol))")
+print("C_*(S^2; \(R.symbol))\n")
 C.printSequence(0 ... 2)
 
 print()
-print("H_*(S^2; \(R.symbol))")
+print("H_*(S^2; \(R.symbol))\n")
 let H = C.homology()
 H.printSequence(0 ... 2)
