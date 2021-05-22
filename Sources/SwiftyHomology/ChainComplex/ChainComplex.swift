@@ -95,36 +95,36 @@ extension ChainComplex1 where Index == Int {
     }
 }
 
-//extension ChainComplex where BaseModule: LinearCombinationType, GridDim == _1 {
-//    public func generateGraph() -> SimpleDirectedGraph<BaseModule.Generator, BaseModule.BaseRing> {
-//        let C = self
-//        guard let support = C.support else {
-//            fatalError()
-//        }
-//
-//        typealias Graph = SimpleDirectedGraph<BaseModule.Generator, BaseModule.BaseRing>
-//        var graph = Graph()
-//        var map: [BaseModule.Generator: Graph.Vertex] = [:]
-//
-//        for i in support.range {
-//            for _x in C[i].generators {
-//                let x = _x.unwrap()!
-//                map[x] = graph.addVertex(value: x, options: ["group": i])
-//            }
-//        }
-//
-//        for i in support.range {
-//            let d = C.differential[i]
-//            for _x in C[i].generators {
-//                let x = _x.unwrap()!
-//                for (y, a) in d(x).elements where a != .zero {
-//                    if let from = map[x], let to = map[y] {
-//                        graph.addEdge(from: from, to: to, value: a)
-//                    }
-//                }
-//            }
-//        }
-//
-//        return graph
-//    }
-//}
+extension ChainComplexType where Index == Int {
+    public func generateGraph(range: ClosedRange<Int>) -> DirectedGraph<BaseModule, BaseModule.BaseRing> {
+        typealias Graph = DirectedGraph<BaseModule, BaseModule.BaseRing>
+        
+        let C = self
+        let d = C.differential
+        
+        var graph = Graph(template: .hierarchical)
+        var table: [MultiIndex<_2>: Graph.Vertex] = [:]
+
+        for i in range {
+            for (j, z) in C[i].generators.enumerated() {
+                table[[i, j]] = graph.addVertex(value: z, options: ["group": i])
+            }
+        }
+
+        for i1 in range {
+            let i2 = i1 + d.degree
+            for (j1, z) in C[i1].generators.enumerated() {
+                let from = table[[i1, j1]]!
+                let w = d[i1](z)
+                let vec = C[i2].vectorize(w)
+                for (j2, a) in vec.nonZeroColEntries {
+                    if let to = table[[i2, j2]] {
+                        from.addEdge(to: to, value: a)
+                    }
+                }
+            }
+        }
+
+        return graph
+    }
+}
