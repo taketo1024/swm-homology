@@ -147,13 +147,12 @@ public struct ModuleStructure<BaseModule: Module>: Equatable, CustomStringConver
 }
 
 extension ModuleStructure where BaseModule: LinearCombinationType {
-    // TODO: rename to `rawGenerators`
-    public init(generators: [BaseModule.Generator]) {
-        let indexer = generators.makeIndexer()
+    public init(rawGenerators: [BaseModule.Generator]) {
+        let indexer = rawGenerators.makeIndexer()
         self.init(
-            generators: generators.map{ x in .init(x) },
+            generators: rawGenerators.map{ x in .init(x) },
             vectorizer: { z in
-                AnySizeVector(size: generators.count) { setEntry in
+                AnySizeVector(size: rawGenerators.count) { setEntry in
                     z.elements.forEach { (a, r) in
                         if let i = indexer(a) {
                             setEntry(i, r)
