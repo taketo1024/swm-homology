@@ -1,5 +1,5 @@
-import SwiftyMath
-import SwiftyHomology
+import SwmCore
+import SwmHomology
 
 extension String: LinearCombinationGenerator {}
 

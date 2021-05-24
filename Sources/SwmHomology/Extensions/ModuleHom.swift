@@ -5,7 +5,7 @@
 //  Created by Taketo Sano on 2021/05/14.
 //
 
-import SwiftyMath
+import SwmCore
 
 extension ModuleHom where Domain: Module, Codomain: Module, Domain.BaseRing == Codomain.BaseRing {
     public func asMatrix(from: ModuleStructure<Domain>, to: ModuleStructure<Codomain>) -> AnySizeMatrix<BaseRing> {

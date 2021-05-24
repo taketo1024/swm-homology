@@ -5,7 +5,7 @@
 //  Created by Taketo Sano on 2021/05/14.
 //
 
-import SwiftyMath
+import SwmCore
 
 public final class LUHomologyCalculator<C: ChainComplexType, _MatrixImpl: MatrixImpl_LU>: HomologyCalculator<C, _MatrixImpl> where C.BaseModule.BaseRing == _MatrixImpl.BaseRing {
     public override func calculate() -> Homology {

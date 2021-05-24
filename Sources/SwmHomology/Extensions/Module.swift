@@ -5,7 +5,7 @@
 //  Created by Taketo Sano on 2021/05/14.
 //
 
-import SwiftyMath
+import SwmCore
 
 extension Module {
     internal static func combine<n>(basis: [Self], vector: ColVector<BaseRing, n>) -> Self {

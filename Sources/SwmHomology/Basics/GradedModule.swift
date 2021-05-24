@@ -5,7 +5,7 @@
 //  Created by Taketo Sano on 2021/05/07.
 //
 
-import SwiftyMath
+import SwmCore
 
 // {M}_I: the direct sum of copies of M over I.
 public struct GradedModule<Index: Hashable, BaseModule: Module>: Module {

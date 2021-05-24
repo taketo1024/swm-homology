@@ -6,8 +6,8 @@
 //
 
 import XCTest
-import SwiftyMath
-@testable import SwiftyHomology
+import SwmCore
+@testable import SwmHomology
 
 class HomologyTests: XCTestCase {
     

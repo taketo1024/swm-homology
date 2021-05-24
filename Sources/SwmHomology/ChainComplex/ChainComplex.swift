@@ -5,7 +5,7 @@
 //  Created by Taketo Sano on 2018/05/21.
 //
 
-import SwiftyMath
+import SwmCore
 
 public protocol ChainComplexType: GradedModuleStructureType {
     typealias Differential = ChainMap<Self, Self>

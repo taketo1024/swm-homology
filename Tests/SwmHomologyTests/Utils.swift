@@ -5,8 +5,8 @@
 //  Created by Taketo Sano on 2021/05/14.
 //
 
-import SwiftyMath
-@testable import SwiftyHomology
+import SwmCore
+@testable import SwmHomology
 
 struct Util {
     static func generateChainComplex<R>(matrices: [AnySizeMatrix<R>]) -> ChainComplex1<LinearCombination<R, Generator>> {

@@ -4,26 +4,27 @@
 import PackageDescription
 
 let package = Package(
-    name: "SwiftyHomology",
+    name: "swm-homology",
     products: [
         .library(
-            name: "SwiftyHomology",
-            targets: ["SwiftyHomology"]),
+            name: "SwmHomology",
+            targets: ["SwmHomology"]),
     ],
     dependencies: [
         .package(
-            name: "SwiftyMath",
-            url: "https://github.com/taketo1024/SwiftyMath.git",
-            from: "3.0.0"
+            url: "https://github.com/taketo1024/swm-core.git",
+            from: "1.0.0"
         ),
     ],
     targets: [
         .target(
-            name: "SwiftyHomology",
-            dependencies: ["SwiftyMath"]
+            name: "SwmHomology",
+            dependencies: [
+                .product(name: "SwmCore", package: "swm-core"),
+            ]
 		),
         .testTarget(
-            name: "SwiftyHomologyTests",
-            dependencies: ["SwiftyHomology"]),
+            name: "SwmHomologyTests",
+            dependencies: ["SwmHomology"]),
     ]
 )

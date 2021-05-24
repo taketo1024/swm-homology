@@ -5,7 +5,7 @@
 //  Created by Taketo Sano on 2019/10/25.
 //
 
-import SwiftyMath
+import SwmCore
 
 public protocol GradedStructure {
     associatedtype Index: AdditiveGroup & Hashable

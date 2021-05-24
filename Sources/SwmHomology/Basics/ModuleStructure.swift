@@ -5,7 +5,7 @@
 //  Created by Taketo Sano on 2018/06/02.
 //
 
-import SwiftyMath
+import SwmCore
 
 // A decomposed form of a freely & finitely presented module,
 // i.e. a module with finite generators and a finite & free presentation.

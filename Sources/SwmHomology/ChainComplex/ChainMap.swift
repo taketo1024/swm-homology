@@ -5,7 +5,7 @@
 //  Created by Taketo Sano on 2018/05/23.
 //
 
-import SwiftyMath
+import SwmCore
 
 public struct ChainMap<C1: ChainComplexType, C2: ChainComplexType>: GradedStructure
 where C1.Index == C2.Index,

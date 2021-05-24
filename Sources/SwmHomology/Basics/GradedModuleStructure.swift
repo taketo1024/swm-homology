@@ -5,10 +5,17 @@
 //  Created by Taketo Sano on 2018/05/18.
 //
 
-import SwiftyMath
+import SwmCore
 
 public protocol GradedModuleStructureType: GradedStructure where Object == ModuleStructure<BaseModule> {
     associatedtype BaseModule: Module
+}
+
+extension GradedModuleStructureType {
+    public func description(forObjectAt i: Index) -> String {
+        let obj = self[i]
+        return obj.isZero ? "" : obj.description
+    }
 }
 
 public typealias ModuleGrid1<M: Module> = GradedModuleStructure<Int, M>
@@ -33,11 +40,6 @@ public struct GradedModuleStructure<Index: AdditiveGroup & Hashable, BaseModule:
         .init { i in
             self[i - shift]
         }
-    }
-    
-    public func description(forObjectAt i: Index) -> String {
-        let obj = self[i]
-        return obj.isZero ? "" : obj.description
     }
 }
 

@@ -5,7 +5,7 @@
 //  Created by Taketo Sano on 2021/05/14.
 //
 
-import SwiftyMath
+import SwmCore
 
 public final class DefaultHomologyCalculator<C: ChainComplexType>: HomologyCalculator<C, DefaultMatrixImpl<C.BaseModule.BaseRing>> where C.BaseModule.BaseRing: EuclideanRing {
     public override func calculate() -> Homology {
