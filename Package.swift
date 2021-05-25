@@ -8,12 +8,19 @@ let package = Package(
     products: [
         .library(
             name: "SwmHomology",
-            targets: ["SwmHomology"]),
+            targets: ["SwmHomology"]
+        ),
     ],
     dependencies: [
+//        .package(
+//            url: "https://github.com/taketo1024/swm-core.git",
+//            from: "1.0.1"
+//        ),
         .package(
-            url: "https://github.com/taketo1024/swm-core.git",
-            from: "1.0.1"
+            path: "../swm-core/"
+        ),
+        .package(
+            path: "../swm-matrix-tools/"
         ),
     ],
     targets: [
@@ -21,8 +28,9 @@ let package = Package(
             name: "SwmHomology",
             dependencies: [
                 .product(name: "SwmCore", package: "swm-core"),
+                .product(name: "SwmMatrixTools", package: "swm-matrix-tools"),
             ]
-		),
+        ),
         .testTarget(
             name: "SwmHomologyTests",
             dependencies: ["SwmHomology"]),

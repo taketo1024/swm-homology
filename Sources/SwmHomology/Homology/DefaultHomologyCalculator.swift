@@ -6,6 +6,7 @@
 //
 
 import SwmCore
+import SwmMatrixTools
 
 public final class DefaultHomologyCalculator<C: ChainComplexType>: HomologyCalculator<C, DefaultMatrixImpl<C.BaseModule.BaseRing>> where C.BaseModule.BaseRing: EuclideanRing {
     public override func calculate() -> Homology {

@@ -6,6 +6,7 @@
 //
 
 import SwmCore
+import SwmMatrixTools
 
 public final class LUHomologyCalculator<C: ChainComplexType, _MatrixImpl: MatrixImpl_LU>: HomologyCalculator<C, _MatrixImpl> where C.BaseModule.BaseRing == _MatrixImpl.BaseRing {
     public override func calculate() -> Homology {
