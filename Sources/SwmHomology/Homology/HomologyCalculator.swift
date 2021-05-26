@@ -13,10 +13,6 @@ public struct HomologyCalculatorOptions: OptionSet {
         self.rawValue = rawValue
     }
     public static let onlyStructures = Self(rawValue: 1 << 0)
-    
-    // TODO remove these
-    public static let withGenerators = Self(rawValue: 1 << 1)
-    public static let withVectorizer = Self(rawValue: 1 << 2)
 }
 
 public class HomologyCalculator<C: ChainComplexType, _MatrixImpl: MatrixImpl>

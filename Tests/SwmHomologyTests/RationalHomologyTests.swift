@@ -163,7 +163,7 @@ class RationalHomologyTests: XCTestCase {
         ]
         
         let C = Util.generateChainComplex(matrices: d)
-        let H = C.homology(options: [.withGenerators, .withVectorizer])
+        let H = C.homology()
         
         if H[0].rank == 1 {
             let z = H[0].generator(0)
@@ -180,7 +180,7 @@ class RationalHomologyTests: XCTestCase {
         ]
 
         let C = Util.generateChainComplex(matrices: d)
-        let H = C.homology(options: [.withGenerators, .withVectorizer])
+        let H = C.homology()
         let H2 = H[2]
 
         if H2.rank == 1 {
@@ -199,7 +199,7 @@ class RationalHomologyTests: XCTestCase {
         ]
 
         let C = Util.generateChainComplex(matrices: d)
-        let H = C.homology(options: [.withGenerators, .withVectorizer])
+        let H = C.homology()
         let H1 = H[1]
 
         if H1.rank == 2 {
@@ -220,7 +220,7 @@ class RationalHomologyTests: XCTestCase {
         ]
         
         let C = Util.generateChainComplex(matrices: d)
-        let H = C.homology(options: [.withGenerators, .withVectorizer])
+        let H = C.homology()
         
         XCTAssertEqual(H[0].dictionaryDescription, [0 : 1])
         XCTAssertEqual(H[1].dictionaryDescription, [:])

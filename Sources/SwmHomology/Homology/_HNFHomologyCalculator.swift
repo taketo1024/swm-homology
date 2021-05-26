@@ -8,7 +8,8 @@
 import SwmCore
 import SwmMatrixTools
 
-public final class DefaultHomologyCalculator<C: ChainComplexType>: HomologyCalculator<C, DefaultMatrixImpl<C.BaseModule.BaseRing>> where C.BaseModule.BaseRing: EuclideanRing {
+@available(*, deprecated)
+public final class _HNFHomologyCalculator<C: ChainComplexType>: HomologyCalculator<C, DefaultMatrixImpl<C.BaseModule.BaseRing>> where C.BaseModule.BaseRing: EuclideanRing {
     public override func calculate() -> Homology {
         return .init { I in
             typealias Summand = Homology.Object.Summand
@@ -50,7 +51,13 @@ public final class DefaultHomologyCalculator<C: ChainComplexType>: HomologyCalcu
             let B1 = A1 * Pm
             let E1 = B1.eliminate(form: .Diagonal)
 
-            if self.options.contains(.withGenerators) {
+            if self.options.contains(.onlyStructures) {
+                let k = E1.nullity
+                let free = (0 ..< k).map { _ in Summand(.zero) }
+                let tor = diag[s ..< r].map { d in Summand(.zero, d) }
+
+                summands = free + tor
+            } else {
                 let gens = C[I].generators
                 let Pr = E0.leftInverse(restrictedToCols: s ..< r)
                 let tor_gens = BaseModule.combine(basis: gens, matrix: Pr)
@@ -61,15 +68,11 @@ public final class DefaultHomologyCalculator<C: ChainComplexType>: HomologyCalcu
                 let free = free_gens.map { z in Summand(z) }
 
                 summands = free + tor
-            } else {
-                let k = E1.nullity
-                let free = (0 ..< k).map { _ in Summand(.zero) }
-                let tor = diag[s ..< r].map { d in Summand(.zero, d) }
-
-                summands = free + tor
             }
 
-            if self.options.contains(.withVectorizer) {
+            if self.options.contains(.onlyStructures) {
+                vectorizer = { _ in AnySizeVector.zero(size: summands.count) }
+            } else {
                 //  Q = P^{-1} = [Qs; Qr; Qm].
                 //  - Qr (size: (r - s) × m ) maps C1 -> H_tor,
                 //  - Qm (size: (m - r) × m ) maps C1 -> C1", and
@@ -89,9 +92,6 @@ public final class DefaultHomologyCalculator<C: ChainComplexType>: HomologyCalcu
                     let wt = (Tt * v).mapNonZeroEntries{ (i, _, a) in a % diag[i + s] }
                     return wf.stack(wt)
                 }
-
-            } else {
-                vectorizer = { _ in AnySizeVector.zero(size: summands.count) }
             }
 
             return ModuleStructure(summands: summands, vectorizer: vectorizer)

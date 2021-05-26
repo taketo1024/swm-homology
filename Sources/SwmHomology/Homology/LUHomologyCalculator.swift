@@ -37,7 +37,7 @@ public final class LUHomologyCalculator<C: ChainComplexType, _MatrixImpl: Matrix
             
             if r == 0 {
                 return .zeroModule
-            } else if !self.options.contains(.withGenerators) && !self.options.contains(.withVectorizer) {
+            } else if self.options.contains(.onlyStructures) {
                 return self.onlyStructure(rank: r)
             } else {
                 let K = e1.kernel // (y - y1) x y2
@@ -49,14 +49,14 @@ public final class LUHomologyCalculator<C: ChainComplexType, _MatrixImpl: Matrix
     
     private func homology(index I: Index, matrix H: Matrix) -> Homology.Object {
         let r = H.size.cols
-        let summands = self.options.contains(.withGenerators)
-            ? self.homologyGenerators(index: I, matrix: H)
-            : self.onlyStructure(rank: r).summands
+        let summands = self.options.contains(.onlyStructures)
+            ? self.onlyStructure(rank: r).summands
+            : self.homologyGenerators(index: I, matrix: H)
         
-        let vectorizer = self.options.contains(.withVectorizer)
-            ? self.homologyVectorizer(index: I, matrix: H)
-            : self.onlyStructure(rank: r).vectorizer
-        
+        let vectorizer = self.options.contains(.onlyStructures)
+            ? self.onlyStructure(rank: r).vectorizer
+            : self.homologyVectorizer(index: I, matrix: H)
+
         return ModuleStructure(summands: summands, vectorizer: vectorizer)
     }
     

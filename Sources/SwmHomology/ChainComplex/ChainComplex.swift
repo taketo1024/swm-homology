@@ -14,7 +14,11 @@ public protocol ChainComplexType: GradedModuleStructureType {
 
 extension ChainComplexType where BaseModule.BaseRing: EuclideanRing {
     public func homology(options: HomologyCalculatorOptions = []) -> GradedModuleStructure<Index, BaseModule> {
-        DefaultHomologyCalculator(chainComplex: self, options: options).calculate()
+        HNFHomologyCalculator(chainComplex: self, options: options).calculate()
+    }
+
+    public func oldHomology(options: HomologyCalculatorOptions = []) -> GradedModuleStructure<Index, BaseModule> {
+        _HNFHomologyCalculator(chainComplex: self, options: options).calculate()
     }
 }
 

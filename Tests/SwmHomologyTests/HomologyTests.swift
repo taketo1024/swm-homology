@@ -83,7 +83,7 @@ class HomologyTests: XCTestCase {
         ]
         
         let C = Util.generateChainComplex(matrices: d)
-        let H = C.homology(options: [.withGenerators])
+        let H = C.homology()
         
         XCTAssertEqual(H[0].dictionaryDescription, [0: 1])
         XCTAssertEqual(H[1].dictionaryDescription, [:])
@@ -162,7 +162,7 @@ class HomologyTests: XCTestCase {
         ]
 
         let C = Util.generateChainComplex(matrices: d)
-        let H = C.homology(options: [.withGenerators, .withVectorizer])
+        let H = C.homology()
         let H2 = H[2]
         
         let z = H2.generator(0)
@@ -177,7 +177,7 @@ class HomologyTests: XCTestCase {
         ]
 
         let C = Util.generateChainComplex(matrices: d)
-        let H = C.homology(options: [.withGenerators, .withVectorizer])
+        let H = C.homology()
         let H1 = H[1]
         
         let z = H1.generator(0)
@@ -194,7 +194,7 @@ class HomologyTests: XCTestCase {
         ]
         
         let C = Util.generateChainComplex(matrices: d)
-        let H = C.homology(options: [.withGenerators, .withVectorizer])
+        let H = C.homology()
         let H1 = H[1]
         
         let z = H1.generator(0)
