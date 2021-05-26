@@ -12,8 +12,11 @@ public struct HomologyCalculatorOptions: OptionSet {
     public init(rawValue: Int) {
         self.rawValue = rawValue
     }
-    public static let withGenerators = Self(rawValue: 1 << 0)
-    public static let withVectorizer = Self(rawValue: 1 << 1)
+    public static let onlyStructures = Self(rawValue: 1 << 0)
+    
+    // TODO remove these
+    public static let withGenerators = Self(rawValue: 1 << 1)
+    public static let withVectorizer = Self(rawValue: 1 << 2)
 }
 
 public class HomologyCalculator<C: ChainComplexType, _MatrixImpl: MatrixImpl>
@@ -39,7 +42,7 @@ where C.BaseModule.BaseRing == _MatrixImpl.BaseRing {
         matrixCache.getOrSet(key: i) {
             let (C, d) = (chainComplex, chainComplex.differential)
             let (C0, C1) = (C[i], C[i + d.degree])
-            return d[i].asMatrix(from: C0, to: C1, implType: _MatrixImpl.self)
+            return d[i].asMatrix(from: C0, to: C1)
         }
     }
     

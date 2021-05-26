@@ -98,9 +98,27 @@ public struct ModuleStructure<BaseModule: Module>: Equatable, CustomStringConver
         return ModuleStructure(summands: reduced, vectorizer: vectorizer)
     }
 
+    public func sub<Impl, n, m>(matrix A: MatrixIF<Impl, n, m>) -> Self where Impl.BaseRing == R {
+        assert(isFree)
+        assert(A.size.rows == summands.count)
+        
+        let summands = (generators * A).map { Summand($0) }
+        let vectorizer = Self.zeroModule.vectorizer // TODO
+        
+        return .init(summands: summands, vectorizer: vectorizer)
+    }
     
-    public static func ==(a: ModuleStructure<BaseModule>, b: ModuleStructure<BaseModule>) -> Bool {
+    public static func ==(a: Self, b: Self) -> Bool {
         a.summands == b.summands
+    }
+    
+    public static func ⊕(a: Self, b: Self) -> Self {
+        .init(
+            summands: a.summands + b.summands,
+            vectorizer: { z in
+                a.vectorize(z).stack( b.vectorize(z) )
+            }
+        )
     }
     
     public var description: String {
