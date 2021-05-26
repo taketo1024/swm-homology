@@ -113,7 +113,14 @@ public struct ModuleStructure<BaseModule: Module>: Equatable, CustomStringConver
     }
     
     public static func ⊕(a: Self, b: Self) -> Self {
-        .init(
+        if b.isZero {
+            return a
+        }
+        if a.isZero {
+            return b
+        }
+        
+        return .init(
             summands: a.summands + b.summands,
             vectorizer: { z in
                 a.vectorize(z).stack( b.vectorize(z) )

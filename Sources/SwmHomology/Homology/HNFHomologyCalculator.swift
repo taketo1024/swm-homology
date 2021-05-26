@@ -43,7 +43,7 @@ public final class HNFHomologyCalculator<C: ChainComplexType>: HomologyCalculato
         let C = chainComplex
         let d = C.differential
         
-        let t1 = e1.imageComplementMatrix // n x s
+        let t1 = e1.freeCokernelMatrix // n x s
         let Y2 = C[i].sub(matrix: t1)
         let Z  = C[i + d.degree]
         
@@ -51,9 +51,7 @@ public final class HNFHomologyCalculator<C: ChainComplexType>: HomologyCalculato
         let e2 = b1.eliminate(form: .ColEchelon)
         let k  = e2.nullity
         
-        if k == 0 {
-            return .zeroModule
-        } else if options.contains(.onlyStructures) {
+        if options.contains(.onlyStructures) {
             return onlyStructure(rank: k)
         }
         
@@ -61,7 +59,28 @@ public final class HNFHomologyCalculator<C: ChainComplexType>: HomologyCalculato
         
         let generators = (C[i].generators * t1) * t2 // [n] -> [s] -> [k]
         let summands = generators.map{ z in Summand(z) }
-        let vectorizer = onlyStructure(rank: k).vectorizer // TODO
+        let vectorizer: Vectorizer = { z in
+            // Given
+            //
+            //   z = (y1 ... yk) [v1 ... vn]^t,
+            //
+            // solve:
+            //
+            //   z = (z1 ... zk) [x1 ... xk]^t.
+            //     = (y1 ... yn) (t1 * t2) * [x1 ... xk]^t
+            //
+            // i.e.
+            //
+            //   t1 * (t2 * x) = v.
+            
+            let v = C[i].vectorize(z).as(ColVector<BaseRing, n>.self)
+            if let w = e1.solveFreeCokernel(v),
+               let x = e2.solveKernel(w) {
+                return x
+            } else {
+                return .zero(size: k) // TODO
+            }
+        }
         
         return .init(
             summands: summands,
@@ -73,24 +92,26 @@ public final class HNFHomologyCalculator<C: ChainComplexType>: HomologyCalculato
         let C = chainComplex
         
         let e2 = e1.eliminate(form: .Smith)
-        let diag = e2.diagonalEntries
+        let d = e2.nonUnitDivisors
+        let l = d.count
         
-        let r = diag.count
-        let s = diag.firstIndex { d in !d.isIdentity } ?? r
-        let l = r - s
-        
-        if l == 0 {
-            return .zeroModule
-        } else if options.contains(.onlyStructures) {
-            return onlyStructure(divisors: diag[s ..< r])
+        if options.contains(.onlyStructures) {
+            return onlyStructure(divisors: d)
         }
         
-        let t1 = e2.leftInverse(restrictedToCols: s ..< r) // n x l
-        let generators = C[i].generators * t1 // [n] -> [l]
-        let summands = zip(generators, diag[s ..< r]).map{ (z, a) in
-            Homology.Object.Summand(z, a)
+        let t = e2.torCokernelMatrix // n x l
+        let generators = C[i].generators * t // [n] -> [l]
+        let summands = zip(generators, d).map{ (z, a) in
+            Summand(z, a)
         }
-        let vectorizer = onlyStructure(divisors: diag[s ..< r]).vectorizer // TODO
+        let vectorizer: Vectorizer = { z in
+            let v = C[i].vectorize(z).as(ColVector<BaseRing, n>.self)
+            if let x = e2.solveTorCokernel(v) {
+                return x
+            } else {
+                return .zero(size: l) // TODO
+            }
+        }
 
         return .init(
             summands: summands,
