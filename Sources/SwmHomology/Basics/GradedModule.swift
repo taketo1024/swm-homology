@@ -16,8 +16,18 @@ public struct GradedModule<Index: Hashable, BaseModule: Module>: Module {
         self.elements = elements.exclude{ $0.value.isZero }
     }
     
+    public init<S>(elements: S)
+    where S: Sequence, S.Element == (Index, BaseModule)
+    {
+        self.init(elements: Dictionary(elements, uniquingKeysWith: +))
+    }
+    
     public init(index: Index, value: BaseModule) {
         self.init(elements: [index : value])
+    }
+    
+    public var reduced: Self {
+        .init(elements: elements.exclude{(_, z) in z.isZero } )
     }
     
     public static var zero: Self {
@@ -38,6 +48,12 @@ public struct GradedModule<Index: Hashable, BaseModule: Module>: Module {
     
     public static func * (m: Self, r: BaseRing) -> Self {
         Self(elements: m.elements.mapValues{ $0 * r })
+    }
+    
+    public static func sum<S>(_ elements: S) -> GradedModule<Index, BaseModule>
+    where GradedModule<Index, BaseModule> == S.Element, S : Sequence
+    {
+        .init(elements: elements.flatMap{ $0.elements })
     }
     
     public var description: String {
