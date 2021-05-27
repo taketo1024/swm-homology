@@ -42,7 +42,13 @@ where C.BaseModule.BaseRing == _MatrixImpl.BaseRing {
         }
     }
     
-    public func calculate() -> Homology {
+    public final func calculate() -> Homology {
+        .init { i in
+            self.calculate(i)
+        }
+    }
+    
+    internal func calculate(_ i: Index) -> Homology.Object {
         fatalError("Use concrete subclasses.")
     }
 }

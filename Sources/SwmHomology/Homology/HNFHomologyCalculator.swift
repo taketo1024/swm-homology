@@ -18,37 +18,35 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
     
     private let eliminationCache: Cache<Index, MatrixEliminationResult<Impl, anySize, anySize>> = .empty
 
-    public override func calculate() -> Homology {
-        return .init { i in
-            //
-            //        a1        a2
-            //    X -----> Y ------> Z
-            //    ^        |
-            //  Q |        | P
-            //    |   b1   V
-            //    X -----> Y1
-            //             ⊕    b2
-            //             Y2 -----> Z
-            //
-            //  H = Ker(a2) / Im(a1)
-            //    = Ker(b2) ⊕ Coker(b1)
-
-            let C = self.chainComplex
-            let d = C.differential
+    internal override func calculate(_ i: Index) -> Homology.Object {
+        //
+        //        a1        a2
+        //    X -----> Y ------> Z
+        //    ^        |
+        //  Q |        | P
+        //    |   b1   V
+        //    X -----> Y1
+        //             ⊕    b2
+        //             Y2 -----> Z
+        //
+        //  H = Ker(a2) / Im(a1)
+        //    = Ker(b2) ⊕ Coker(b1)
+        
+        let C = chainComplex
+        let d = C.differential
+        
+        let e1 = eliminationCache[i] ?? {
+            let X = C[i - d.degree]
+            let Y = C[i]
+            let a1: Matrix = d[i - d.degree].asMatrix(from: X, to: Y)
             
-            let e1 = self.eliminationCache[i] ?? {
-                let X = C[i - d.degree]
-                let Y = C[i]
-                let a1: Matrix = d[i - d.degree].asMatrix(from: X, to: Y)
-                
-                return a1.eliminate(form: .RowEchelon)
-            }()
-            
-            let free = self.freePart(i, e1)
-            let tor  = self.torPart (i, e1)
- 
-            return free ⊕ tor
-        }
+            return a1.eliminate(form: .RowEchelon)
+        }()
+        
+        let free = freePart(i, e1)
+        let tor  = torPart (i, e1)
+        
+        return free ⊕ tor
     }
     
     private func freePart<n, m>(_ i: Index, _ e1: MatrixEliminationResult<Impl, n, m>) -> Homology.Object {
