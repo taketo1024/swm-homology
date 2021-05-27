@@ -12,8 +12,7 @@ public struct HomologyCalculatorOptions: OptionSet {
     public init(rawValue: Int) {
         self.rawValue = rawValue
     }
-    public static let withGenerators = Self(rawValue: 1 << 0)
-    public static let withVectorizer = Self(rawValue: 1 << 1)
+    public static let onlyStructures = Self(rawValue: 1 << 0)
 }
 
 public class HomologyCalculator<C: ChainComplexType, _MatrixImpl: MatrixImpl>
@@ -39,11 +38,23 @@ where C.BaseModule.BaseRing == _MatrixImpl.BaseRing {
         matrixCache.getOrSet(key: i) {
             let (C, d) = (chainComplex, chainComplex.differential)
             let (C0, C1) = (C[i], C[i + d.degree])
-            return d[i].asMatrix(from: C0, to: C1, implType: _MatrixImpl.self)
+            return d[i].asMatrix(from: C0, to: C1)
         }
     }
     
-    public func calculate() -> Homology {
+    public final func calculate() -> Homology {
+        .init { i in
+            self.calculate(i)
+        }
+    }
+    
+    internal func calculate(_ i: Index) -> Homology.Object {
         fatalError("Use concrete subclasses.")
+    }
+}
+
+extension ChainComplexType where BaseModule.BaseRing: EuclideanRing {
+    public func homology(options: HomologyCalculatorOptions = []) -> GradedModuleStructure<Index, BaseModule> {
+        return HNFHomologyCalculator(chainComplex: self, options: options).calculate()
     }
 }

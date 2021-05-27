@@ -38,7 +38,7 @@ struct Util {
                     let to = objs[i - 1]
                     let d = matrices[i - 1]
                     return ModuleEnd { z in
-                        .combine(basis: to.generators, vector: d * from.vectorize(z))
+                        .combine(basis: to.generators, vector: d * from.vectorize(z)!)
                     }
                 } else {
                     return .zero
