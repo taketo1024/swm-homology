@@ -12,16 +12,6 @@ public protocol ChainComplexType: GradedModuleStructureType {
     var differential: Differential { get }
 }
 
-extension ChainComplexType where BaseModule.BaseRing: EuclideanRing {
-    public func homology(options: HomologyCalculatorOptions = []) -> GradedModuleStructure<Index, BaseModule> {
-        HNFHomologyCalculator(chainComplex: self, options: options).calculate()
-    }
-
-    public func oldHomology(options: HomologyCalculatorOptions = []) -> GradedModuleStructure<Index, BaseModule> {
-        _HNFHomologyCalculator(chainComplex: self, options: options).calculate()
-    }
-}
-
 public typealias ChainComplex1<M: Module> = ChainComplex<Int, M>
 public typealias ChainComplex2<M: Module> = ChainComplex<MultiIndex<_2>, M>
 

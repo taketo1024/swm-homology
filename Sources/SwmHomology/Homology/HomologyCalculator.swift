@@ -46,3 +46,9 @@ where C.BaseModule.BaseRing == _MatrixImpl.BaseRing {
         fatalError("Use concrete subclasses.")
     }
 }
+
+extension ChainComplexType where BaseModule.BaseRing: EuclideanRing {
+    public func homology(options: HomologyCalculatorOptions = []) -> GradedModuleStructure<Index, BaseModule> {
+        return HNFHomologyCalculator(chainComplex: self, options: options).calculate()
+    }
+}
