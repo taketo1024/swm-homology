@@ -37,7 +37,7 @@ public final class _HNFHomologyCalculator<C: ChainComplexType>: HomologyCalculat
             let (A0, A1) = (self.matrix(at: I - d.degree), self.matrix(at: I))
 
             let E0 = A0.eliminate(form: .Smith)
-            let diag = E0.divisors
+            let diag = E0.diagonalEntries
             let m = A0.size.rows // == A1.size.cols
             let r = diag.count
             let s = diag.firstIndex { d in !d.isIdentity } ?? r
@@ -100,6 +100,14 @@ public final class _HNFHomologyCalculator<C: ChainComplexType>: HomologyCalculat
 }
 
 private extension MatrixEliminationResult {
+    var diagonalEntries: [R] {
+        guard form == .Smith else {
+            fatalError("unavailable")
+        }
+        
+        return headEntries.map{ $0.value }
+    }
+
     func left(restrictedToRows rowRange: Range<Int>) -> MatrixIF<Impl, anySize, n> {
         composeRowOps(rowOps, restrictedToRows: rowRange)
     }
