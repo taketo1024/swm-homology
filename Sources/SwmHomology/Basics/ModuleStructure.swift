@@ -173,6 +173,7 @@ public struct ModuleStructure<BaseModule: Module>: Equatable, CustomStringConver
 
 extension ModuleStructure where BaseModule: LinearCombinationType {
     public init(rawGenerators: [BaseModule.Generator]) {
+        assert(rawGenerators.isUnique)
         let indexer = rawGenerators.makeIndexer()
         self.init(
             generators: rawGenerators.map{ x in .init(x) },
