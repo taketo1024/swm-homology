@@ -8,12 +8,13 @@
 import SwmCore
 
 // {M}_I: the direct sum of copies of M over I.
-public struct GradedModule<Index: Hashable, BaseModule: Module>: Module {
+public struct GradedModule<Index: Hashable, _BaseModule: Module>: Module {
+    public typealias BaseModule = _BaseModule
     public typealias BaseRing = BaseModule.BaseRing
     public let elements: [Index: BaseModule]
     
     public init(elements: [Index: BaseModule]) {
-        self.elements = elements.exclude{ $0.value.isZero }
+        self.elements = elements
     }
     
     public init<S>(elements: S)
@@ -50,6 +51,14 @@ public struct GradedModule<Index: Hashable, BaseModule: Module>: Module {
         Self(elements: m.elements.mapValues{ $0 * r })
     }
     
+    public func map(_ f: (Index, BaseModule) -> (Index, BaseModule)) -> Self {
+        .init(elements: elements.map(f))
+    }
+    
+    public func filter(_ f: (Index, BaseModule) -> Bool) -> Self {
+        .init(elements: elements.filter(f))
+    }
+    
     public static func sum<S>(_ elements: S) -> GradedModule<Index, BaseModule>
     where GradedModule<Index, BaseModule> == S.Element, S : Sequence
     {
@@ -62,6 +71,28 @@ public struct GradedModule<Index: Hashable, BaseModule: Module>: Module {
             elements.map { (index, x) in
                 "{\(index): \(x)}"
             }.joined(separator: " + ")
+    }
+}
+
+extension GradedModule where BaseModule: LinearCombinationType {
+    public var terms: [(Index, BaseModule)] {
+        elements.flatMap { (index, z) in
+            !z.isZero
+                ? z.terms.map{ (index, $0) }
+                : []
+        }
+    }
+
+    public func filterTerms(_ f: (Index, BaseModule) -> Bool) -> Self {
+        .init(elements: elements.map { (index, z) in
+            (index, z.terms.filter{ f(index, $0) }.sum())
+        })
+    }
+    
+    public func mapTerms(_ f: (Index, BaseModule) -> (Index, BaseModule)) -> Self {
+        .init(elements: elements.flatMap { (index, z) in
+            z.terms.map { term in f(index, term) }
+        })
     }
 }
 
