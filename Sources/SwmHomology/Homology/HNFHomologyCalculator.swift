@@ -10,9 +10,13 @@ import SwmMatrixTools
 
 public final class HNFHomologyCalculator<C>: HomologyCalculator<C, DefaultMatrixImpl<C.BaseModule.BaseRing>>
 where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
-    private typealias Impl = DefaultMatrixImpl<C.BaseModule.BaseRing>
-    private typealias Summand = Homology.Object.Summand
-    private typealias Vectorizer = Homology.Object.Vectorizer
+    private typealias R = C.BaseModule.BaseRing
+    private typealias Impl = DefaultMatrixImpl<R>
+    private typealias Object = Homology.Object
+    private typealias Summand = Object.Summand
+    private typealias Vectorizer = Object.Vectorizer
+    
+    private let eliminationCache: Cache<Index, MatrixEliminationResult<Impl, anySize, anySize>> = .empty
 
     public override func calculate() -> Homology {
         return .init { i in
@@ -29,9 +33,16 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
             //  H = Ker(a2) / Im(a1)
             //    = Ker(b2) ⊕ Coker(b1)
 
-            let d  = self.chainComplex.differential
-            let a1 = self.matrix(at: i - d.degree) // TODO use kernelComplement of b1
-            let e1 = a1.eliminate(form: .RowEchelon)
+            let C = self.chainComplex
+            let d = C.differential
+            
+            let e1 = self.eliminationCache[i] ?? {
+                let X = C[i - d.degree]
+                let Y = C[i]
+                let a1: Matrix = d[i - d.degree].asMatrix(from: X, to: Y)
+                
+                return a1.eliminate(form: .RowEchelon)
+            }()
             
             let free = self.freePart(i, e1)
             let tor  = self.torPart (i, e1)
@@ -59,7 +70,10 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
         let Z  = C[i + d.degree]
         
         let b2: Matrix = d[i].asMatrix(from: Y2, to: Z) // p x (n - r)
-        let e2 = b2.eliminate(form: .ColEchelon)
+        let e2 = b2
+            .eliminate(form: .RowEchelon)
+            .eliminate(form: .ColEchelon)
+        
         let k = e2.nullity // <= n - r
         
         if k == 0 {
@@ -72,7 +86,6 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
         
         let generators = (C[i].generators * T1) * T2 // [n] -> [n - r] -> [k]
         let summands = generators.map{ z in Summand(z.reduced) }
-        
         let vectorizer: Vectorizer = { z in
             // Solve:
             //
@@ -96,6 +109,11 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
                 fatalError()
             }
         }
+        
+        // MEMO: e2 can be used for e1 in the next degree.
+        // The col size is shrinkened, but does not affect the computation.
+        
+        eliminationCache[i + d.degree] = e2
         
         return .init(
             summands: summands,
