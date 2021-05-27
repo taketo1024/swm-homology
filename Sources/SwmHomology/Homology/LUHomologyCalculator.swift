@@ -59,11 +59,7 @@ public final class LUHomologyCalculator<C: ChainComplexType, _MatrixImpl: Matrix
     }
     
     private func homologyGenerators(index i: Index, matrix H: Matrix) -> [Homology.Object.Summand] {
-        let gens = BaseModule.combine(
-            basis: chainComplex[i].generators,
-            matrix: AnySizeMatrix(H)
-        )
-        return gens.map{ z in .init(z) }
+        (chainComplex[i].generators * H).map{ z in .init(z) }
     }
     
     private func homologyVectorizer(index i: Index, matrix H: Matrix) -> Homology.Object.Vectorizer {
