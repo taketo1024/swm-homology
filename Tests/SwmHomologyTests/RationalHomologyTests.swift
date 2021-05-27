@@ -185,8 +185,8 @@ class RationalHomologyTests: XCTestCase {
 
         if H2.rank == 1 {
             let z = H2.generator(0)
-            XCTAssertEqual(H2.vectorize(z).serialize(), [1])
-            XCTAssertEqual(H2.vectorize(2 * z).serialize(), [2])
+            XCTAssertEqual(H2.vectorize(z)!.serialize(), [1])
+            XCTAssertEqual(H2.vectorize(2 * z)!.serialize(), [2])
         } else {
             XCTFail()
         }
@@ -205,9 +205,9 @@ class RationalHomologyTests: XCTestCase {
         if H1.rank == 2 {
             let z = H1.generator(0)
             let w = H1.generator(1)
-            XCTAssertEqual(H1.vectorize(z).serialize(), [1, 0])
-            XCTAssertEqual(H1.vectorize(w).serialize(), [0, 1])
-            XCTAssertEqual(H1.vectorize(z - 2 * w).serialize(), [1, -2])
+            XCTAssertEqual(H1.vectorize(z)!.serialize(), [1, 0])
+            XCTAssertEqual(H1.vectorize(w)!.serialize(), [0, 1])
+            XCTAssertEqual(H1.vectorize(z - 2 * w)!.serialize(), [1, -2])
         } else {
             XCTFail()
         }

@@ -166,8 +166,8 @@ class HomologyTests: XCTestCase {
         let H2 = H[2]
         
         let z = H2.generator(0)
-        XCTAssertEqual(H2.vectorize(z).serialize(), [1])
-        XCTAssertEqual(H2.vectorize(2 * z).serialize(), [2])
+        XCTAssertEqual(H2.vectorize(z)!.serialize(), [1])
+        XCTAssertEqual(H2.vectorize(2 * z)!.serialize(), [2])
     }
 
     func testVectorizer_T2() {
@@ -182,9 +182,9 @@ class HomologyTests: XCTestCase {
         
         let z = H1.generator(0)
         let w = H1.generator(1)
-        XCTAssertEqual(H1.vectorize(z).serialize(), [1, 0])
-        XCTAssertEqual(H1.vectorize(w).serialize(), [0, 1])
-        XCTAssertEqual(H1.vectorize(z - 2 * w).serialize(), [1, -2])
+        XCTAssertEqual(H1.vectorize(z)!.serialize(), [1, 0])
+        XCTAssertEqual(H1.vectorize(w)!.serialize(), [0, 1])
+        XCTAssertEqual(H1.vectorize(z - 2 * w)!.serialize(), [1, -2])
     }
 
     func testVectorizer_RP2() {
@@ -198,7 +198,7 @@ class HomologyTests: XCTestCase {
         let H1 = H[1]
         
         let z = H1.generator(0)
-        XCTAssertEqual(H1.vectorize(z).serialize(), [1])
-        XCTAssertEqual(H1.vectorize(2 * z).serialize(), [0])
+        XCTAssertEqual(H1.vectorize(z)!.serialize(), [1])
+        XCTAssertEqual(H1.vectorize(2 * z)!.serialize(), [0])
     }
 }

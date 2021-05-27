@@ -96,7 +96,9 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
             //
             // Then solve x as kernel vector of b2.
             
-            let v = C[i].vectorize(z).as(ColVector<BaseRing, n>.self)
+            guard let v = C[i].vectorize(z)?.as(ColVector<BaseRing, n>.self) else {
+                return nil
+            }
             
             let P = e1.left // n x n
             let p = (P * v)[r ..< n] // projected to Y2
@@ -153,7 +155,9 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
         
         let vectorizer: Vectorizer = { z in
             let P = e2.left
-            let v = C[i].vectorize(z).as(ColVector<BaseRing, n>.self)
+            guard let v = C[i].vectorize(z)?.as(ColVector<BaseRing, n>.self) else {
+                return nil
+            }
             let p = (P * v)[r - l ..< r].mapNonZeroEntries { (i, _, a) in
                 a % d[i]
             }
@@ -169,14 +173,14 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
     private func onlyStructure(rank: Int) -> Homology.Object {
         .init(
             summands: (0 ..< rank).map { _ in .init(.zero) },
-            vectorizer: { _ in .zero(size: rank) }
+            vectorizer: { _ in nil }
         )
     }
 
     private func onlyStructure<S>(divisors: S) -> Homology.Object where S: Sequence, S.Element == BaseRing {
         .init(
             summands: divisors.map { a in .init(.zero, a) },
-            vectorizer: { _ in .zero(size: divisors.count) }
+            vectorizer: { _ in nil }
         )
     }
 }

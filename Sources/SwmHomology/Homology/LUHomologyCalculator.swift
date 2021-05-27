@@ -67,16 +67,19 @@ public final class LUHomologyCalculator<C: ChainComplexType, _MatrixImpl: Matrix
         let e = H.luDecomposition()
         
         return { (z: BaseModule) in
-            let x = MatrixIF<_MatrixImpl, anySize, _1>(C.vectorize(z))
-            let y = e.solve(x) // Hy = x
-            return AnySizeVector(y!)
+            if let v = C.vectorize(z),
+               let x = e.solve( .init(v) ) {
+                return .init(x)
+            } else {
+                return nil
+            }
         }
     }
     
     private func onlyStructure(rank: Int) -> Homology.Object {
         .init(
             summands: (0 ..< rank).map { _ in .init(.zero) },
-            vectorizer: { _ in .zero(size: rank) }
+            vectorizer: { _ in nil }
         )
     }
 }

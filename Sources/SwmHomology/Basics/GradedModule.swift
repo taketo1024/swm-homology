@@ -67,6 +67,8 @@ public struct GradedModule<Index: Hashable, BaseModule: Module>: Module {
 
 extension ModuleStructure {
     public static func formDirectSum<Index: Hashable>(_ objects: [Index : Self]) -> ModuleStructure<GradedModule<Index, BaseModule>> {
+        typealias S = ModuleStructure<GradedModule<Index, BaseModule>>
+        
         let indices = objects.keys.toArray()
         let ranks = [0] + indices.map { objects[$0]!.rank }.accumulate()
         let shifts = Dictionary(zip(indices, ranks))
@@ -76,15 +78,24 @@ extension ModuleStructure {
         }
         
         let N = ranks.last ?? 0
-        let vectorizer = { (z: GradedModule<Index, BaseModule>) -> AnySizeVector<R> in
-            .init(size: N) { setEntry in
-                z.elements.forEach { (index, x) in
-                    let vec = objects[index]!.vectorize(x)
-                    let shift = shifts[index]!
-                    vec.nonZeroEntries.forEach{ (i, _, r) in
-                        setEntry(i + shift, r)
-                    }
+        let vectorizer: S.Vectorizer = { z in
+            let entries = z.elements.reduce(
+                into: [ColEntry<R>]?.some([]),
+                while: { (res, _) in res != nil }
+            ) { (res, elem) in
+                let (index, x) = elem
+                let (obj, shift) = (objects[index]!, shifts[index]!)
+                
+                if let v = obj.vectorize(x) {
+                    res! += v.nonZeroColEntries.map{ (i, a) in (i + shift, a) }
+                } else {
+                    res = nil
                 }
+            }
+            if let entries = entries {
+                return .init(size: N, colEntries: entries)
+            } else {
+                return nil
             }
         }
         

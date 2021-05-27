@@ -17,7 +17,7 @@ import SwmCore
 
 public struct ModuleStructure<BaseModule: Module>: Equatable, CustomStringConvertible {
     public typealias R = BaseModule.BaseRing
-    public typealias Vectorizer = (BaseModule) -> AnySizeVector<R>
+    public typealias Vectorizer = (BaseModule) -> AnySizeVector<R>?
 
     public let summands: [Summand]
     internal let vectorizer: Vectorizer
@@ -42,7 +42,7 @@ public struct ModuleStructure<BaseModule: Module>: Equatable, CustomStringConver
         summands[i]
     }
     
-    public func vectorize(_ z: BaseModule) -> AnySizeVector<R> {
+    public func vectorize(_ z: BaseModule) -> AnySizeVector<R>? {
         vectorizer(z)
     }
     
@@ -71,28 +71,40 @@ public struct ModuleStructure<BaseModule: Module>: Equatable, CustomStringConver
     }
     
     public func filter(_ predicate: @escaping (Summand) -> Bool) -> ModuleStructure {
-        let (reduced, table) = summands
-            .enumerated()
-            .reduce(into: ([], [:])) {
-                (res: inout (summands: [Summand], table: [Int : Int]), next) in
-                
+        let (reduced, table): ([Summand], [Int: Int]) =
+            summands.enumerated()
+            .reduce(
+                into: ([Summand](), [Int : Int]())
+            ) { (res, next) in
                 let (i, z) = next
                 if predicate(z) {
                     let j = res.0.count
-                    res.summands.append(z)
-                    res.table[i] = j
+                    res.0.append(z)
+                    res.1[i] = j
                 }
             }
         
         let N = reduced.count
-        let vectorizer = { (z: BaseModule) -> AnySizeVector<R> in
-            let vec = vectorize(z)
-            return .init(size: N) { setEntry in
-                vec.nonZeroColEntries.forEach { (i, r) in
-                    if let j = table[i]  {
-                        setEntry(j, r)
-                    }
+        
+        let vectorizer: Vectorizer = { z in
+            guard let v = vectorize(z) else {
+                return nil
+            }
+            let entries = v.nonZeroColEntries.reduce(
+                into: [ColEntry<R>]?.some([]),
+                while: { (res, _) in res != nil }
+            ) { (res, entry) in
+                let (i, a) = entry
+                if let j = table[i]  {
+                    res?.append((j, a))
+                } else {
+                    res = nil
                 }
+            }
+            if let entries = entries {
+                return .init(size: N, colEntries: entries)
+            } else {
+                return nil
             }
         }
         return ModuleStructure(summands: reduced, vectorizer: vectorizer)
@@ -103,7 +115,7 @@ public struct ModuleStructure<BaseModule: Module>: Equatable, CustomStringConver
         assert(A.size.rows == summands.count)
         
         let summands = (generators * A).map { Summand($0) }
-        let vectorizer = Self.zeroModule.vectorizer // TODO
+        let vectorizer: Vectorizer = { _ in nil }
         
         return .init(summands: summands, vectorizer: vectorizer)
     }
@@ -123,7 +135,12 @@ public struct ModuleStructure<BaseModule: Module>: Equatable, CustomStringConver
         return .init(
             summands: a.summands + b.summands,
             vectorizer: { z in
-                a.vectorize(z).stack( b.vectorize(z) )
+                if let v = a.vectorize(z),
+                   let w = b.vectorize(z) {
+                    return v.stack(w)
+                } else {
+                    return nil
+                }
             }
         )
     }
@@ -174,16 +191,30 @@ public struct ModuleStructure<BaseModule: Module>: Equatable, CustomStringConver
 extension ModuleStructure where BaseModule: LinearCombinationType {
     public init(rawGenerators: [BaseModule.Generator]) {
         assert(rawGenerators.isUnique)
+        
+        let n = rawGenerators.count
         let indexer = rawGenerators.makeIndexer()
+        
         self.init(
             generators: rawGenerators.map{ x in .init(x) },
-            vectorizer: { z in
-                AnySizeVector(size: rawGenerators.count) { setEntry in
-                    z.elements.forEach { (a, r) in
-                        if let i = indexer(a) {
-                            setEntry(i, r)
-                        }
+            vectorizer: { (z: BaseModule) in
+                let entries = z.elements.reduce(
+                    into: [ColEntry<R>]?.some([]),
+                    while: { (res, _) in res != nil }
+                ) { (res, elem) in
+                    let (x, a) = elem
+                    if a.isZero { return }
+                    
+                    if let i = indexer(x) {
+                        res?.append((i, a))
+                    } else {
+                        res = nil
                     }
+                }
+                if let entries = entries {
+                    return .init(size: n, colEntries: entries)
+                } else {
+                    return nil
                 }
             }
         )
@@ -194,15 +225,17 @@ extension ModuleStructure {
     public var dual: ModuleStructure<DualModule<BaseModule>> {
         assert(isFree)
         
-        typealias DualObject = ModuleStructure<DualModule<BaseModule>>
-        let summands = self.generators.enumerated().map { (i, _) in
-            DualModule<BaseModule> { z in
-                .init(self.vectorize(z)[i])
-            }
-        }.map{ DualObject.Summand($0) }
+        typealias D = ModuleStructure<DualModule<BaseModule>>
         
-        let vectorizer = { (f: DualModule<BaseModule>) -> AnySizeVector<R> in
-            AnySizeVector(size: self.generators.count) { setEntry in
+        let gens = generators
+        let summands = gens.enumerated().map { (i, _) in
+            DualModule<BaseModule> { z in
+                .init(self.vectorize(z)![i])
+            }
+        }.map{ D.Summand($0) }
+        
+        let vectorizer: D.Vectorizer = { f in
+            AnySizeVector(size: gens.count) { setEntry in
                 self.generators.enumerated().forEach { (i, z) in
                     let a = f(z).value
                     if !a.isZero {
@@ -211,7 +244,8 @@ extension ModuleStructure {
                 }
             }
         }
-        return ModuleStructure<DualModule<BaseModule>>(summands: summands, vectorizer: vectorizer)
+        
+        return .init(summands: summands, vectorizer: vectorizer)
     }
 }
 

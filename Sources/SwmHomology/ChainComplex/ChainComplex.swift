@@ -65,7 +65,7 @@ public struct ChainComplex<Index: AdditiveGroup & Hashable, BaseModule: Module>:
             let z = d[i1](y)
             print("\t\(x) ->\t\(y) ->\t\(z)")
             
-            assert(self[i2].vectorize(z).isZero)
+            assert(self[i2].vectorize(z)?.isZero ?? false)
         }
     }
 
@@ -123,10 +123,11 @@ extension ChainComplexType where Index == Int {
             for (j1, z) in C[i1].generators.enumerated() {
                 let from = table[[i1, j1]]!
                 let w = d[i1](z)
-                let vec = C[i2].vectorize(w)
-                for (j2, a) in vec.nonZeroColEntries {
-                    if let to = table[[i2, j2]] {
-                        from.addEdge(to: to, value: a)
+                if let vec = C[i2].vectorize(w) {
+                    for (j2, a) in vec.nonZeroColEntries {
+                        if let to = table[[i2, j2]] {
+                            from.addEdge(to: to, value: a)
+                        }
                     }
                 }
             }
