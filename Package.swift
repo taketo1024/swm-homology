@@ -12,15 +12,15 @@ let package = Package(
         ),
     ],
     dependencies: [
-//        .package(
-//            url: "https://github.com/taketo1024/swm-core.git",
-//            from: "1.0.1"
-//        ),
         .package(
-            path: "../swm-core/"
+            url: "https://github.com/taketo1024/swm-core.git",
+            from: "1.1.0"
+//            path: "../swm-core/"
         ),
         .package(
-            path: "../swm-matrix-tools/"
+            url: "https://github.com/taketo1024/swm-matrix-tools.git",
+            from: "1.0.0"
+//            path: "../swm-matrix-tools/"
         ),
     ],
     targets: [
