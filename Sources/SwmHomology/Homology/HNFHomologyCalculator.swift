@@ -8,7 +8,8 @@
 import SwmCore
 import SwmMatrixTools
 
-public final class HNFHomologyCalculator<C: ChainComplexType>: HomologyCalculator<C, DefaultMatrixImpl<C.BaseModule.BaseRing>> where C.BaseModule.BaseRing: EuclideanRing {
+public final class HNFHomologyCalculator<C>: HomologyCalculator<C, DefaultMatrixImpl<C.BaseModule.BaseRing>>
+where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
     private typealias Impl = DefaultMatrixImpl<C.BaseModule.BaseRing>
     private typealias Summand = Homology.Object.Summand
     private typealias Vectorizer = Homology.Object.Vectorizer
@@ -30,7 +31,7 @@ public final class HNFHomologyCalculator<C: ChainComplexType>: HomologyCalculato
 
             let d  = self.chainComplex.differential
             let a1 = self.matrix(at: i - d.degree) // TODO use kernelComplement of b1
-            let e1 = a1.eliminate(form: .ColEchelon)
+            let e1 = a1.eliminate(form: .RowEchelon)
             
             let free = self.freePart(i, e1)
             let tor  = self.torPart (i, e1)
@@ -40,45 +41,59 @@ public final class HNFHomologyCalculator<C: ChainComplexType>: HomologyCalculato
     }
     
     private func freePart<n, m>(_ i: Index, _ e1: MatrixEliminationResult<Impl, n, m>) -> Homology.Object {
+        let (n, r) = (e1.size.rows, e1.rank)
+        if n == r {
+            return .zeroModule
+        }
+        
         let C = chainComplex
         let d = C.differential
         
-        let t1 = e1.freeCokernelMatrix // n x s
-        let Y2 = C[i].sub(matrix: t1)
+        let Pinv = e1.leftInverse
+        let T1 = Pinv * Matrix.colUnits(
+            size: (n, n - r),
+            indices: r ..< n
+        ).as(MatrixIF<Impl, n, anySize>.self)
+        
+        let Y2 = C[i].sub(matrix: T1)
         let Z  = C[i + d.degree]
         
-        let b1: Matrix = d[i].asMatrix(from: Y2, to: Z) // p x s
-        let e2 = b1.eliminate(form: .ColEchelon)
-        let k  = e2.nullity
+        let b2: Matrix = d[i].asMatrix(from: Y2, to: Z) // p x (n - r)
+        let e2 = b2.eliminate(form: .ColEchelon)
+        let k = e2.nullity // <= n - r
         
-        if options.contains(.onlyStructures) {
+        if k == 0 {
+            return .zeroModule
+        } else if options.contains(.onlyStructures) {
             return onlyStructure(rank: k)
         }
         
-        let t2 = e2.kernelMatrix // s x k
+        let T2 = e2.kernelMatrix // (n - r) x k
         
-        let generators = (C[i].generators * t1) * t2 // [n] -> [s] -> [k]
-        let summands = generators.map{ z in Summand(z) }
+        let generators = (C[i].generators * T1) * T2 // [n] -> [n - r] -> [k]
+        let summands = generators.map{ z in Summand(z.reduced) }
+        
         let vectorizer: Vectorizer = { z in
-            // Given
+            // Solve:
             //
-            //   z = (y1 ... yk) [v1 ... vn]^t,
+            //   T1 * (T2 * x) = v (mod Y1).
             //
-            // solve:
+            // Project to Y2 by [O, I_{n-r}] * (P * ( - )).
+            // From T1 = P^-1 [O; I_{n-r}], we get
             //
-            //   z = (z1 ... zk) [x1 ... xk]^t.
-            //     = (y1 ... yn) (t1 * t2) * [x1 ... xk]^t
+            //   T2 * x = Pv[r ..< n].
             //
-            // i.e.
-            //
-            //   t1 * (t2 * x) = v.
+            // Then solve x as kernel vector of b2.
             
             let v = C[i].vectorize(z).as(ColVector<BaseRing, n>.self)
-            if let w = e1.solveFreeCokernel(v),
-               let x = e2.solveKernel(w) {
+            
+            let P = e1.left // n x n
+            let p = (P * v)[r ..< n] // projected to Y2
+            
+            if let x = e2.solveKernel(p) {
                 return x
             } else {
-                return .zero(size: k) // TODO
+                fatalError()
             }
         }
         
@@ -89,28 +104,44 @@ public final class HNFHomologyCalculator<C: ChainComplexType>: HomologyCalculato
     }
     
     private func torPart<n, m>(_ i: Index, _ e1: MatrixEliminationResult<Impl, n, m>) -> Homology.Object {
-        let C = chainComplex
-        
-        let e2 = e1.eliminate(form: .Smith)
-        let d = e2.nonUnitDivisors
-        let l = d.count
-        
-        if options.contains(.onlyStructures) {
-            return onlyStructure(divisors: d)
+        if BaseRing.isField || e1.rank == 0 {
+            return .zeroModule
         }
         
-        let t = e2.torCokernelMatrix // n x l
-        let generators = C[i].generators * t // [n] -> [l]
+        let (n, r) = (e1.size.rows, e1.rank)
+        
+        let e2 = e1.eliminate(form: .Smith)
+        let d = e2.headEntries
+            .map{ $0.value }
+            .exclude { $0.isIdentity }
+        
+        let l = d.count // <= r
+        
+        if l == 0 {
+            return .zeroModule
+        } else if options.contains(.onlyStructures) {
+            return onlyStructure(divisors: d)
+        }
+
+        let Pinv = e2.leftInverse
+        let T = Pinv * Matrix.colUnits(
+            size: (n, l),
+            indices: (r - l ..< r)
+        ).as(MatrixIF<Impl, n, anySize>.self)
+        
+        let C = chainComplex
+        let generators = C[i].generators * T // [n] -> [l]
         let summands = zip(generators, d).map{ (z, a) in
             Summand(z, a)
         }
+        
         let vectorizer: Vectorizer = { z in
+            let P = e2.left
             let v = C[i].vectorize(z).as(ColVector<BaseRing, n>.self)
-            if let x = e2.solveTorCokernel(v) {
-                return x
-            } else {
-                return .zero(size: l) // TODO
+            let p = (P * v)[r - l ..< r].mapNonZeroEntries { (i, _, a) in
+                a % d[i]
             }
+            return p
         }
 
         return .init(
