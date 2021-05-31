@@ -8,14 +8,16 @@
 import SwmCore
 import SwmMatrixTools
 
-public final class HNFHomologyCalculator<C>: HomologyCalculator<C, DefaultMatrixImpl<C.BaseModule.BaseRing>>
+public final class HNFHomologyCalculator<C>: HomologyCalculator<C>
 where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
-    private typealias R = C.BaseModule.BaseRing
-    private typealias Impl = DefaultMatrixImpl<R>
+    
     private typealias Object = Homology.Object
     private typealias Summand = Object.Summand
     private typealias Vectorizer = Object.Vectorizer
     
+    private typealias Impl = DefaultMatrixImpl<C.BaseModule.BaseRing>
+    private typealias Matrix<n, m> = MatrixIF<Impl, n, m> where n: SizeType, m: SizeType
+
     private let eliminationCache: Cache<Index, MatrixEliminationResult<Impl, anySize, anySize>> = .empty
 
     internal override func calculate(_ i: Index) -> Homology.Object {
@@ -38,7 +40,7 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
         let e1 = eliminationCache[i] ?? {
             let X = C[i - d.degree]
             let Y = C[i]
-            let a1: Matrix = d[i - d.degree].asMatrix(from: X, to: Y)
+            let a1: Matrix<anySize, anySize> = d[i - d.degree].asMatrix(from: X, to: Y)
             
             return a1.eliminate(form: .RowEchelon)
         }()
@@ -59,15 +61,15 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
         let d = C.differential
         
         let Pinv = e1.leftInverse
-        let T1 = Pinv * Matrix.colUnits(
+        let T1 = Pinv * Matrix<n, anySize>.colUnits(
             size: (n, n - r),
             indices: r ..< n
-        ).as(MatrixIF<Impl, n, anySize>.self)
+        )
         
         let Y2 = C[i].sub(matrix: T1)
         let Z  = C[i + d.degree]
         
-        let b2: Matrix = d[i].asMatrix(from: Y2, to: Z) // p x (n - r)
+        let b2: Matrix<anySize, anySize> = d[i].asMatrix(from: Y2, to: Z) // p x (n - r)
         let e2 = b2
             .eliminate(form: .RowEchelon)
             .eliminate(form: .ColEchelon)
@@ -142,10 +144,10 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
         }
 
         let Pinv = e2.leftInverse
-        let T = Pinv * Matrix.colUnits(
+        let T = Pinv * Matrix<n, anySize>.colUnits(
             size: (n, l),
             indices: (r - l ..< r)
-        ).as(MatrixIF<Impl, n, anySize>.self)
+        )
         
         let C = chainComplex
         let generators = C[i].generators * T // [n] -> [l]

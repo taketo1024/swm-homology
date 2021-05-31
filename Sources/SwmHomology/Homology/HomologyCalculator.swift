@@ -15,31 +15,19 @@ public struct HomologyCalculatorOptions: OptionSet {
     public static let onlyStructures = Self(rawValue: 1 << 0)
 }
 
-public class HomologyCalculator<C: ChainComplexType, _MatrixImpl: MatrixImpl>
-where C.BaseModule.BaseRing == _MatrixImpl.BaseRing {
-    
+public class HomologyCalculator<C: ChainComplexType> {
     public typealias Homology = GradedModuleStructure<C.Index, C.BaseModule>
 
     typealias Index = C.Index
     typealias BaseModule = C.BaseModule
     typealias BaseRing = BaseModule.BaseRing
-    typealias Matrix = MatrixIF<_MatrixImpl, anySize, anySize>
     
     public let chainComplex: C
     public let options: HomologyCalculatorOptions
-    internal let matrixCache: Cache<Index, Matrix> = .empty
 
-    public init(chainComplex: C, options: HomologyCalculatorOptions) {
+    public required init(chainComplex: C, options: HomologyCalculatorOptions) {
         self.chainComplex = chainComplex
         self.options = options
-    }
-    
-    internal func matrix(at i: Index) -> Matrix {
-        matrixCache.getOrSet(key: i) {
-            let (C, d) = (chainComplex, chainComplex.differential)
-            let (C0, C1) = (C[i], C[i + d.degree])
-            return d[i].asMatrix(from: C0, to: C1)
-        }
     }
     
     public final func calculate() -> Homology {
@@ -55,6 +43,10 @@ where C.BaseModule.BaseRing == _MatrixImpl.BaseRing {
 
 extension ChainComplexType where BaseModule.BaseRing: EuclideanRing {
     public func homology(options: HomologyCalculatorOptions = []) -> GradedModuleStructure<Index, BaseModule> {
-        return HNFHomologyCalculator(chainComplex: self, options: options).calculate()
+        homology(options: options, using: HNFHomologyCalculator<Self>.self)
+    }
+
+    public func homology(options: HomologyCalculatorOptions = [], using type: HomologyCalculator<Self>.Type) -> GradedModuleStructure<Index, BaseModule> {
+        type.init(chainComplex: self, options: options).calculate()
     }
 }

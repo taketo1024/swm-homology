@@ -8,7 +8,10 @@
 import SwmCore
 import SwmMatrixTools
 
-public final class LUHomologyCalculator<C: ChainComplexType, _MatrixImpl: MatrixImpl_LU>: HomologyCalculator<C, _MatrixImpl> where C.BaseModule.BaseRing == _MatrixImpl.BaseRing {
+public final class LUHomologyCalculator<C: ChainComplexType, _MatrixImpl: MatrixImpl_LU>: HomologyCalculator<C> where C.BaseModule.BaseRing == _MatrixImpl.BaseRing {
+    
+    private typealias Matrix = MatrixIF<_MatrixImpl, anySize, anySize>
+    
     internal override func calculate(_ i: Index) -> Homology.Object {
         
         //      a0       a1
@@ -81,5 +84,14 @@ public final class LUHomologyCalculator<C: ChainComplexType, _MatrixImpl: Matrix
             summands: (0 ..< rank).map { _ in .init(.zero) },
             vectorizer: { _ in nil }
         )
+    }
+    
+    private let matrixCache: Cache<Index, Matrix> = .empty
+    private func matrix(at i: Index) -> Matrix {
+        matrixCache.getOrSet(key: i) {
+            let (C, d) = (chainComplex, chainComplex.differential)
+            let (C0, C1) = (C[i], C[i + d.degree])
+            return d[i].asMatrix(from: C0, to: C1)
+        }
     }
 }
