@@ -43,7 +43,8 @@ public class HomologyCalculator<C: ChainComplexType> {
 
 extension ChainComplexType where BaseModule.BaseRing: EuclideanRing {
     public func homology(options: HomologyCalculatorOptions = []) -> GradedModuleStructure<Index, BaseModule> {
-        homology(options: options, using: HNFHomologyCalculator<Self>.self)
+        typealias defaultType = HNFHomologyCalculator<Self, DefaultMatrixImpl<BaseModule.BaseRing>>
+        return homology(options: options, using: defaultType.self)
     }
 
     public func homology(options: HomologyCalculatorOptions = [], using type: HomologyCalculator<Self>.Type) -> GradedModuleStructure<Index, BaseModule> {

@@ -11,7 +11,8 @@ import SwmMatrixTools
 public final class LUHomologyCalculator<C: ChainComplexType, _MatrixImpl: MatrixImpl_LU>: HomologyCalculator<C> where C.BaseModule.BaseRing == _MatrixImpl.BaseRing {
     
     private typealias Matrix = MatrixIF<_MatrixImpl, anySize, anySize>
-    
+    private typealias Vector = MatrixIF<_MatrixImpl, anySize, _1>
+
     internal override func calculate(_ i: Index) -> Homology.Object {
         
         //      a0       a1
@@ -70,9 +71,9 @@ public final class LUHomologyCalculator<C: ChainComplexType, _MatrixImpl: Matrix
         let e = H.luDecomposition()
         
         return { (z: BaseModule) in
-            if let v = C.vectorize(z),
-               let x = e.solve( .init(v) ) {
-                return .init(x)
+            if let v = C.vectorize(z)?.convert(to: Vector.self),
+               let x = e.solve(v) {
+                return x.convert(to: AnySizeVector.self)
             } else {
                 return nil
             }

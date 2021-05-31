@@ -8,15 +8,16 @@
 import SwmCore
 import SwmMatrixTools
 
-public final class HNFHomologyCalculator<C>: HomologyCalculator<C>
-where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
+public final class HNFHomologyCalculator<C, Impl>: HomologyCalculator<C>
+where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing,
+      Impl: MatrixImpl, Impl.BaseRing == C.BaseModule.BaseRing {
     
     private typealias Object = Homology.Object
     private typealias Summand = Object.Summand
     private typealias Vectorizer = Object.Vectorizer
     
-    private typealias Impl = DefaultMatrixImpl<C.BaseModule.BaseRing>
     private typealias Matrix<n, m> = MatrixIF<Impl, n, m> where n: SizeType, m: SizeType
+    private typealias Vector<n> = Matrix<n, _1> where n: SizeType
 
     private let eliminationCache: Cache<Index, MatrixEliminationResult<Impl, anySize, anySize>> = .empty
 
@@ -98,7 +99,7 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
             //
             // Then solve x as kernel vector of b2.
             
-            guard let v = C[i].vectorize(z)?.as(ColVector<BaseRing, n>.self) else {
+            guard let v = C[i].vectorize(z)?.convert(to: Vector<n>.self) else {
                 return nil
             }
             
@@ -106,7 +107,7 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
             let p = (P * v)[r ..< n] // projected to Y2
             
             if let x = e2.solveKernel(p) {
-                return x
+                return x.convert(to: AnySizeVector.self)
             } else {
                 fatalError()
             }
@@ -157,13 +158,13 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
         
         let vectorizer: Vectorizer = { z in
             let P = e2.left
-            guard let v = C[i].vectorize(z)?.as(ColVector<BaseRing, n>.self) else {
+            guard let v = C[i].vectorize(z)?.convert(to: Vector<n>.self) else {
                 return nil
             }
             let p = (P * v)[r - l ..< r].mapNonZeroEntries { (i, _, a) in
                 a % d[i]
             }
-            return p
+            return p.convert(to: AnySizeVector.self)
         }
 
         return .init(
