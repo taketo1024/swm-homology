@@ -8,10 +8,10 @@
 import SwmCore
 import SwmMatrixTools
 
-public final class LUHomologyCalculator<C: ChainComplexType, _MatrixImpl: MatrixImpl_LU>: HomologyCalculator<C> where C.BaseModule.BaseRing == _MatrixImpl.BaseRing {
+public final class LUHomologyCalculator<C: ChainComplexType, M: MatrixImpl & LUFactorizable>: HomologyCalculator<C> where C.BaseModule.BaseRing == M.BaseRing {
     
-    private typealias Matrix = MatrixIF<_MatrixImpl, anySize, anySize>
-    private typealias Vector = MatrixIF<_MatrixImpl, anySize, _1>
+    private typealias Matrix = MatrixIF<M, anySize, anySize>
+    private typealias Vector = MatrixIF<M, anySize, _1>
 
     internal override func calculate(_ i: Index) -> Homology.Object {
         
@@ -30,12 +30,12 @@ public final class LUHomologyCalculator<C: ChainComplexType, _MatrixImpl: Matrix
         let d = C.differential
         let (a0, a1) = (matrix(at: i - d.degree), matrix(at: i))
         
-        let e0 = a0.luDecomposition()
+        let e0 = a0.LUfactorize()
 //      let Y1 = e0.image     // y x y1
         let Y23 = e0.cokernel // y x (y - y1)
         let b1 = a1 * Y23     // z x (y - y1)
         
-        let e1 = b1.luDecomposition()
+        let e1 = b1.LUfactorize()
         let r = e1.nullity
         
         if r == 0 {
@@ -68,7 +68,7 @@ public final class LUHomologyCalculator<C: ChainComplexType, _MatrixImpl: Matrix
     
     private func homologyVectorizer(index i: Index, matrix H: Matrix) -> Homology.Object.Vectorizer {
         let C = chainComplex[i]
-        let e = H.luDecomposition()
+        let e = H.LUfactorize()
         
         return { (z: BaseModule) in
             if let v = C.vectorize(z)?.convert(to: Vector.self),
