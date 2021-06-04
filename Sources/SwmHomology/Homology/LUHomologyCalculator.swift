@@ -40,7 +40,7 @@ public final class LUHomologyCalculator<C: ChainComplexType, M: MatrixImpl & LUF
         let Y = C[i]
 
         let e1 = luCache[i] ?? {
-            let a1: Matrix = d[i - d.degree].asMatrix(from: X, to: Y)
+            let a1 = d[i - d.degree].asMatrix(from: X, to: Y, ofType: Matrix.self)
             return a1.LUfactorize()
         }()
         
@@ -48,7 +48,7 @@ public final class LUHomologyCalculator<C: ChainComplexType, M: MatrixImpl & LUF
         let Y2 = C[i].sub(matrix: T1)
         let Z = C[i + d.degree]
         
-        let b2: Matrix = d[i].asMatrix(from: Y2, to: Z)
+        let b2 = d[i].asMatrix(from: Y2, to: Z, ofType: Matrix.self)
         let e2 = b2.LUfactorize()
         
         // MEMO: e2 can be used for e1 in the next degree.

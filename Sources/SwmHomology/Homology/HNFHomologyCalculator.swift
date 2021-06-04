@@ -41,7 +41,7 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing,
         let Y = C[i]
         
         let e1 = eliminationCache[i] ?? {
-            let a1: Matrix<anySize, anySize> = d[i - d.degree].asMatrix(from: X, to: Y)
+            let a1 = d[i - d.degree].asMatrix(from: X, to: Y, ofType: Matrix<anySize, anySize>.self)
             return a1.eliminate(form: .RowEchelon)
         }()
         
@@ -69,7 +69,7 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing,
         let Y2 = C[i].sub(matrix: T1)
         let Z  = C[i + d.degree]
         
-        let b2: Matrix<anySize, anySize> = d[i].asMatrix(from: Y2, to: Z) // p x (n - r)
+        let b2 = d[i].asMatrix(from: Y2, to: Z, ofType: Matrix<anySize, anySize>.self) // p x (n - r)
         let e2 = b2
             .eliminate(form: .RowEchelon)
             .eliminate(form: .ColEchelon)
