@@ -14,12 +14,12 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/taketo1024/swm-core.git",
-            from: "1.1.0"
+            from: "1.2.1"
 //            path: "../swm-core/"
         ),
         .package(
             url: "https://github.com/taketo1024/swm-matrix-tools.git",
-            from: "1.0.0"
+            from: "1.1.1"
 //            path: "../swm-matrix-tools/"
         ),
     ],
@@ -33,6 +33,7 @@ let package = Package(
         ),
         .testTarget(
             name: "SwmHomologyTests",
-            dependencies: ["SwmHomology"]),
+            dependencies: ["SwmHomology"]
+        ),
     ]
 )

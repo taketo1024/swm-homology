@@ -8,72 +8,80 @@
 import SwmCore
 import SwmMatrixTools
 
-public final class LUHomologyCalculator<C: ChainComplexType, _MatrixImpl: MatrixImpl_LU>: HomologyCalculator<C, _MatrixImpl> where C.BaseModule.BaseRing == _MatrixImpl.BaseRing {
+public final class LUHomologyCalculator<C: ChainComplexType, M: MatrixImpl & LUFactorizable>: HomologyCalculator<C> where C.BaseModule.BaseRing == M.BaseRing {
+    
+    private typealias Object = Homology.Object
+    private typealias Summand = Object.Summand
+    private typealias Vectorizer = Object.Vectorizer
+
+    private typealias Matrix = MatrixIF<M, anySize, anySize>
+    private typealias Vector = MatrixIF<M, anySize, _1>
+    private typealias LU = LUFactorizationResult<M, anySize, anySize>
+    
+    private let luCache: Cache<Index, LU> = .empty
+
     internal override func calculate(_ i: Index) -> Homology.Object {
         
-        //      a0       a1
-        //  X -----> Y -----> Z
-        //           |
-        //           |
-        //           |
-        //  X -----> Y1
-        //           ⊕
-        //           Y2
-        //           ⊕
-        //           Y3 ----> Z
+        //        a1        a2
+        //    X -----> Y ------> Z
+        //    ^        |
+        //  Q |        | P
+        //    |   b1   V
+        //    X -----> Y1
+        //             ⊕    b2
+        //             Y2 -----> Z
+        //
+        //  H = Ker(a2) / Im(a1)
+        //    = Ker(b2)
         
         let C = chainComplex
         let d = C.differential
-        let (a0, a1) = (matrix(at: i - d.degree), matrix(at: i))
+        let X = C[i - d.degree]
+        let Y = C[i]
+
+        let e1 = luCache[i] ?? {
+            let a1 = d[i - d.degree].asMatrix(from: X, to: Y, ofType: Matrix.self)
+            return a1.LUfactorize()
+        }()
         
-        let e0 = a0.luDecomposition()
-//      let Y1 = e0.image     // y x y1
-        let Y23 = e0.cokernel // y x (y - y1)
-        let b1 = a1 * Y23     // z x (y - y1)
+        let T1 = e1.cokernel
+        let Y2 = C[i].sub(matrix: T1)
+        let Z = C[i + d.degree]
         
-        let e1 = b1.luDecomposition()
-        let r = e1.nullity
+        let b2 = d[i].asMatrix(from: Y2, to: Z, ofType: Matrix.self)
+        let e2 = b2.LUfactorize()
         
+        // MEMO: e2 can be used for e1 in the next degree.
+        // Note that only the cokernel of e1 is used.
+        defer {
+            luCache[i + d.degree] = e2
+        }
+        
+        let r = e2.nullity
         if r == 0 {
             return .zeroModule
         } else if options.contains(.onlyStructures) {
             return onlyStructure(rank: r)
-        } else {
-            let K = e1.kernel // (y - y1) x y2
-            let Y2 = Y23 * K  // y x y2
-            return homology(index: i, matrix: Y2)
         }
-    }
-    
-    private func homology(index i: Index, matrix H: Matrix) -> Homology.Object {
-        let r = H.size.cols
-        let summands = options.contains(.onlyStructures)
-            ? onlyStructure(rank: r).summands
-            : homologyGenerators(index: i, matrix: H)
         
-        let vectorizer = options.contains(.onlyStructures)
-            ? onlyStructure(rank: r).vectorizer
-            : homologyVectorizer(index: i, matrix: H)
-
-        return ModuleStructure(summands: summands, vectorizer: vectorizer)
-    }
-    
-    private func homologyGenerators(index i: Index, matrix H: Matrix) -> [Homology.Object.Summand] {
-        (chainComplex[i].generators * H).map{ z in .init(z) }
-    }
-    
-    private func homologyVectorizer(index i: Index, matrix H: Matrix) -> Homology.Object.Vectorizer {
-        let C = chainComplex[i]
-        let e = H.luDecomposition()
+        let T2 = e2.kernel // (y - y1) x y2
+        let generators = (Y.generators * T1) * T2
+        let summands = generators.map{ z in Summand(z.reduced) }
         
-        return { (z: BaseModule) in
-            if let v = C.vectorize(z),
-               let x = e.solve( .init(v) ) {
-                return .init(x)
+        let p = e1.cokernelProjector
+        let vectorizer: Vectorizer = { z in
+            guard let v = Y.vectorize(z)?.convert(to: Vector.self) else {
+                return nil
+            }
+            
+            if let x = e2.solveKernel(p(v)) {
+                return x.convert(to: AnySizeVector.self)
             } else {
                 return nil
             }
         }
+        
+        return Object(summands: summands, vectorizer: vectorizer)
     }
     
     private func onlyStructure(rank: Int) -> Homology.Object {

@@ -8,14 +8,17 @@
 import SwmCore
 import SwmMatrixTools
 
-public final class HNFHomologyCalculator<C>: HomologyCalculator<C, DefaultMatrixImpl<C.BaseModule.BaseRing>>
-where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
-    private typealias R = C.BaseModule.BaseRing
-    private typealias Impl = DefaultMatrixImpl<R>
+public final class HNFHomologyCalculator<C, Impl>: HomologyCalculator<C>
+where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing,
+      Impl: MatrixImpl, Impl.BaseRing == C.BaseModule.BaseRing {
+    
     private typealias Object = Homology.Object
     private typealias Summand = Object.Summand
     private typealias Vectorizer = Object.Vectorizer
     
+    private typealias Matrix<n, m> = MatrixIF<Impl, n, m> where n: SizeType, m: SizeType
+    private typealias Vector<n> = Matrix<n, _1> where n: SizeType
+
     private let eliminationCache: Cache<Index, MatrixEliminationResult<Impl, anySize, anySize>> = .empty
 
     internal override func calculate(_ i: Index) -> Homology.Object {
@@ -34,12 +37,11 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
         
         let C = chainComplex
         let d = C.differential
+        let X = C[i - d.degree]
+        let Y = C[i]
         
         let e1 = eliminationCache[i] ?? {
-            let X = C[i - d.degree]
-            let Y = C[i]
-            let a1: Matrix = d[i - d.degree].asMatrix(from: X, to: Y)
-            
+            let a1 = d[i - d.degree].asMatrix(from: X, to: Y, ofType: Matrix<anySize, anySize>.self)
             return a1.eliminate(form: .RowEchelon)
         }()
         
@@ -59,21 +61,26 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
         let d = C.differential
         
         let Pinv = e1.leftInverse
-        let T1 = Pinv * Matrix.colUnits(
+        let T1 = Pinv * Matrix<n, anySize>.colUnits(
             size: (n, n - r),
             indices: r ..< n
-        ).as(MatrixIF<Impl, n, anySize>.self)
+        )
         
         let Y2 = C[i].sub(matrix: T1)
         let Z  = C[i + d.degree]
         
-        let b2: Matrix = d[i].asMatrix(from: Y2, to: Z) // p x (n - r)
+        let b2 = d[i].asMatrix(from: Y2, to: Z, ofType: Matrix<anySize, anySize>.self) // p x (n - r)
         let e2 = b2
             .eliminate(form: .RowEchelon)
             .eliminate(form: .ColEchelon)
         
-        let k = e2.nullity // <= n - r
+        // MEMO: e2 can be used for e1 in the next degree.
+        // Note that only the cokernel of e1 is used.
+        defer {
+            eliminationCache[i + d.degree] = e2
+        }
         
+        let k = e2.nullity // <= n - r
         if k == 0 {
             return .zeroModule
         } else if options.contains(.onlyStructures) {
@@ -96,7 +103,7 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
             //
             // Then solve x as kernel vector of b2.
             
-            guard let v = C[i].vectorize(z)?.as(ColVector<BaseRing, n>.self) else {
+            guard let v = C[i].vectorize(z)?.convert(to: Vector<n>.self) else {
                 return nil
             }
             
@@ -104,16 +111,11 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
             let p = (P * v)[r ..< n] // projected to Y2
             
             if let x = e2.solveKernel(p) {
-                return x
+                return x.convert(to: AnySizeVector.self)
             } else {
-                fatalError()
+                return nil
             }
         }
-        
-        // MEMO: e2 can be used for e1 in the next degree.
-        // The col size is shrinkened, but does not affect the computation.
-        
-        eliminationCache[i + d.degree] = e2
         
         return .init(
             summands: summands,
@@ -142,10 +144,10 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
         }
 
         let Pinv = e2.leftInverse
-        let T = Pinv * Matrix.colUnits(
+        let T = Pinv * Matrix<n, anySize>.colUnits(
             size: (n, l),
             indices: (r - l ..< r)
-        ).as(MatrixIF<Impl, n, anySize>.self)
+        )
         
         let C = chainComplex
         let generators = C[i].generators * T // [n] -> [l]
@@ -155,13 +157,13 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing {
         
         let vectorizer: Vectorizer = { z in
             let P = e2.left
-            guard let v = C[i].vectorize(z)?.as(ColVector<BaseRing, n>.self) else {
+            guard let v = C[i].vectorize(z)?.convert(to: Vector<n>.self) else {
                 return nil
             }
             let p = (P * v)[r - l ..< r].mapNonZeroEntries { (i, _, a) in
                 a % d[i]
             }
-            return p
+            return p.convert(to: AnySizeVector.self)
         }
 
         return .init(
