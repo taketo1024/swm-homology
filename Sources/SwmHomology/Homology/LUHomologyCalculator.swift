@@ -43,13 +43,14 @@ public final class LUHomologyCalculator<C: ChainComplexType, M: MatrixImpl & LUF
         } else if options.contains(.onlyStructures) {
             return onlyStructure(rank: r)
         } else {
+            let p = e0.cokernelProjector
             let K = e1.kernel // (y - y1) x y2
             let Y2 = Y23 * K  // y x y2
-            return homology(index: i, matrix: Y2)
+            return homology(index: i, matrix: Y2, projector: p)
         }
     }
     
-    private func homology(index i: Index, matrix H: Matrix) -> Homology.Object {
+    private func homology(index i: Index, matrix H: Matrix, projector p: @escaping (Vector) -> Vector) -> Homology.Object {
         let r = H.size.cols
         let summands = options.contains(.onlyStructures)
             ? onlyStructure(rank: r).summands
@@ -57,7 +58,7 @@ public final class LUHomologyCalculator<C: ChainComplexType, M: MatrixImpl & LUF
         
         let vectorizer = options.contains(.onlyStructures)
             ? onlyStructure(rank: r).vectorizer
-            : homologyVectorizer(index: i, matrix: H)
+            : homologyVectorizer(index: i, matrix: H, projector: p)
 
         return ModuleStructure(summands: summands, vectorizer: vectorizer)
     }
@@ -66,13 +67,15 @@ public final class LUHomologyCalculator<C: ChainComplexType, M: MatrixImpl & LUF
         (chainComplex[i].generators * H).map{ z in .init(z) }
     }
     
-    private func homologyVectorizer(index i: Index, matrix H: Matrix) -> Homology.Object.Vectorizer {
+    private func homologyVectorizer(index i: Index, matrix H: Matrix, projector p: @escaping (Vector) -> Vector) -> Homology.Object.Vectorizer {
         let C = chainComplex[i]
         let e = H.LUfactorize()
         
+        assert(H.permute(rowsBy: e.P, colsBy: e.Q) == e.L * e.U)
+        
         return { (z: BaseModule) in
             if let v = C.vectorize(z)?.convert(to: Vector.self),
-               let x = e.solve(v) {
+               let x = e.solve(p(v)) {
                 return x.convert(to: AnySizeVector.self)
             } else {
                 return nil
