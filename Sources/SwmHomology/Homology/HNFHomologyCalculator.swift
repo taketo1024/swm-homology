@@ -37,12 +37,11 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing,
         
         let C = chainComplex
         let d = C.differential
+        let X = C[i - d.degree]
+        let Y = C[i]
         
         let e1 = eliminationCache[i] ?? {
-            let X = C[i - d.degree]
-            let Y = C[i]
             let a1: Matrix<anySize, anySize> = d[i - d.degree].asMatrix(from: X, to: Y)
-            
             return a1.eliminate(form: .RowEchelon)
         }()
         
@@ -75,8 +74,13 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing,
             .eliminate(form: .RowEchelon)
             .eliminate(form: .ColEchelon)
         
-        let k = e2.nullity // <= n - r
+        // MEMO: e2 can be used for e1 in the next degree.
+        // Note that only the cokernel of e1 is used.
+        defer {
+            eliminationCache[i + d.degree] = e2
+        }
         
+        let k = e2.nullity // <= n - r
         if k == 0 {
             return .zeroModule
         } else if options.contains(.onlyStructures) {
@@ -109,14 +113,9 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing,
             if let x = e2.solveKernel(p) {
                 return x.convert(to: AnySizeVector.self)
             } else {
-                fatalError()
+                return nil
             }
         }
-        
-        // MEMO: e2 can be used for e1 in the next degree.
-        // The col size is shrinkened, but does not affect the computation.
-        
-        eliminationCache[i + d.degree] = e2
         
         return .init(
             summands: summands,

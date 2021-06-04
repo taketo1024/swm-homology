@@ -50,8 +50,14 @@ public final class LUHomologyCalculator<C: ChainComplexType, M: MatrixImpl & LUF
         
         let b2: Matrix = d[i].asMatrix(from: Y2, to: Z)
         let e2 = b2.LUfactorize()
+        
+        // MEMO: e2 can be used for e1 in the next degree.
+        // Note that only the cokernel of e1 is used.
+        defer {
+            luCache[i + d.degree] = e2
+        }
+        
         let r = e2.nullity
-
         if r == 0 {
             return .zeroModule
         } else if options.contains(.onlyStructures) {
