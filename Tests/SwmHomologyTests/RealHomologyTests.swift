@@ -7,18 +7,12 @@
 
 import XCTest
 import SwmCore
+import SwmMatrixTools
 @testable import SwmHomology
 
-fileprivate extension ChainComplexType where BaseModule.BaseRing == 𝐐 {
-    func homology_LU() -> GradedModuleStructure<Index, BaseModule> {
-        typealias type = LUHomologyCalculator<Self, DefaultMatrixImpl<BaseModule.BaseRing>>
-        return homology(using: type.self)
-    }
-}
-
-class LUHomologyTests: XCTestCase {
+class RealHomologyTests: XCTestCase {
     
-    typealias R = 𝐐
+    typealias R = 𝐑
     typealias Matrix = AnySizeMatrix<R>
 
     override func setUp() {
@@ -30,10 +24,16 @@ class LUHomologyTests: XCTestCase {
         super.tearDown()
     }
     
+    func testCalculatorType() {
+        typealias C = ChainComplex1<LinearCombination<R, Util.Generator>>
+        let type = R.homologyCalculator(forChainComplexType: C.self, options: [])
+        XCTAssertTrue(type == LUHomologyCalculator<C, CSCMatrixImpl<R>>.self)
+    }
+    
     func test1() {
         let d = (1 ... 3).map{ _ in Matrix.zero(size: (1, 1)) }
         let C = Util.generateChainComplex(matrices: d)
-        let H = C.homology_LU()
+        let H = C.homology()
         
         XCTAssertEqual(H[-1].dictionaryDescription, [:])
         XCTAssertEqual(H[0].dictionaryDescription, [0: 1])
@@ -46,7 +46,7 @@ class LUHomologyTests: XCTestCase {
     func test2() {
         let d = (1 ... 3).map{ i in i.isOdd ? Matrix.identity(size: (1, 1)) : Matrix.zero(size: (1, 1)) }
         let C = Util.generateChainComplex(matrices: d)
-        let H = C.homology_LU()
+        let H = C.homology()
 
         XCTAssertEqual(H[-1].dictionaryDescription, [:])
         XCTAssertEqual(H[0].dictionaryDescription, [:])
@@ -59,7 +59,7 @@ class LUHomologyTests: XCTestCase {
     func test3() {
         let d = (1 ... 3).map{ i in i.isOdd ? 2 * Matrix.identity(size: (1, 1)) : Matrix.zero(size: (1, 1)) }
         let C = Util.generateChainComplex(matrices: d)
-        let H = C.homology_LU()
+        let H = C.homology()
 
         XCTAssertEqual(H[-1].dictionaryDescription, [:])
         XCTAssertEqual(H[0].dictionaryDescription, [:])
@@ -73,7 +73,7 @@ class LUHomologyTests: XCTestCase {
         let shift = -3
         let d = (1 ... 3).map{ i in i.isOdd ? 2 * Matrix.identity(size: (1, 1)) : Matrix.zero(size: (1, 1)) }
         let C = Util.generateChainComplex(matrices: d).shifted(shift)
-        let H = C.homology_LU()
+        let H = C.homology()
         
         XCTAssertEqual(H[-1 + shift].dictionaryDescription, [:])
         XCTAssertEqual(H[ 0 + shift].dictionaryDescription, [:])
@@ -90,7 +90,7 @@ class LUHomologyTests: XCTestCase {
         ]
         
         let C = Util.generateChainComplex(matrices: d)
-        let H = C.homology_LU()
+        let H = C.homology()
         
         XCTAssertEqual(H[0].dictionaryDescription, [0: 1])
         XCTAssertEqual(H[1].dictionaryDescription, [:])
@@ -106,7 +106,7 @@ class LUHomologyTests: XCTestCase {
         ]
         
         let C = Util.generateChainComplex(matrices: d)
-        let H = C.homology_LU()
+        let H = C.homology()
         
         XCTAssertEqual(H[0].dictionaryDescription, [0: 1])
         XCTAssertEqual(H[1].dictionaryDescription, [:])
@@ -121,7 +121,7 @@ class LUHomologyTests: XCTestCase {
         ]
         
         let C = Util.generateChainComplex(matrices: d)
-        let H = C.homology_LU()
+        let H = C.homology()
         
         XCTAssertEqual(H[0].dictionaryDescription, [0: 1])
         XCTAssertEqual(H[1].dictionaryDescription, [0: 2])
@@ -136,7 +136,7 @@ class LUHomologyTests: XCTestCase {
         ]
         
         let C = Util.generateChainComplex(matrices: d)
-        let H = C.homology_LU()
+        let H = C.homology()
         
         XCTAssertEqual(H[0].dictionaryDescription, [0 : 1])
         XCTAssertEqual(H[1].dictionaryDescription, [:])
@@ -151,7 +151,7 @@ class LUHomologyTests: XCTestCase {
         
         let C = Util.generateChainComplex(matrices: d).dual
         let δ = C.differential
-        let H = C.homology_LU()
+        let H = C.homology()
         
         XCTAssertEqual(δ.degree, 1)
         XCTAssertEqual(δ[0].asMatrix(from: C[0], to: C[1]), d[0].transposed)
@@ -170,7 +170,7 @@ class LUHomologyTests: XCTestCase {
         ]
         
         let C = Util.generateChainComplex(matrices: d)
-        let H = C.homology_LU()
+        let H = C.homology()
         
         if H[0].rank == 1 {
             let z = H[0].generator(0)
@@ -187,7 +187,7 @@ class LUHomologyTests: XCTestCase {
         ]
 
         let C = Util.generateChainComplex(matrices: d)
-        let H = C.homology_LU()
+        let H = C.homology()
         let H2 = H[2]
 
         if H2.rank == 1 {
@@ -206,7 +206,7 @@ class LUHomologyTests: XCTestCase {
         ]
 
         let C = Util.generateChainComplex(matrices: d)
-        let H = C.homology_LU()
+        let H = C.homology()
         let H1 = H[1]
 
         if H1.rank == 2 {
@@ -219,19 +219,4 @@ class LUHomologyTests: XCTestCase {
             XCTFail()
         }
     }
-    
-    func test_RP2_withGenerators() {
-        let d = [
-            Matrix(size: (6, 15), grid: [-1, -1, 0, 0, 0, 0, 0, -1, -1, 0, -1, 0, 0, 0, 0, 1, 0, -1, -1, 0, -1, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 1, 1, 0, 1, 1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 1, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1] ),
-            Matrix(size: (15, 10), grid: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, -1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1] ),
-        ]
-        
-        let C = Util.generateChainComplex(matrices: d)
-        let H = C.homology_LU()
-        
-        XCTAssertEqual(H[0].dictionaryDescription, [0 : 1])
-        XCTAssertEqual(H[1].dictionaryDescription, [:])
-        XCTAssertEqual(H[2].dictionaryDescription, [:])
-    }
-    
 }

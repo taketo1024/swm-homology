@@ -8,18 +8,18 @@
 import SwmCore
 import SwmMatrixTools
 
-public final class HNFHomologyCalculator<C, Impl>: HomologyCalculator<C>
-where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing,
-      Impl: MatrixImpl, Impl.BaseRing == C.BaseModule.BaseRing {
+public final class HNFHomologyCalculator<C, M>: HomologyCalculator<C>
+where C: ChainComplexType, C.BaseRing: HomologyCalculatable & EuclideanRing,
+      M: MatrixImpl, M.BaseRing == C.BaseRing {
     
     private typealias Object = Homology.Object
     private typealias Summand = Object.Summand
     private typealias Vectorizer = Object.Vectorizer
     
-    private typealias Matrix<n, m> = MatrixIF<Impl, n, m> where n: SizeType, m: SizeType
+    private typealias Matrix<n, m> = MatrixIF<M, n, m> where n: SizeType, m: SizeType
     private typealias Vector<n> = Matrix<n, _1> where n: SizeType
 
-    private let eliminationCache: Cache<Index, MatrixEliminationResult<Impl, anySize, anySize>> = .empty
+    private let eliminationCache: Cache<Index, MatrixEliminationResult<M, anySize, anySize>> = .empty
 
     internal override func calculate(_ i: Index) -> Homology.Object {
         //
@@ -51,7 +51,7 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing,
         return free ⊕ tor
     }
     
-    private func freePart<n, m>(_ i: Index, _ e1: MatrixEliminationResult<Impl, n, m>) -> Homology.Object {
+    private func freePart<n, m>(_ i: Index, _ e1: MatrixEliminationResult<M, n, m>) -> Homology.Object {
         let (n, r) = (e1.size.rows, e1.rank)
         if n == r {
             return .zeroModule
@@ -123,7 +123,7 @@ where C: ChainComplexType, C.BaseModule.BaseRing: EuclideanRing,
         )
     }
     
-    private func torPart<n, m>(_ i: Index, _ e1: MatrixEliminationResult<Impl, n, m>) -> Homology.Object {
+    private func torPart<n, m>(_ i: Index, _ e1: MatrixEliminationResult<M, n, m>) -> Homology.Object {
         if BaseRing.isField || e1.rank == 0 {
             return .zeroModule
         }

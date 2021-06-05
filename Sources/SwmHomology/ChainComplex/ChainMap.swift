@@ -9,11 +9,11 @@ import SwmCore
 
 public struct ChainMap<C1: ChainComplexType, C2: ChainComplexType>: GradedStructure
 where C1.Index == C2.Index,
-      C1.BaseModule.BaseRing == C2.BaseModule.BaseRing
+      C1.BaseRing == C2.BaseRing
 {
     public typealias Index = C1.Index
     public typealias Object = ModuleHom<C1.BaseModule, C2.BaseModule>
-    public typealias R = C1.BaseModule.BaseRing
+    public typealias R = C1.BaseRing
     
     public var degree: Index
     internal let maps: (Index) -> Object

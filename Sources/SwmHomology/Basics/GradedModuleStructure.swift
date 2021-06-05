@@ -9,6 +9,7 @@ import SwmCore
 
 public protocol GradedModuleStructureType: GradedStructure where Object == ModuleStructure<BaseModule> {
     associatedtype BaseModule: Module
+    typealias BaseRing = BaseModule.BaseRing
 }
 
 extension GradedModuleStructureType {
@@ -23,7 +24,7 @@ public typealias ModuleGrid2<M: Module> = GradedModuleStructure<MultiIndex<_2>, 
 
 public struct GradedModuleStructure<Index: AdditiveGroup & Hashable, BaseModule: Module>: GradedModuleStructureType {
     public typealias Object = ModuleStructure<BaseModule>
-    public typealias R = BaseModule.BaseRing
+    public typealias R = BaseRing
     
     private let grid: (Index) -> Object
     private let gridCache: Cache<Index, Object> = Cache.empty

@@ -103,8 +103,8 @@ extension ChainComplex1 where Index == Int {
 }
 
 extension ChainComplexType where Index == Int {
-    public func generateGraph(range: ClosedRange<Int>) -> Graph<MultiIndex<_2>, BaseModule, BaseModule.BaseRing> {
-        typealias G = Graph<MultiIndex<_2>, BaseModule, BaseModule.BaseRing>
+    public func generateGraph(range: ClosedRange<Int>) -> Graph<MultiIndex<_2>, BaseModule, BaseRing> {
+        typealias G = Graph<MultiIndex<_2>, BaseModule, BaseRing>
         
         let C = self
         let d = C.differential
