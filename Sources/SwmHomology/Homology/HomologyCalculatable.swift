@@ -8,6 +8,10 @@
 import SwmCore
 import SwmMatrixTools
 
+#if os(macOS)
+import SwmEigen
+#endif
+
 public protocol HomologyCalculatable: Ring {
     static func homologyCalculator<C>(forChainComplexType: C.Type, options: HomologyCalculatorOptions) -> HomologyCalculator<C>.Type
     where C: ChainComplexType, C.BaseRing == Self
@@ -39,7 +43,12 @@ extension Int: HomologyCalculatable {
 extension RationalNumber: HomologyCalculatable {
     public static func homologyCalculator<C>(forChainComplexType: C.Type, options: HomologyCalculatorOptions) -> HomologyCalculator<C>.Type
     where C : ChainComplexType, C.BaseRing == Self {
+        #if os(macOS) && USE_EIGEN
+        typealias T = LUHomologyCalculator<C, EigenRationalSparseMatrix>
+        return T.self
+        #else
         LUHomologyCalculator(forChainComplexType: C.self, options: options)
+        #endif
     }
 }
 

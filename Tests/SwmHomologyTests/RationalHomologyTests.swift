@@ -10,6 +10,10 @@ import SwmCore
 import SwmMatrixTools
 @testable import SwmHomology
 
+#if os(macOS)
+import SwmEigen
+#endif
+
 class RationalHomologyTests: XCTestCase {
     
     typealias R = 𝐐
@@ -27,7 +31,12 @@ class RationalHomologyTests: XCTestCase {
     func testCalculatorType() {
         typealias C = ChainComplex1<LinearCombination<R, Util.Generator>>
         let type = R.homologyCalculator(forChainComplexType: C.self, options: [])
+        
+        #if os(macOS)
+        XCTAssertTrue(type == LUHomologyCalculator<C, EigenRationalSparseMatrix>.self)
+        #else
         XCTAssertTrue(type == LUHomologyCalculator<C, CSCMatrixImpl<R>>.self)
+        #endif
     }
     
     func test1() {
