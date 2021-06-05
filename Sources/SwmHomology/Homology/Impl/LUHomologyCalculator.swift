@@ -9,8 +9,8 @@ import SwmCore
 import SwmMatrixTools
 
 public final class LUHomologyCalculator<C, M>: HomologyCalculator<C>
-where C: ChainComplexType, M: MatrixImpl & LUFactorizable,
-      C.BaseModule.BaseRing == M.BaseRing {
+where C: ChainComplexType, C.BaseRing: HomologyCalculatable,
+      M: MatrixImpl & LUFactorizable, M.BaseRing == C.BaseRing {
     
     private typealias Object = Homology.Object
     private typealias Summand = Object.Summand
