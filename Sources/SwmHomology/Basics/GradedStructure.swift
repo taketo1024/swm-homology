@@ -39,8 +39,9 @@ extension GradedStructure {
 extension GradedStructure where Index == Int {
     public func printSequence() {
         let strc = structure()
-        let seq = support.compactMap{ i in
-            strc[i].flatMap{ obj in (i, description(forObject: obj)) }
+        let seq = support.map{ i -> (Int, String) in
+            let s = strc[i].flatMap{ description(forObject: $0) } ?? ""
+            return (i, s)
         }
         let table = Format.table(elements: seq)
         print(table)
@@ -54,8 +55,9 @@ extension GradedStructure where Index == MultiIndex<_2> {
 
     public func printTable() {
         let strc = structure()
-        let elements = support.compactMap { idx in
-            strc[idx].flatMap{ (idx[0], idx[1], description(forObject: $0)) }
+        let elements = support.map { idx -> (Int, Int, String)  in
+            let s = strc[idx].flatMap{ description(forObject: $0) } ?? ""
+            return (idx[0], idx[1], s)
         }
         let table = Format.table(elements: elements)
         print(table)
