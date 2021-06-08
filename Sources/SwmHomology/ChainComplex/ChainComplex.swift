@@ -28,9 +28,9 @@ public struct ChainComplex<Index: AdditiveGroup & Hashable, BaseModule: Module>:
         self.differential = differential
     }
     
-    public init(grid: @escaping (Index) -> Object, degree: Index, differential: @escaping (Index) -> Differential.Object) {
+    public init(support: [Index] = [], grid: @escaping (Index) -> Object, degree: Index, differential: @escaping (Index) -> Differential.Object) {
         self.init(
-            grid: GradedModuleStructure(grid: grid),
+            grid: GradedModuleStructure(support: support, grid: grid),
             differential: ChainMap(degree: degree, maps: differential)
         )
     }
@@ -41,6 +41,10 @@ public struct ChainComplex<Index: AdditiveGroup & Hashable, BaseModule: Module>:
     
     public func shifted(_ shift: Index) -> Self {
         .init(grid: grid.shifted(shift), differential: differential.shifted(shift))
+    }
+    
+    public var support: [Index] {
+        grid.support
     }
     
     public func isFreeToFree(at i: Index) -> Bool {
@@ -66,6 +70,12 @@ public struct ChainComplex<Index: AdditiveGroup & Hashable, BaseModule: Module>:
             print("\t\(x) ->\t\(y) ->\t\(z)")
             
             assert(self[i2].vectorize(z)?.isZero ?? false)
+        }
+    }
+    
+    public func assertChainComplex(debug: Bool = false) {
+        for i in support {
+            assertChainComplex(at: i, debug: debug)
         }
     }
 

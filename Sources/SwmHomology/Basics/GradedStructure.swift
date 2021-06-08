@@ -12,23 +12,38 @@ public protocol GradedStructure {
     associatedtype Object
     
     subscript(i: Index) -> Object { get }
-    func shifted(_ shift: Index) -> Self
-    func description(forObjectAt i: Index) -> String
+    var support: [Index] { get }
+    func structure() -> [Index : Object]
+    func description(forObject obj: Object) -> String
 }
 
 extension GradedStructure {
-    public func description(forObjectAt i: Index) -> String {
-        "\(self[i])"
+    public func structure() -> [Index : Object] {
+        Dictionary(support.map{ idx in (idx, self[idx]) })
+    }
+    
+    public func description(forObject obj: Object) -> String {
+        "\(obj)"
+    }
+    
+    public func printStructure() {
+        let strc = structure()
+        for s in support {
+            if let obj = strc[s] {
+                print(s, ":", description(forObject: obj))
+            }
+        }
     }
 }
 
 extension GradedStructure where Index == Int {
-    public func shifted(_ i: Int) -> Self {
-        shifted(Index(i))
-    }
-    
-    public func printSequence<S: Sequence>(_ indices: S) where S.Element == Int {
-        print( Format.table(rows: [""], cols: indices, symbol: "i") { (_, i) in description(forObjectAt: i) } )
+    public func printSequence() {
+        let strc = structure()
+        let seq = support.compactMap{ i in
+            strc[i].flatMap{ obj in (i, description(forObject: obj)) }
+        }
+        let table = Format.table(elements: seq)
+        print(table)
     }
 }
 
@@ -37,13 +52,18 @@ extension GradedStructure where Index == MultiIndex<_2> {
         self[Index(i, j)]
     }
 
-    public func shifted(_ i: Int, _ j: Int) -> Self {
-        shifted(Index(i, j))
+    public func printTable() {
+        let strc = structure()
+        let elements = support.compactMap { idx in
+            strc[idx].flatMap{ (idx[0], idx[1], description(forObject: $0)) }
+        }
+        let table = Format.table(elements: elements)
+        print(table)
     }
-    
-    public func printTable<S1: Sequence, S2: Sequence>(_ indices1: S1, _ indices2: S2) where S1.Element == Int, S2.Element == Int {
-        print( Format.table(rows: indices2.reversed(), cols: indices1, symbol: "j\\i") { (j, i) -> String in
-            description(forObjectAt: Index(i, j))
-        } )
+}
+
+extension GradedStructure where Index == MultiIndex<_3> {
+    public subscript(i: Int, j: Int, k: Int) -> Object {
+        self[Index(i, j, k)]
     }
 }

@@ -31,9 +31,12 @@ public class HomologyCalculator<C> where C: ChainComplexType, C.BaseRing: Homolo
     }
     
     public final func calculate() -> Homology {
-        .init { i in
-            self.calculate(i)
-        }
+        Homology(
+            support: chainComplex.support,
+            grid: { i in
+                self.calculate(i)
+            }
+        )
     }
     
     internal func calculate(_ i: Index) -> Homology.Object {
