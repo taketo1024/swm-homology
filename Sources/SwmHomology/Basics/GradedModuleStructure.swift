@@ -54,6 +54,9 @@ public struct GradedModuleStructure<Index: AdditiveGroup & Hashable, BaseModule:
 
 extension GradedModuleStructure {
     public var dual: GradedModuleStructure<Index, DualModule<BaseModule>> {
-        .init { i in self[i].dual }
+        .init(
+            support: support.reversed(),
+            grid: { i in self[i].dual }
+        )
     }
 }

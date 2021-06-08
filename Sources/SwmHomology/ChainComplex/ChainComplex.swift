@@ -80,7 +80,10 @@ public struct ChainComplex<Index: AdditiveGroup & Hashable, BaseModule: Module>:
     }
 
     public var dual: ChainComplex<Index, DualModule<BaseModule>> {
-        ChainComplex<Index, DualModule<BaseModule>>(grid: grid.dual, differential: differential.dual)
+        ChainComplex<Index, DualModule<BaseModule>>(
+            grid: grid.dual,
+            differential: differential.dual
+        )
     }
 }
 
@@ -88,6 +91,7 @@ extension ChainComplex1 where Index == Int {
     public init(grid: [Object], degree: Index, differential: [Differential.Object]) {
         assert(grid.count == differential.count)
         self.init(
+            support: Array(0 ..< grid.count),
             grid: { i in
                 grid.indices.contains(i) ? grid[i] : .zeroModule
             },
@@ -98,8 +102,9 @@ extension ChainComplex1 where Index == Int {
         )
     }
     
-    public func asBigraded(differentialSecondaryDegree: Int = 0, secondaryDegreeMap: @escaping (Object.Summand) -> Int) -> ChainComplex2<BaseModule> {
+    public func asBigraded(secondaryDegreeSupport: [Int] = [], differentialSecondaryDegree: Int = 0, secondaryDegreeMap: @escaping (Object.Summand) -> Int) -> ChainComplex2<BaseModule> {
         ChainComplex2(
+            support: (support * secondaryDegreeSupport).map{ (i, j) in [i, j] },
             grid: { I in
                 let (i, j) = I.tuple
                 return self[i].filter { summand in
