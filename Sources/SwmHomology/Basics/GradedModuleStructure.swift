@@ -13,9 +13,15 @@ public protocol GradedModuleStructureType: GradedStructure where Object == Modul
 }
 
 extension GradedModuleStructureType {
-    public func description(forObjectAt i: Index) -> String {
-        let obj = self[i]
-        return obj.isZero ? "" : obj.description
+    public func structure() -> [Index : ModuleStructure<BaseModule>] {
+        Dictionary(support.compactMap { idx in
+            let obj = self[idx]
+            return obj.isZero ? nil : (idx, obj)
+        })
+    }
+    
+    public func description(forObject obj: ModuleStructure<BaseModule>) -> String {
+        obj.isZero ? "" : obj.description
     }
 }
 
@@ -26,10 +32,12 @@ public struct GradedModuleStructure<Index: AdditiveGroup & Hashable, BaseModule:
     public typealias Object = ModuleStructure<BaseModule>
     public typealias R = BaseRing
     
+    public let support: [Index]
     private let grid: (Index) -> Object
     private let gridCache: Cache<Index, Object> = Cache.empty
     
-    public init(grid: @escaping (Index) -> Object) {
+    public init(support: [Index] = [], grid: @escaping (Index) -> Object) {
+        self.support = support
         self.grid = grid
     }
     

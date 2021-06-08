@@ -35,6 +35,10 @@ where C1.Index == C2.Index,
         .init(degree: degree) { i in self[i - shift] }
     }
     
+    public var support: [Index] {
+        []
+    }
+    
     public func assertChainMap(from c1: C1, to c2: C2, at i0: Index, debug: Bool = false) {
         let (f, d0, d1) = (self, c1.differential, c2.differential)
         assert(d0.degree == d1.degree)
@@ -69,6 +73,12 @@ where C1.Index == C2.Index,
             print("")
             
             assert(c2[i3].vectorize(z0) == c2[i3].vectorize(z1))
+        }
+    }
+    
+    public func assertChainMap(from c1: C1, to c2: C2, debug: Bool = false) {
+        for i in c1.support {
+            assertChainMap(from: c1, to: c2, at: i, debug: debug)
         }
     }
 }
