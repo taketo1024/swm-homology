@@ -8,6 +8,7 @@
 import XCTest
 import SwmCore
 import SwmMatrixTools
+import SwmEigen
 @testable import SwmHomology
 
 class F2HomologyTests: XCTestCase {
@@ -27,7 +28,7 @@ class F2HomologyTests: XCTestCase {
     func testCalculatorType() {
         typealias C = ChainComplex1<LinearCombination<R, Util.Generator>>
         let type = R.homologyCalculator(forChainComplexType: C.self, options: [])
-        XCTAssertTrue(type == LUHomologyCalculator<C, CSCMatrixImpl<R>>.self)
+        XCTAssertTrue(type == LUHomologyCalculator<C, EigenSparseMatrixImpl<R>>.self)
     }
     
     func test1() {
