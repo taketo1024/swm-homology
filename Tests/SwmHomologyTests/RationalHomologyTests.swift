@@ -8,11 +8,8 @@
 import XCTest
 import SwmCore
 import SwmMatrixTools
-@testable import SwmHomology
-
-#if os(macOS)
 import SwmEigen
-#endif
+@testable import SwmHomology
 
 class RationalHomologyTests: XCTestCase {
     
@@ -31,12 +28,7 @@ class RationalHomologyTests: XCTestCase {
     func testCalculatorType() {
         typealias C = ChainComplex1<LinearCombination<R, Util.Generator>>
         let type = R.homologyCalculator(forChainComplexType: C.self, options: [])
-        
-        #if os(macOS)
-        XCTAssertTrue(type == LUHomologyCalculator<C, EigenRationalSparseMatrix>.self)
-        #else
-        XCTAssertTrue(type == LUHomologyCalculator<C, CSCMatrixImpl<R>>.self)
-        #endif
+        XCTAssertTrue(type == LUHomologyCalculator<C, EigenSparseMatrixImpl<R>>.self)
     }
     
     func test1() {
@@ -120,7 +112,6 @@ class RationalHomologyTests: XCTestCase {
         XCTAssertEqual(H[0].dictionaryDescription, [0: 1])
         XCTAssertEqual(H[1].dictionaryDescription, [:])
         XCTAssertEqual(H[2].dictionaryDescription, [0: 1])
-        
     }
     
     func test_T2() {
