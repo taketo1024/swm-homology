@@ -198,24 +198,18 @@ extension ModuleStructure where BaseModule: LinearCombinationType {
         self.init(
             generators: rawGenerators.map{ x in .init(x) },
             vectorizer: { (z: BaseModule) in
-                let entries = z.elements.reduce(
-                    into: [ColEntry<R>]?.some([]),
-                    while: { (res, _) in res != nil }
-                ) { (res, elem) in
-                    let (x, a) = elem
-                    if a.isZero { return }
-                    
-                    if let i = indexer(x) {
-                        res?.append((i, a))
-                    } else {
-                        res = nil
+                var valid = true
+                let vec = AnySizeVector<R>(size: n) { setEntry in
+                    for (x, a) in z.elements {
+                        guard let i = indexer(x) else {
+                            valid = false
+                            break
+                        }
+                        
+                        setEntry(i, a)
                     }
                 }
-                if let entries = entries {
-                    return .init(size: n, colEntries: entries)
-                } else {
-                    return nil
-                }
+                return valid ? vec : nil
             }
         )
     }

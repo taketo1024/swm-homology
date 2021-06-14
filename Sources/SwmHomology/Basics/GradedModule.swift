@@ -97,39 +97,41 @@ extension GradedModule where BaseModule: LinearCombinationType {
 }
 
 extension ModuleStructure {
-    public static func formDirectSum<Index: Hashable>(_ objects: [Index : Self]) -> ModuleStructure<GradedModule<Index, BaseModule>> {
+    public static func formDirectSum<Index: Hashable>(indices: [Index], objects: [Self]) -> ModuleStructure<GradedModule<Index, BaseModule>> {
         typealias S = ModuleStructure<GradedModule<Index, BaseModule>>
+        typealias R = BaseModule.BaseRing
         
-        let indices = objects.keys.toArray()
-        let ranks = [0] + indices.map { objects[$0]!.rank }.accumulate()
-        let shifts = Dictionary(zip(indices, ranks))
+        let indexer = indices.makeIndexer()
         
-        let generators = indices.flatMap { index -> [GradedModule<Index, BaseModule>] in
-            objects[index]!.generators.map { x in GradedModule(index: index, value: x) }
+        let ranks = [0] + objects.map { $0.rank }.accumulate()
+        let generators = zip(indices, objects).flatMap { (index, obj) -> [GradedModule<Index, BaseModule>] in
+            obj.generators.map { x in GradedModule(index: index, value: x) }
         }
         
         let N = ranks.last ?? 0
         let vectorizer: S.Vectorizer = { z in
-            let entries = z.elements.reduce(
-                into: [ColEntry<R>]?.some([]),
-                while: { (res, _) in res != nil }
-            ) { (res, elem) in
-                let (index, x) = elem
-                let (obj, shift) = (objects[index]!, shifts[index]!)
-                
-                if let v = obj.vectorize(x) {
-                    res! += v.nonZeroColEntries.map{ (i, a) in (i + shift, a) }
-                } else {
-                    res = nil
+            var valid = true
+            let vec = AnySizeVector<R>(size: N) { setEntry in
+                for (index, x) in z.elements {
+                    guard let i = indexer(index),
+                          let v = objects[i].vectorize(x)
+                    else {
+                        valid = false
+                        break
+                    }
+                    
+                    let shift = ranks[i]
+                    v.nonZeroColEntries.forEach { (i, a) in
+                        setEntry(i + shift, a)
+                    }
                 }
             }
-            if let entries = entries {
-                return .init(size: N, colEntries: entries)
-            } else {
-                return nil
-            }
+            return valid ? vec : nil
         }
         
-        return ModuleStructure<GradedModule<Index, BaseModule>>(generators: generators, vectorizer: vectorizer)
+        return S(
+            generators: generators,
+            vectorizer: vectorizer
+        )
     }
 }
