@@ -34,4 +34,4 @@ extension Int: HomologyCalculatable {}
 extension RationalNumber: HomologyCalculatable {}
 extension RealNumber: HomologyCalculatable {}
 extension 𝐅₂: HomologyCalculatable {}
-extension Polynomial: HomologyCalculatable where BaseRing: Field {}
+extension Polynomial: HomologyCalculatable where BaseRing: Field & ComputationalRing {}
