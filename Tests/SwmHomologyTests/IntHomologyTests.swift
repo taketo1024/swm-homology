@@ -27,7 +27,7 @@ class PolynomialHomologyTests: XCTestCase {
     func testCalculatorType() {
         typealias C = ChainComplex1<LinearCombination<R, Util.Generator>>
         let type = R.homologyCalculator(forChainComplexType: C.self, options: [])
-        XCTAssertTrue(type == HNFHomologyCalculator<C, DefaultSparseMatrixImpl<R>>.self)
+        XCTAssertTrue(type == HNFHomologyCalculator<C>.self)
     }
     
     func test1() {

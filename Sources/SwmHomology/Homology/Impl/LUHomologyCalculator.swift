@@ -8,17 +8,17 @@
 import SwmCore
 import SwmMatrixTools
 
-public final class LUHomologyCalculator<C, M>: HomologyCalculator<C>
-where C: ChainComplexType, C.BaseRing: HomologyCalculatable,
-      M: MatrixImpl & LUFactorizable, M.BaseRing == C.BaseRing {
+public final class LUHomologyCalculator<C>: HomologyCalculator<C>
+where C: ChainComplexType, C.BaseRing: ComputationalField {
     
     private typealias Object = Homology.Object
     private typealias Summand = Object.Summand
     private typealias Vectorizer = Object.Vectorizer
 
-    private typealias Matrix = MatrixIF<M, anySize, anySize>
-    private typealias Vector = MatrixIF<M, anySize, _1>
-    private typealias LU = LUFactorizationResult<M, anySize, anySize>
+    private typealias R = C.BaseRing
+    private typealias Matrix = R.ComputationalSparseMatrix<anySize, anySize>
+    private typealias Vector = R.ComputationalSparseVector<anySize>
+    private typealias LU = LUFactorizationResult<R.ComputationalSparseMatrixImpl, anySize, anySize>
     
     private let luCache: Cache<Index, LU> = .empty
 

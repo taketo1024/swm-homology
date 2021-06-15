@@ -15,7 +15,7 @@ public struct HomologyCalculatorOptions: OptionSet {
     public static let onlyStructures = Self(rawValue: 1 << 0)
 }
 
-public class HomologyCalculator<C> where C: ChainComplexType, C.BaseRing: HomologyCalculatable {
+public class HomologyCalculator<C> where C: ChainComplexType {
     public typealias Homology = GradedModuleStructure<C.Index, C.BaseModule>
 
     typealias Index = C.Index
