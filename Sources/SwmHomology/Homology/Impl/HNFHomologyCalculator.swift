@@ -9,7 +9,7 @@ import SwmCore
 import SwmMatrixTools
 
 public final class HNFHomologyCalculator<C, M>: HomologyCalculator<C>
-where C: ChainComplexType, C.BaseRing: HomologyCalculatable & EuclideanRing,
+where C: ChainComplexType, C.BaseRing: HomologyCalculatable & EuclideanRing & ComputationalRing,
       M: MatrixImpl, M.BaseRing == C.BaseRing {
     
     private typealias Object = Homology.Object
