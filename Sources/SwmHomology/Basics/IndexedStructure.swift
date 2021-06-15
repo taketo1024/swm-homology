@@ -7,7 +7,7 @@
 
 import SwmCore
 
-public protocol GradedStructure {
+public protocol IndexedStructure {
     associatedtype Index: AdditiveGroup & Hashable
     associatedtype Object
     
@@ -17,7 +17,7 @@ public protocol GradedStructure {
     func description(forObject obj: Object) -> String
 }
 
-extension GradedStructure {
+extension IndexedStructure {
     public func structure() -> [Index : Object] {
         Dictionary(support.map{ idx in (idx, self[idx]) })
     }
@@ -36,7 +36,7 @@ extension GradedStructure {
     }
 }
 
-extension GradedStructure where Index == Int {
+extension IndexedStructure where Index == Int {
     public func printSequence() {
         let strc = structure()
         let seq = support.map{ i -> (Int, String) in
@@ -48,7 +48,7 @@ extension GradedStructure where Index == Int {
     }
 }
 
-extension GradedStructure where Index == MultiIndex<_2> {
+extension IndexedStructure where Index == MultiIndex<_2> {
     public subscript(i: Int, j: Int) -> Object {
         self[Index(i, j)]
     }
@@ -64,7 +64,7 @@ extension GradedStructure where Index == MultiIndex<_2> {
     }
 }
 
-extension GradedStructure where Index == MultiIndex<_3> {
+extension IndexedStructure where Index == MultiIndex<_3> {
     public subscript(i: Int, j: Int, k: Int) -> Object {
         self[Index(i, j, k)]
     }

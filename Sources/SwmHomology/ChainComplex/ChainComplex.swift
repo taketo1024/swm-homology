@@ -7,7 +7,7 @@
 
 import SwmCore
 
-public protocol ChainComplexType: GradedModuleStructureType {
+public protocol ChainComplexType: IndexedModuleStructureType {
     typealias Differential = ChainMap<Self, Self>
     var differential: Differential { get }
 }
@@ -16,7 +16,7 @@ public typealias ChainComplex1<M: Module> = ChainComplex<Int, M>
 public typealias ChainComplex2<M: Module> = ChainComplex<MultiIndex<_2>, M>
 
 public struct ChainComplex<Index: AdditiveGroup & Hashable, BaseModule: Module>: ChainComplexType {
-    public typealias BaseGrid = GradedModuleStructure<Index, BaseModule>
+    public typealias BaseGrid = IndexedModuleStructure<Index, BaseModule>
     public typealias Object = BaseGrid.Object
     public typealias Differential = ChainMap<Self, Self>
     
@@ -30,7 +30,7 @@ public struct ChainComplex<Index: AdditiveGroup & Hashable, BaseModule: Module>:
     
     public init(support: [Index] = [], grid: @escaping (Index) -> Object, degree: Index, differential: @escaping (Index) -> Differential.Object) {
         self.init(
-            grid: GradedModuleStructure(support: support, grid: grid),
+            grid: IndexedModuleStructure(support: support, grid: grid),
             differential: ChainMap(degree: degree, maps: differential)
         )
     }

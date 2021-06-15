@@ -8,7 +8,7 @@
 import SwmCore
 
 // {M}_I: the direct sum of copies of M over I.
-public struct GradedModule<Index: Hashable, _BaseModule: Module>: Module {
+public struct IndexedModule<Index: Hashable, _BaseModule: Module>: Module {
     public typealias BaseModule = _BaseModule
     public typealias BaseRing = BaseModule.BaseRing
     public let elements: [Index: BaseModule]
@@ -59,8 +59,8 @@ public struct GradedModule<Index: Hashable, _BaseModule: Module>: Module {
         .init(elements: elements.filter(f))
     }
     
-    public static func sum<S>(_ elements: S) -> GradedModule<Index, BaseModule>
-    where GradedModule<Index, BaseModule> == S.Element, S : Sequence
+    public static func sum<S>(_ elements: S) -> IndexedModule<Index, BaseModule>
+    where IndexedModule<Index, BaseModule> == S.Element, S : Sequence
     {
         .init(elements: elements.flatMap{ $0.elements })
     }
@@ -74,7 +74,7 @@ public struct GradedModule<Index: Hashable, _BaseModule: Module>: Module {
     }
 }
 
-extension GradedModule where BaseModule: LinearCombinationType {
+extension IndexedModule where BaseModule: LinearCombinationType {
     public var terms: [(Index, BaseModule)] {
         elements.flatMap { (index, z) in
             !z.isZero
@@ -93,45 +93,5 @@ extension GradedModule where BaseModule: LinearCombinationType {
         .init(elements: elements.flatMap { (index, z) in
             z.terms.map { term in f(index, term) }
         })
-    }
-}
-
-extension ModuleStructure {
-    public static func formDirectSum<Index: Hashable>(indices: [Index], objects: [Self]) -> ModuleStructure<GradedModule<Index, BaseModule>> {
-        typealias S = ModuleStructure<GradedModule<Index, BaseModule>>
-        typealias R = BaseModule.BaseRing
-        
-        let indexer = indices.makeIndexer()
-        
-        let ranks = [0] + objects.map { $0.rank }.accumulate()
-        let generators = zip(indices, objects).flatMap { (index, obj) -> [GradedModule<Index, BaseModule>] in
-            obj.generators.map { x in GradedModule(index: index, value: x) }
-        }
-        
-        let N = ranks.last ?? 0
-        let vectorizer: S.Vectorizer = { z in
-            var valid = true
-            let vec = AnySizeVector<R>(size: N) { setEntry in
-                for (index, x) in z.elements {
-                    guard let i = indexer(index),
-                          let v = objects[i].vectorize(x)
-                    else {
-                        valid = false
-                        break
-                    }
-                    
-                    let shift = ranks[i]
-                    v.nonZeroColEntries.forEach { (i, a) in
-                        setEntry(i + shift, a)
-                    }
-                }
-            }
-            return valid ? vec : nil
-        }
-        
-        return S(
-            generators: generators,
-            vectorizer: vectorizer
-        )
     }
 }

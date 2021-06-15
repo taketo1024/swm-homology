@@ -7,12 +7,12 @@
 
 import SwmCore
 
-public protocol GradedModuleStructureType: GradedStructure where Object == ModuleStructure<BaseModule> {
+public protocol IndexedModuleStructureType: IndexedStructure where Object == ModuleStructure<BaseModule> {
     associatedtype BaseModule: Module
     typealias BaseRing = BaseModule.BaseRing
 }
 
-extension GradedModuleStructureType {
+extension IndexedModuleStructureType {
     public func structure() -> [Index : ModuleStructure<BaseModule>] {
         Dictionary(support.compactMap { idx in
             let obj = self[idx]
@@ -25,10 +25,7 @@ extension GradedModuleStructureType {
     }
 }
 
-public typealias ModuleGrid1<M: Module> = GradedModuleStructure<Int, M>
-public typealias ModuleGrid2<M: Module> = GradedModuleStructure<MultiIndex<_2>, M>
-
-public struct GradedModuleStructure<Index: AdditiveGroup & Hashable, BaseModule: Module>: GradedModuleStructureType {
+public struct IndexedModuleStructure<Index: AdditiveGroup & Hashable, BaseModule: Module>: IndexedModuleStructureType {
     public typealias Object = ModuleStructure<BaseModule>
     public typealias R = BaseRing
     
@@ -52,8 +49,8 @@ public struct GradedModuleStructure<Index: AdditiveGroup & Hashable, BaseModule:
     }
 }
 
-extension GradedModuleStructure {
-    public var dual: GradedModuleStructure<Index, DualModule<BaseModule>> {
+extension IndexedModuleStructure {
+    public var dual: IndexedModuleStructure<Index, DualModule<BaseModule>> {
         .init(
             support: support.reversed(),
             grid: { i in self[i].dual }
