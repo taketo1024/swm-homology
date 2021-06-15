@@ -198,24 +198,18 @@ extension ModuleStructure where BaseModule: LinearCombinationType {
         self.init(
             generators: rawGenerators.map{ x in .init(x) },
             vectorizer: { (z: BaseModule) in
-                let entries = z.elements.reduce(
-                    into: [ColEntry<R>]?.some([]),
-                    while: { (res, _) in res != nil }
-                ) { (res, elem) in
-                    let (x, a) = elem
-                    if a.isZero { return }
-                    
-                    if let i = indexer(x) {
-                        res?.append((i, a))
-                    } else {
-                        res = nil
+                var valid = true
+                let vec = AnySizeVector<R>(size: n) { setEntry in
+                    for (x, a) in z.elements {
+                        guard let i = indexer(x) else {
+                            valid = false
+                            break
+                        }
+                        
+                        setEntry(i, a)
                     }
                 }
-                if let entries = entries {
-                    return .init(size: n, colEntries: entries)
-                } else {
-                    return nil
-                }
+                return valid ? vec : nil
             }
         )
     }
@@ -246,6 +240,44 @@ extension ModuleStructure {
         }
         
         return .init(summands: summands, vectorizer: vectorizer)
+    }
+
+    public static func formDirectSum<Index: Hashable>(indices: [Index], objects: [Self]) -> ModuleStructure<IndexedModule<Index, BaseModule>> {
+        typealias S = ModuleStructure<IndexedModule<Index, BaseModule>>
+        typealias R = BaseModule.BaseRing
+        
+        let indexer = indices.makeIndexer()
+        
+        let ranks = [0] + objects.map { $0.rank }.accumulate()
+        let generators = zip(indices, objects).flatMap { (index, obj) -> [IndexedModule<Index, BaseModule>] in
+            obj.generators.map { x in IndexedModule(index: index, value: x) }
+        }
+        
+        let N = ranks.last ?? 0
+        let vectorizer: S.Vectorizer = { z in
+            var valid = true
+            let vec = AnySizeVector<R>(size: N) { setEntry in
+                for (index, x) in z.elements {
+                    guard let i = indexer(index),
+                          let v = objects[i].vectorize(x)
+                    else {
+                        valid = false
+                        break
+                    }
+                    
+                    let shift = ranks[i]
+                    v.nonZeroColEntries.forEach { (i, a) in
+                        setEntry(i + shift, a)
+                    }
+                }
+            }
+            return valid ? vec : nil
+        }
+        
+        return S(
+            generators: generators,
+            vectorizer: vectorizer
+        )
     }
 }
 

@@ -7,7 +7,7 @@
 
 import SwmCore
 
-public struct ChainMap<C1: ChainComplexType, C2: ChainComplexType>: GradedStructure
+public struct ChainMap<C1: ChainComplexType, C2: ChainComplexType>: IndexedStructure
 where C1.Index == C2.Index,
       C1.BaseRing == C2.BaseRing
 {

@@ -8,7 +8,7 @@
 import SwmCore
 
 // {M}_I: the direct sum of copies of M over I.
-public struct GradedModule<Index: Hashable, _BaseModule: Module>: Module {
+public struct IndexedModule<Index: Hashable, _BaseModule: Module>: Module {
     public typealias BaseModule = _BaseModule
     public typealias BaseRing = BaseModule.BaseRing
     public let elements: [Index: BaseModule]
@@ -59,8 +59,8 @@ public struct GradedModule<Index: Hashable, _BaseModule: Module>: Module {
         .init(elements: elements.filter(f))
     }
     
-    public static func sum<S>(_ elements: S) -> GradedModule<Index, BaseModule>
-    where GradedModule<Index, BaseModule> == S.Element, S : Sequence
+    public static func sum<S>(_ elements: S) -> IndexedModule<Index, BaseModule>
+    where IndexedModule<Index, BaseModule> == S.Element, S : Sequence
     {
         .init(elements: elements.flatMap{ $0.elements })
     }
@@ -74,7 +74,7 @@ public struct GradedModule<Index: Hashable, _BaseModule: Module>: Module {
     }
 }
 
-extension GradedModule where BaseModule: LinearCombinationType {
+extension IndexedModule where BaseModule: LinearCombinationType {
     public var terms: [(Index, BaseModule)] {
         elements.flatMap { (index, z) in
             !z.isZero
@@ -93,43 +93,5 @@ extension GradedModule where BaseModule: LinearCombinationType {
         .init(elements: elements.flatMap { (index, z) in
             z.terms.map { term in f(index, term) }
         })
-    }
-}
-
-extension ModuleStructure {
-    public static func formDirectSum<Index: Hashable>(_ objects: [Index : Self]) -> ModuleStructure<GradedModule<Index, BaseModule>> {
-        typealias S = ModuleStructure<GradedModule<Index, BaseModule>>
-        
-        let indices = objects.keys.toArray()
-        let ranks = [0] + indices.map { objects[$0]!.rank }.accumulate()
-        let shifts = Dictionary(zip(indices, ranks))
-        
-        let generators = indices.flatMap { index -> [GradedModule<Index, BaseModule>] in
-            objects[index]!.generators.map { x in GradedModule(index: index, value: x) }
-        }
-        
-        let N = ranks.last ?? 0
-        let vectorizer: S.Vectorizer = { z in
-            let entries = z.elements.reduce(
-                into: [ColEntry<R>]?.some([]),
-                while: { (res, _) in res != nil }
-            ) { (res, elem) in
-                let (index, x) = elem
-                let (obj, shift) = (objects[index]!, shifts[index]!)
-                
-                if let v = obj.vectorize(x) {
-                    res! += v.nonZeroColEntries.map{ (i, a) in (i + shift, a) }
-                } else {
-                    res = nil
-                }
-            }
-            if let entries = entries {
-                return .init(size: N, colEntries: entries)
-            } else {
-                return nil
-            }
-        }
-        
-        return ModuleStructure<GradedModule<Index, BaseModule>>(generators: generators, vectorizer: vectorizer)
     }
 }

@@ -8,18 +8,19 @@
 import SwmCore
 import SwmMatrixTools
 
-public final class HNFHomologyCalculator<C, M>: HomologyCalculator<C>
-where C: ChainComplexType, C.BaseRing: HomologyCalculatable & EuclideanRing,
-      M: MatrixImpl, M.BaseRing == C.BaseRing {
+public final class HNFHomologyCalculator<C>: HomologyCalculator<C>
+where C: ChainComplexType, C.BaseRing: ComputationalEuclideanRing {
     
     private typealias Object = Homology.Object
     private typealias Summand = Object.Summand
     private typealias Vectorizer = Object.Vectorizer
     
-    private typealias Matrix<n, m> = MatrixIF<M, n, m> where n: SizeType, m: SizeType
-    private typealias Vector<n> = Matrix<n, _1> where n: SizeType
-
-    private let eliminationCache: Cache<Index, MatrixEliminationResult<M, anySize, anySize>> = .empty
+    private typealias R = C.BaseRing
+    private typealias Matrix = R.ComputationalSparseMatrix<anySize, anySize>
+    private typealias Vector = R.ComputationalSparseVector<anySize>
+    private typealias Elimination = MatrixEliminationResult<R.ComputationalSparseMatrixImpl, anySize, anySize>
+    
+    private let eliminationCache: Cache<Index, Elimination> = .empty
 
     internal override func calculate(_ i: Index) -> Homology.Object {
         //
@@ -41,7 +42,7 @@ where C: ChainComplexType, C.BaseRing: HomologyCalculatable & EuclideanRing,
         let Y = C[i]
         
         let e1 = eliminationCache[i] ?? {
-            let a1 = d[i - d.degree].asMatrix(from: X, to: Y, ofType: Matrix<anySize, anySize>.self)
+            let a1 = d[i - d.degree].asMatrix(from: X, to: Y, ofType: Matrix.self)
             return a1.eliminate(form: .RowEchelon)
         }()
         
@@ -51,7 +52,7 @@ where C: ChainComplexType, C.BaseRing: HomologyCalculatable & EuclideanRing,
         return free ⊕ tor
     }
     
-    private func freePart<n, m>(_ i: Index, _ e1: MatrixEliminationResult<M, n, m>) -> Homology.Object {
+    private func freePart(_ i: Index, _ e1: Elimination) -> Homology.Object {
         let (n, r) = (e1.size.rows, e1.rank)
         if n == r {
             return .zeroModule
@@ -61,7 +62,7 @@ where C: ChainComplexType, C.BaseRing: HomologyCalculatable & EuclideanRing,
         let d = C.differential
         
         let Pinv = e1.leftInverse
-        let T1 = Pinv * Matrix<n, anySize>.colUnits(
+        let T1 = Pinv * Matrix.colUnits(
             size: (n, n - r),
             indices: r ..< n
         )
@@ -69,7 +70,7 @@ where C: ChainComplexType, C.BaseRing: HomologyCalculatable & EuclideanRing,
         let Y2 = C[i].sub(matrix: T1)
         let Z  = C[i + d.degree]
         
-        let b2 = d[i].asMatrix(from: Y2, to: Z, ofType: Matrix<anySize, anySize>.self) // p x (n - r)
+        let b2 = d[i].asMatrix(from: Y2, to: Z, ofType: Matrix.self) // p x (n - r)
         let e2 = b2
             .eliminate(form: .RowEchelon)
             .eliminate(form: .ColEchelon)
@@ -103,7 +104,7 @@ where C: ChainComplexType, C.BaseRing: HomologyCalculatable & EuclideanRing,
             //
             // Then solve x as kernel vector of b2.
             
-            guard let v = C[i].vectorize(z)?.convert(to: Vector<n>.self) else {
+            guard let v = C[i].vectorize(z)?.convert(to: Vector.self) else {
                 return nil
             }
             
@@ -123,7 +124,7 @@ where C: ChainComplexType, C.BaseRing: HomologyCalculatable & EuclideanRing,
         )
     }
     
-    private func torPart<n, m>(_ i: Index, _ e1: MatrixEliminationResult<M, n, m>) -> Homology.Object {
+    private func torPart(_ i: Index, _ e1: Elimination) -> Homology.Object {
         if BaseRing.isField || e1.rank == 0 {
             return .zeroModule
         }
@@ -144,7 +145,7 @@ where C: ChainComplexType, C.BaseRing: HomologyCalculatable & EuclideanRing,
         }
 
         let Pinv = e2.leftInverse
-        let T = Pinv * Matrix<n, anySize>.colUnits(
+        let T = Pinv * Matrix.colUnits(
             size: (n, l),
             indices: (r - l ..< r)
         )
@@ -157,7 +158,7 @@ where C: ChainComplexType, C.BaseRing: HomologyCalculatable & EuclideanRing,
         
         let vectorizer: Vectorizer = { z in
             let P = e2.left
-            guard let v = C[i].vectorize(z)?.convert(to: Vector<n>.self) else {
+            guard let v = C[i].vectorize(z)?.convert(to: Vector.self) else {
                 return nil
             }
             let p = (P * v)[r - l ..< r].mapNonZeroEntries { (i, _, a) in

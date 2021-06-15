@@ -15,8 +15,8 @@ public struct HomologyCalculatorOptions: OptionSet {
     public static let onlyStructures = Self(rawValue: 1 << 0)
 }
 
-public class HomologyCalculator<C> where C: ChainComplexType, C.BaseRing: HomologyCalculatable {
-    public typealias Homology = GradedModuleStructure<C.Index, C.BaseModule>
+public class HomologyCalculator<C> where C: ChainComplexType {
+    public typealias Homology = IndexedModuleStructure<C.Index, C.BaseModule>
 
     typealias Index = C.Index
     typealias BaseModule = C.BaseModule
@@ -45,12 +45,12 @@ public class HomologyCalculator<C> where C: ChainComplexType, C.BaseRing: Homolo
 }
 
 extension ChainComplexType where BaseRing: HomologyCalculatable {
-    public func homology(options: HomologyCalculatorOptions = []) -> GradedModuleStructure<Index, BaseModule> {
+    public func homology(options: HomologyCalculatorOptions = []) -> IndexedModuleStructure<Index, BaseModule> {
         let defaultCalculator = BaseRing.homologyCalculator(forChainComplexType: Self.self, options: options)
         return homology(options: options, using: defaultCalculator.self)
     }
 
-    public func homology(options: HomologyCalculatorOptions = [], using type: HomologyCalculator<Self>.Type) -> GradedModuleStructure<Index, BaseModule> {
+    public func homology(options: HomologyCalculatorOptions = [], using type: HomologyCalculator<Self>.Type) -> IndexedModuleStructure<Index, BaseModule> {
         type.init(chainComplex: self, options: options).calculate()
     }
 }
