@@ -19,7 +19,7 @@ let package = Package(
         ),
         .package(
             url: "https://github.com/taketo1024/swm-matrix-tools.git",
-            from: "1.2.1"
+            from: "1.3.0"
 //            path: "../swm-matrix-tools/"
         ),
     ],
