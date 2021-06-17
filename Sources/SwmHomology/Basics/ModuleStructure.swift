@@ -200,7 +200,7 @@ extension ModuleStructure where BaseModule: LinearCombinationType {
             vectorizer: { (z: BaseModule) in
                 var valid = true
                 let vec = AnySizeVector<R>(size: n) { setEntry in
-                    for (x, a) in z.elements {
+                    for (x, a) in z.elements where !a.isZero {
                         guard let i = indexer(x) else {
                             valid = false
                             break
