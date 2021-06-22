@@ -35,6 +35,10 @@ public struct IndexedModule<Index: Hashable, _BaseModule: Module>: Module {
         self.init(elements: [:])
     }
     
+    public var isZero: Bool {
+        elements.values.allSatisfy{ $0.isZero } 
+    }
+    
     public static func + (a: Self, b: Self) -> Self {
         Self(elements: a.elements.merging(b.elements, uniquingKeysWith: +))
     }
@@ -53,6 +57,10 @@ public struct IndexedModule<Index: Hashable, _BaseModule: Module>: Module {
     
     public func map(_ f: (Index, BaseModule) -> (Index, BaseModule)) -> Self {
         .init(elements: elements.map(f))
+    }
+    
+    public func mapValues(_ f: (BaseModule) -> BaseModule) -> Self {
+        .init(elements: elements.mapValues { z in f(z) } )
     }
     
     public func filter(_ f: (Index, BaseModule) -> Bool) -> Self {
