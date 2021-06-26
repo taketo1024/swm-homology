@@ -14,7 +14,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/taketo1024/swm-core.git",
-            from: "1.2.6"
+            from: "1.2.7"
 //            path: "../swm-core/"
         ),
         .package(
