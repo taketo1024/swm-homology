@@ -19,7 +19,7 @@ extension ModuleHom where Domain: Module, Codomain: Module, Domain.BaseRing == C
             let x = from.generator(j)
             let y = self.callAsFunction(x)
             guard let v = to.vectorize(y) else {
-                fatalError("Unavailable to vectorize.")
+                fatalError("Unavailable to vectorize \(y).")
             }
             return v.nonZeroColEntries.map{ (i, a) in (i, j, a) }.toArray()
         }

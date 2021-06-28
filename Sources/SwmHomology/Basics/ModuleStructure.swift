@@ -157,12 +157,14 @@ public struct ModuleStructure<BaseModule: Module>: Equatable, CustomStringConver
         }.joined(separator: "⊕")
     }
     
+    public var detailDescription: String {
+        "\(self) {\n" + summands.map { s in
+            "\t\(s): \(s.generator)"
+        }.joined(separator: "\n") + "\n}"
+    }
+    
     public func printDetail() {
-        print("\(self) {")
-        for s in summands {
-            print("\t\(s): \(s.generator)")
-        }
-        print("}")
+        print(detailDescription)
     }
     
     public struct Summand: Equatable, CustomStringConvertible {
