@@ -288,3 +288,38 @@ extension ModuleStructure where R: Hashable {
         summands.group{ $0.divisor }.mapValues{ $0.count }
     }
 }
+
+extension ModuleStructure.Summand: Codable where BaseModule.BaseRing: Codable {
+    public enum CodingKeys: CodingKey {
+        case generator, divisor
+    }
+    
+    public init(from decoder: Decoder) throws {
+        typealias R = BaseModule.BaseRing
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        generator = .zero // TODO
+        divisor = try c.decode(R.self, forKey: .divisor)
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(divisor, forKey: .divisor)
+    }
+}
+
+extension ModuleStructure: Codable where BaseModule.BaseRing: Codable {
+    public enum CodingKeys: CodingKey {
+        case summands
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        summands = try c.decode([Summand].self, forKey: .summands)
+        vectorizer = { _ in nil }
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(summands, forKey: .summands)
+    }
+}
