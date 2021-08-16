@@ -38,8 +38,10 @@ where C: ChainComplexType, C.BaseRing: ComputationalField {
         
         let C = chainComplex
         let d = C.differential
+        
         let X = C[i - d.degree]
         let Y = C[i]
+        let Z = C[i + d.degree]
 
         let e1 = luCache[i] ?? {
             let a1 = d[i - d.degree].asMatrix(from: X, to: Y, ofType: Matrix.self)
@@ -47,8 +49,7 @@ where C: ChainComplexType, C.BaseRing: ComputationalField {
         }()
         
         let T1 = e1.cokernel
-        let Y2 = C[i].sub(matrix: T1)
-        let Z = C[i + d.degree]
+        let Y2 = Y.sub(matrix: T1)
         
         let b2 = d[i].asMatrix(from: Y2, to: Z, ofType: Matrix.self)
         let e2 = b2.LUfactorize()
