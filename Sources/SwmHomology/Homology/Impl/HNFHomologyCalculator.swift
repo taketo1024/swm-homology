@@ -8,17 +8,17 @@
 import SwmCore
 import SwmMatrixTools
 
-public final class HNFHomologyCalculator<C>: HomologyCalculator<C>
-where C: ChainComplexType, C.BaseRing: ComputationalEuclideanRing {
+public final class HNFHomologyCalculator<C, M: MatrixImpl>: HomologyCalculator<C>
+where C: ChainComplexType, C.BaseRing == M.BaseRing, M.BaseRing: EuclideanRing & ComputationalRing {
     
     private typealias Object = Homology.Object
     private typealias Summand = Object.Summand
     private typealias Vectorizer = Object.Vectorizer
     
     private typealias R = C.BaseRing
-    private typealias Matrix = R.ComputationalSparseMatrix<anySize, anySize>
-    private typealias Vector = R.ComputationalSparseVector<anySize>
-    private typealias Elimination = MatrixEliminationResult<R.ComputationalSparseMatrixImpl, anySize, anySize>
+    private typealias Matrix = MatrixIF<M, anySize, anySize>
+    private typealias Vector = ColVectorIF<M, anySize>
+    private typealias Elimination = MatrixEliminationResult<M, anySize, anySize>
     
     private let eliminationCache: Cache<Index, Elimination> = .empty
 

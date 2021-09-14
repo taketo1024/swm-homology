@@ -8,11 +8,14 @@
 import XCTest
 import SwmCore
 import SwmMatrixTools
+
 @testable import SwmHomology
 
-class PolynomialHomologyTests: XCTestCase {
+extension Int: HomologyCalculatable {}
+
+class HomologyTests: XCTestCase {
     
-    typealias R = Polynomial<𝐐, StandardPolynomialIndeterminates.x>
+    typealias R = 𝐙
     typealias Matrix = AnySizeMatrix<R>
 
     override func setUp() {
@@ -25,9 +28,9 @@ class PolynomialHomologyTests: XCTestCase {
     }
     
     func testCalculatorType() {
-        typealias C = ChainComplex1<LinearCombination<R, Util.Generator>>
-        let type = R.homologyCalculator(forChainComplexType: C.self, options: [])
-        XCTAssertTrue(type == HNFHomologyCalculator<C>.self)
+        let C = Util.generateChainComplex(matrices: [Matrix.zero(size: (0, 0))])
+        let type = R.homologyCalculator(forChainComplex: C, options: [])
+        XCTAssertTrue(type is HNFHomologyCalculator<Util.ChainComplex<R>, DefaultSparseMatrixImpl<R>>)
     }
     
     func test1() {
@@ -35,12 +38,12 @@ class PolynomialHomologyTests: XCTestCase {
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
         
-        XCTAssertEqual(H[-1].rank, 0)
-        XCTAssertEqual(H[0].rank, 1)
-        XCTAssertEqual(H[1].rank, 1)
-        XCTAssertEqual(H[2].rank, 1)
-        XCTAssertEqual(H[3].rank, 1)
-        XCTAssertEqual(H[4].rank, 0)
+        XCTAssertEqual(H[-1].dictionaryDescription, [:])
+        XCTAssertEqual(H[0].dictionaryDescription, [0: 1])
+        XCTAssertEqual(H[1].dictionaryDescription, [0: 1])
+        XCTAssertEqual(H[2].dictionaryDescription, [0: 1])
+        XCTAssertEqual(H[3].dictionaryDescription, [0: 1])
+        XCTAssertEqual(H[4].dictionaryDescription, [:])
     }
 
     func test2() {
@@ -48,12 +51,12 @@ class PolynomialHomologyTests: XCTestCase {
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
 
-        XCTAssertEqual(H[-1].rank, 0)
-        XCTAssertEqual(H[0].rank, 0)
-        XCTAssertEqual(H[1].rank, 0)
-        XCTAssertEqual(H[2].rank, 0)
-        XCTAssertEqual(H[3].rank, 0)
-        XCTAssertEqual(H[4].rank, 0)
+        XCTAssertEqual(H[-1].dictionaryDescription, [:])
+        XCTAssertEqual(H[0].dictionaryDescription, [:])
+        XCTAssertEqual(H[1].dictionaryDescription, [:])
+        XCTAssertEqual(H[2].dictionaryDescription, [:])
+        XCTAssertEqual(H[3].dictionaryDescription, [:])
+        XCTAssertEqual(H[4].dictionaryDescription, [:])
     }
 
     func test3() {
@@ -61,12 +64,12 @@ class PolynomialHomologyTests: XCTestCase {
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
 
-        XCTAssertEqual(H[-1].rank, 0)
-        XCTAssertEqual(H[0].rank, 0)
-        XCTAssertEqual(H[1].rank, 0)
-        XCTAssertEqual(H[2].rank, 0)
-        XCTAssertEqual(H[3].rank, 0)
-        XCTAssertEqual(H[4].rank, 0)
+        XCTAssertEqual(H[-1].dictionaryDescription, [:])
+        XCTAssertEqual(H[0].dictionaryDescription, [2:1])
+        XCTAssertEqual(H[1].dictionaryDescription, [:])
+        XCTAssertEqual(H[2].dictionaryDescription, [2:1])
+        XCTAssertEqual(H[3].dictionaryDescription, [:])
+        XCTAssertEqual(H[4].dictionaryDescription, [:])
     }
     
     func testShift() {
@@ -75,11 +78,11 @@ class PolynomialHomologyTests: XCTestCase {
         let C = Util.generateChainComplex(matrices: d).shifted(shift)
         let H = C.homology()
         
-        XCTAssertEqual(H[-1 + shift].rank, 0)
-        XCTAssertEqual(H[ 0 + shift].rank, 0)
-        XCTAssertEqual(H[ 1 + shift].rank, 0)
-        XCTAssertEqual(H[ 2 + shift].rank, 0)
-        XCTAssertEqual(H[ 3 + shift].rank, 0)
+        XCTAssertEqual(H[-1 + shift].dictionaryDescription, [:])
+        XCTAssertEqual(H[ 0 + shift].dictionaryDescription, [2:1])
+        XCTAssertEqual(H[ 1 + shift].dictionaryDescription, [:])
+        XCTAssertEqual(H[ 2 + shift].dictionaryDescription, [2:1])
+        XCTAssertEqual(H[ 3 + shift].dictionaryDescription, [:])
     }
     
     func test_D3() {
@@ -92,10 +95,10 @@ class PolynomialHomologyTests: XCTestCase {
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
         
-        XCTAssertEqual(H[0].rank, 1)
-        XCTAssertEqual(H[1].rank, 0)
-        XCTAssertEqual(H[2].rank, 0)
-        XCTAssertEqual(H[3].rank, 0)
+        XCTAssertEqual(H[0].dictionaryDescription, [0: 1])
+        XCTAssertEqual(H[1].dictionaryDescription, [:])
+        XCTAssertEqual(H[2].dictionaryDescription, [:])
+        XCTAssertEqual(H[3].dictionaryDescription, [:])
         
     }
     
@@ -108,9 +111,9 @@ class PolynomialHomologyTests: XCTestCase {
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
         
-        XCTAssertEqual(H[0].rank, 1)
-        XCTAssertEqual(H[1].rank, 0)
-        XCTAssertEqual(H[2].rank, 1)
+        XCTAssertEqual(H[0].dictionaryDescription, [0: 1])
+        XCTAssertEqual(H[1].dictionaryDescription, [:])
+        XCTAssertEqual(H[2].dictionaryDescription, [0: 1])
         
     }
     
@@ -123,9 +126,9 @@ class PolynomialHomologyTests: XCTestCase {
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
         
-        XCTAssertEqual(H[0].rank, 1)
-        XCTAssertEqual(H[1].rank, 2)
-        XCTAssertEqual(H[2].rank, 1)
+        XCTAssertEqual(H[0].dictionaryDescription, [0: 1])
+        XCTAssertEqual(H[1].dictionaryDescription, [0: 2])
+        XCTAssertEqual(H[2].dictionaryDescription, [0: 1])
         
     }
     
@@ -138,9 +141,9 @@ class PolynomialHomologyTests: XCTestCase {
         let C = Util.generateChainComplex(matrices: d)
         let H = C.homology()
         
-        XCTAssertEqual(H[0].rank, 1)
-        XCTAssertEqual(H[1].rank, 0)
-        XCTAssertEqual(H[2].rank, 0)
+        XCTAssertEqual(H[0].dictionaryDescription, [0 : 1])
+        XCTAssertEqual(H[1].dictionaryDescription, [2 : 1])
+        XCTAssertEqual(H[2].dictionaryDescription, [:])
     }
     
     func test_Dual() {
@@ -157,9 +160,9 @@ class PolynomialHomologyTests: XCTestCase {
         XCTAssertEqual(δ[0].asMatrix(from: C[0], to: C[1]), d[0].transposed)
         XCTAssertEqual(δ[1].asMatrix(from: C[1], to: C[2]), d[1].transposed)
 
-        XCTAssertEqual(H[0].rank, 1)
-        XCTAssertEqual(H[1].rank, 0)
-        XCTAssertEqual(H[2].rank, 0)
+        XCTAssertEqual(H[0].dictionaryDescription, [0 : 1])
+        XCTAssertEqual(H[1].dictionaryDescription, [:])
+        XCTAssertEqual(H[2].dictionaryDescription, [2 : 1])
     }
     
     func testVectorizer_S2() {
@@ -192,5 +195,20 @@ class PolynomialHomologyTests: XCTestCase {
         XCTAssertEqual(H1.vectorize(z)!.serialize(), [1, 0])
         XCTAssertEqual(H1.vectorize(w)!.serialize(), [0, 1])
         XCTAssertEqual(H1.vectorize(z - 2 * w)!.serialize(), [1, -2])
+    }
+
+    func testVectorizer_RP2() {
+        let d = [
+            Matrix(size: (6, 15), grid: [-1, -1, 0, 0, 0, 0, 0, -1, -1, 0, -1, 0, 0, 0, 0, 1, 0, -1, -1, 0, -1, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 1, 1, 0, 1, 1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 1, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1] ),
+            Matrix(size: (15, 10), grid: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, -1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1] ),
+        ]
+        
+        let C = Util.generateChainComplex(matrices: d)
+        let H = C.homology()
+        let H1 = H[1]
+        
+        let z = H1.generator(0)
+        XCTAssertEqual(H1.vectorize(z)!.serialize(), [1])
+        XCTAssertEqual(H1.vectorize(2 * z)!.serialize(), [0])
     }
 }

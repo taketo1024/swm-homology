@@ -9,7 +9,8 @@ import SwmCore
 @testable import SwmHomology
 
 struct Util {
-    static func generateChainComplex<R>(matrices: [AnySizeMatrix<R>]) -> ChainComplex1<LinearCombination<R, Generator>> {
+    typealias ChainComplex<R: Ring> = ChainComplex1<LinearCombination<R, Generator>>
+    static func generateChainComplex<R>(matrices: [AnySizeMatrix<R>]) -> ChainComplex<R> {
         typealias A = Generator
         typealias M = LinearCombination<R, A>
 
@@ -18,7 +19,7 @@ struct Util {
             defer {
                 count += n
             }
-            return (1 ... n).map{ A(count + $0) }
+            return (0 ..< n).map{ A(count + $0) }
         }
         
         let bases = matrices.map { d in

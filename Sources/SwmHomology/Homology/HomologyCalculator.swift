@@ -43,14 +43,3 @@ public class HomologyCalculator<C> where C: ChainComplexType {
         fatalError("Use concrete subclasses.")
     }
 }
-
-extension ChainComplexType where BaseRing: HomologyCalculatable {
-    public func homology(options: HomologyCalculatorOptions = []) -> IndexedModuleStructure<Index, BaseModule> {
-        let defaultCalculator = BaseRing.homologyCalculator(forChainComplexType: Self.self, options: options)
-        return homology(options: options, using: defaultCalculator.self)
-    }
-
-    public func homology(options: HomologyCalculatorOptions = [], using type: HomologyCalculator<Self>.Type) -> IndexedModuleStructure<Index, BaseModule> {
-        type.init(chainComplex: self, options: options).calculate()
-    }
-}
