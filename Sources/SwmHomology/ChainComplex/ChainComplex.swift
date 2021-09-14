@@ -13,7 +13,7 @@ public protocol ChainComplexType: IndexedModuleStructureType {
 }
 
 public typealias ChainComplex1<M: Module> = ChainComplex<Int, M>
-public typealias ChainComplex2<M: Module> = ChainComplex<MultiIndex<_2>, M>
+public typealias ChainComplex2<M: Module> = ChainComplex<IntList<_2>, M>
 
 public struct ChainComplex<Index: AdditiveGroup & Hashable, BaseModule: Module>: ChainComplexType {
     public typealias BaseGrid = IndexedModuleStructure<Index, BaseModule>
@@ -111,42 +111,8 @@ extension ChainComplex1 where Index == Int {
                     secondaryDegreeMap(summand) == j
                 }
             },
-            degree: MultiIndex<_2>(differential.degree, differentialSecondaryDegree),
+            degree: IntList<_2>(differential.degree, differentialSecondaryDegree),
             differential: { I in self.differential[I[0]] }
         )
-    }
-}
-
-extension ChainComplexType where Index == Int {
-    public func generateGraph(range: ClosedRange<Int>) -> Graph<MultiIndex<_2>, BaseModule, BaseRing> {
-        typealias G = Graph<MultiIndex<_2>, BaseModule, BaseRing>
-        
-        let C = self
-        let d = C.differential
-        
-        var graph = G(template: .hierarchical)
-
-        for i in range {
-            for (j, z) in C[i].generators.enumerated() {
-                graph.addVertex(id: [i, j], value: z, options: ["group": i])
-            }
-        }
-
-        for i1 in range {
-            let i2 = i1 + d.degree
-            for (j1, z) in C[i1].generators.enumerated() {
-                let from = graph[[i1, j1]]!
-                let w = d[i1](z)
-                if let vec = C[i2].vectorize(w) {
-                    for (j2, a) in vec.nonZeroColEntries {
-                        if let to = graph[[i2, j2]] {
-                            from.addEdge(to: to, value: a)
-                        }
-                    }
-                }
-            }
-        }
-
-        return graph
     }
 }

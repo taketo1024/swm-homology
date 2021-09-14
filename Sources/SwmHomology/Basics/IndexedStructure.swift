@@ -48,7 +48,7 @@ extension IndexedStructure where Index == Int {
     }
 }
 
-extension IndexedStructure where Index == MultiIndex<_2> {
+extension IndexedStructure where Index == IntList<_2> {
     public subscript(i: Int, j: Int) -> Object {
         self[Index(i, j)]
     }
@@ -64,7 +64,7 @@ extension IndexedStructure where Index == MultiIndex<_2> {
     }
 }
 
-extension IndexedStructure where Index == MultiIndex<_3> {
+extension IndexedStructure where Index == IntList<_3> {
     public subscript(i: Int, j: Int, k: Int) -> Object {
         self[Index(i, j, k)]
     }
