@@ -16,7 +16,7 @@ public struct HomologyCalculatorOptions: OptionSet {
 }
 
 public class HomologyCalculator<C> where C: ChainComplexType {
-    public typealias Homology = IndexedModuleStructure<C.Index, C.BaseModule>
+    public typealias Homology = GradedModuleStructure<C.Index, C.BaseModule>
 
     typealias Index = C.Index
     typealias BaseModule = C.BaseModule

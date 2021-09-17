@@ -7,7 +7,7 @@
 
 import SwmCore
 
-public protocol IndexedStructure {
+public protocol GridType {
     associatedtype Index: AdditiveGroup & Hashable
     associatedtype Object
     
@@ -17,7 +17,7 @@ public protocol IndexedStructure {
     func description(forObject obj: Object) -> String
 }
 
-extension IndexedStructure {
+extension GridType {
     public func structure() -> [Index : Object] {
         Dictionary(support.map{ idx in (idx, self[idx]) })
     }
@@ -36,7 +36,7 @@ extension IndexedStructure {
     }
 }
 
-extension IndexedStructure where Index == Int {
+extension GridType where Index == Int {
     public func printSequence() {
         let strc = structure()
         let seq = support.map{ i -> (Int, String) in
@@ -48,7 +48,7 @@ extension IndexedStructure where Index == Int {
     }
 }
 
-extension IndexedStructure where Index == IntList<_2> {
+extension GridType where Index == IntList<_2> {
     public subscript(i: Int, j: Int) -> Object {
         self[Index(i, j)]
     }
@@ -64,7 +64,7 @@ extension IndexedStructure where Index == IntList<_2> {
     }
 }
 
-extension IndexedStructure where Index == IntList<_3> {
+extension GridType where Index == IntList<_3> {
     public subscript(i: Int, j: Int, k: Int) -> Object {
         self[Index(i, j, k)]
     }

@@ -23,7 +23,8 @@ extension HomologyCalculatable {
 }
 
 extension ChainComplexType where BaseRing: HomologyCalculatable {
-    public func homology(options: HomologyCalculatorOptions = []) -> IndexedModuleStructure<Index, BaseModule> {
+    public typealias Homology = GradedModuleStructure<Index, BaseModule>
+    public func homology(options: HomologyCalculatorOptions = []) -> Homology {
         let calculator = BaseRing.homologyCalculator(forChainComplex: self, options: options)
         return calculator.calculate()
     }
