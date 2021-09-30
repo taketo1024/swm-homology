@@ -8,8 +8,10 @@
 import XCTest
 import SwmCore
 import SwmMatrixTools
-import SwmEigen
+
 @testable import SwmHomology
+
+extension RationalNumber: HomologyCalculatable {}
 
 class RationalHomologyTests: XCTestCase {
     
@@ -26,9 +28,9 @@ class RationalHomologyTests: XCTestCase {
     }
     
     func testCalculatorType() {
-        typealias C = ChainComplex1<LinearCombination<R, Util.Generator>>
-        let type = R.homologyCalculator(forChainComplexType: C.self, options: [])
-        XCTAssertTrue(type == LUHomologyCalculator<C>.self)
+        let C = Util.generateChainComplex(matrices: [Matrix.zero(size: (0, 0))])
+        let type = R.homologyCalculator(forChainComplex: C, options: [])
+        XCTAssertTrue(type is LUHomologyCalculator<Util.ChainComplex<R>, DefaultSparseMatrixImpl<R>>)
     }
     
     func test1() {

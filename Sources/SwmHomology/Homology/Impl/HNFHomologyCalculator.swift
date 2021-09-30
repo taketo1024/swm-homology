@@ -8,17 +8,17 @@
 import SwmCore
 import SwmMatrixTools
 
-public final class HNFHomologyCalculator<C>: HomologyCalculator<C>
-where C: ChainComplexType, C.BaseRing: ComputationalEuclideanRing {
+public final class HNFHomologyCalculator<C, M: MatrixImpl>: HomologyCalculator<C>
+where C: ChainComplexType, C.BaseRing == M.BaseRing, M.BaseRing: EuclideanRing & ComputationalRing {
     
     private typealias Object = Homology.Object
     private typealias Summand = Object.Summand
     private typealias Vectorizer = Object.Vectorizer
     
     private typealias R = C.BaseRing
-    private typealias Matrix = R.ComputationalSparseMatrix<anySize, anySize>
-    private typealias Vector = R.ComputationalSparseVector<anySize>
-    private typealias Elimination = MatrixEliminationResult<R.ComputationalSparseMatrixImpl, anySize, anySize>
+    private typealias Matrix = MatrixIF<M, anySize, anySize>
+    private typealias Vector = ColVectorIF<M, anySize>
+    private typealias Elimination = MatrixEliminationResult<M, anySize, anySize>
     
     private let eliminationCache: Cache<Index, Elimination> = .empty
 
@@ -104,7 +104,7 @@ where C: ChainComplexType, C.BaseRing: ComputationalEuclideanRing {
             //
             // Then solve x as kernel vector of b2.
             
-            guard let v = C[i].vectorize(z)?.convert(to: Vector.self) else {
+            guard let v = C[i].vectorize(z, Vector.self) else {
                 return nil
             }
             
@@ -112,7 +112,7 @@ where C: ChainComplexType, C.BaseRing: ComputationalEuclideanRing {
             let p = (P * v)[r ..< n] // projected to Y2
             
             if let x = e2.solveKernel(p) {
-                return x.convert(to: AnySizeVector.self)
+                return x.nonZeroColEntries.toArray()
             } else {
                 return nil
             }
@@ -157,14 +157,15 @@ where C: ChainComplexType, C.BaseRing: ComputationalEuclideanRing {
         }
         
         let vectorizer: Vectorizer = { z in
-            let P = e2.left
-            guard let v = C[i].vectorize(z)?.convert(to: Vector.self) else {
+            guard let v = C[i].vectorize(z, Vector.self) else {
                 return nil
             }
+            
+            let P = e2.left
             let p = (P * v)[r - l ..< r].mapNonZeroEntries { (i, _, a) in
                 a % d[i]
             }
-            return p.convert(to: AnySizeVector.self)
+            return p.nonZeroColEntries.toArray()
         }
 
         return .init(

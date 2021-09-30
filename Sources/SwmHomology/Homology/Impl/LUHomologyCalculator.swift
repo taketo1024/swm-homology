@@ -8,17 +8,17 @@
 import SwmCore
 import SwmMatrixTools
 
-public final class LUHomologyCalculator<C>: HomologyCalculator<C>
-where C: ChainComplexType, C.BaseRing: ComputationalField {
+public final class LUHomologyCalculator<C, M>: HomologyCalculator<C>
+where C: ChainComplexType, C.BaseRing == M.BaseRing, M: LUFactorizable {
     
     private typealias Object = Homology.Object
     private typealias Summand = Object.Summand
     private typealias Vectorizer = Object.Vectorizer
 
     private typealias R = C.BaseRing
-    private typealias Matrix = R.ComputationalSparseMatrix<anySize, anySize>
-    private typealias Vector = R.ComputationalSparseVector<anySize>
-    private typealias LU = LUFactorizationResult<R.ComputationalSparseMatrixImpl, anySize, anySize>
+    private typealias Matrix = MatrixIF<M, anySize, anySize>
+    private typealias Vector = ColVectorIF<M, anySize>
+    private typealias LU = LUFactorizationResult<M, anySize, anySize>
     
     private let luCache: Cache<Index, LU> = .empty
 
@@ -73,12 +73,11 @@ where C: ChainComplexType, C.BaseRing: ComputationalField {
         
         let p = e1.cokernelProjector
         let vectorizer: Vectorizer = { z in
-            guard let v = Y.vectorize(z)?.convert(to: Vector.self) else {
+            guard let v = Y.vectorize(z, Vector.self) else {
                 return nil
             }
-            
             if let x = e2.solveKernel(p(v)) {
-                return x.convert(to: AnySizeVector.self)
+                return x.nonZeroColEntries.toArray()
             } else {
                 return nil
             }

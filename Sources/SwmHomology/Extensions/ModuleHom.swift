@@ -18,10 +18,10 @@ extension ModuleHom where Domain: Module, Codomain: Module, Domain.BaseRing == C
         let entries = Array(0 ..< m).parallelFlatMap { j -> [MatrixEntry<BaseRing>] in
             let x = from.generator(j)
             let y = self.callAsFunction(x)
-            guard let v = to.vectorize(y) else {
+            guard let v = to.vectorEntries(y) else {
                 fatalError("Unavailable to vectorize \(y).")
             }
-            return v.nonZeroColEntries.map{ (i, a) in (i, j, a) }.toArray()
+            return v.map{ (i, a) in (i, j, a) }
         }
         
         return .init(size: (n, m)) { setEntry in
