@@ -73,12 +73,11 @@ where C: ChainComplexType, C.BaseRing == M.BaseRing, M: LUFactorizable {
         
         let p = e1.cokernelProjector
         let vectorizer: Vectorizer = { z in
-            guard let v = Y.vectorize(z)?.convert(to: Vector.self) else {
+            guard let v = Y.vectorize(z, Vector.self) else {
                 return nil
             }
-            
             if let x = e2.solveKernel(p(v)) {
-                return x.convert(to: AnySizeVector.self)
+                return x.nonZeroColEntries.toArray()
             } else {
                 return nil
             }

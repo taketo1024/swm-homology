@@ -104,7 +104,7 @@ where C: ChainComplexType, C.BaseRing == M.BaseRing, M.BaseRing: EuclideanRing &
             //
             // Then solve x as kernel vector of b2.
             
-            guard let v = C[i].vectorize(z)?.convert(to: Vector.self) else {
+            guard let v = C[i].vectorize(z, Vector.self) else {
                 return nil
             }
             
@@ -112,7 +112,7 @@ where C: ChainComplexType, C.BaseRing == M.BaseRing, M.BaseRing: EuclideanRing &
             let p = (P * v)[r ..< n] // projected to Y2
             
             if let x = e2.solveKernel(p) {
-                return x.convert(to: AnySizeVector.self)
+                return x.nonZeroColEntries.toArray()
             } else {
                 return nil
             }
@@ -157,14 +157,15 @@ where C: ChainComplexType, C.BaseRing == M.BaseRing, M.BaseRing: EuclideanRing &
         }
         
         let vectorizer: Vectorizer = { z in
-            let P = e2.left
-            guard let v = C[i].vectorize(z)?.convert(to: Vector.self) else {
+            guard let v = C[i].vectorize(z, Vector.self) else {
                 return nil
             }
+            
+            let P = e2.left
             let p = (P * v)[r - l ..< r].mapNonZeroEntries { (i, _, a) in
                 a % d[i]
             }
-            return p.convert(to: AnySizeVector.self)
+            return p.nonZeroColEntries.toArray()
         }
 
         return .init(
